@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Recipes</string>
+    <string name="an_error_occurred">An error occurred</string>
+    <string name="retry">Retry</string>
+    <string name="search">Search</string>
+    <string name="no_recipes_found">No recipes found</string>
+</resources>
