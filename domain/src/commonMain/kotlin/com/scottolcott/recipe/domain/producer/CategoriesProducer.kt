@@ -7,7 +7,6 @@ import com.scottolcott.recipe.repository.CategoryRepository
 import com.slack.circuit.retained.produceRetainedState
 import dev.zacsweers.metro.Inject
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponseOrigin
 
 @Inject
 class CategoriesProducer(private val categoryRepository: CategoryRepository) {
@@ -16,7 +15,7 @@ class CategoriesProducer(private val categoryRepository: CategoryRepository) {
   fun produce(retryTrigger: Int): StoreReadResponse<List<Category>> {
     val categories by
       produceRetainedState<StoreReadResponse<List<Category>>>(
-        StoreReadResponse.Loading(StoreReadResponseOrigin.SourceOfTruth),
+        StoreReadResponse.Initial,
         retryTrigger,
       ) {
         categoryRepository.getCategories().collect {

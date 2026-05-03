@@ -28,7 +28,6 @@ import io.github.solcott.kmp.parcelize.Parcelize
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponseOrigin
 
 @AssistedInject
 class RecipeDetailsPresenter(
@@ -43,10 +42,7 @@ class RecipeDetailsPresenter(
     var retryTrigger by remember { mutableIntStateOf(0) }
     screen as RecipeDetailsScreen
     val recipeResponse by
-      produceRetainedState<StoreReadResponse<Recipe?>>(
-        StoreReadResponse.NoNewData(StoreReadResponseOrigin.Cache),
-        retryTrigger,
-      ) {
+      produceRetainedState<StoreReadResponse<Recipe?>>(StoreReadResponse.Initial, retryTrigger) {
         recipeRepository
           .getById(screen.id)
           .onEach {

@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.domain.presenter.CategoriesState.*
 import com.scottolcott.recipe.domain.producer.CategoriesProducer
-import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.model.Category
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained

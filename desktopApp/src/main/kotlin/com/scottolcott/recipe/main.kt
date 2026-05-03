@@ -18,6 +18,6 @@ fun main() = application {
     state = state,
     alwaysOnTop = false,
   ) {
-      RecipeApp(graph.circuit)
+    RecipeApp(graph.circuit)
   }
 }

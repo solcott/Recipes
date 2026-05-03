@@ -7,7 +7,6 @@ import com.scottolcott.recipe.repository.RecipeRepository
 import com.slack.circuit.retained.produceRetainedState
 import dev.zacsweers.metro.Inject
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponseOrigin
 
 @Inject
 class RecipesProducer(private val recipeRepository: RecipeRepository) {
@@ -17,7 +16,7 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
 
     val recipes by
       produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Loading(StoreReadResponseOrigin.Cache),
+        StoreReadResponse.Initial,
         searchTerm,
         retryTrigger,
       ) {
@@ -30,7 +29,7 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
   fun produceByCategory(category: String, retryTrigger: Int): StoreReadResponse<List<Recipe>> {
     val recipes by
       produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Loading(StoreReadResponseOrigin.Cache),
+        StoreReadResponse.Initial,
         category,
         retryTrigger,
       ) {
