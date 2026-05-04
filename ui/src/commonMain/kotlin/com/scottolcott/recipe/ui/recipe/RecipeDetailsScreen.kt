@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -62,6 +63,7 @@ fun RecipeDetailsScreen(state: RecipeDetailsState, modifier: Modifier = Modifier
   }
 }
 
+@OptIn(ExperimentalFlexBoxApi::class)
 @Composable
 private fun RecipeDetails(recipe: Recipe, state: RecipeDetailsState) {
   val windowSizeClass = LocalWindowSizeClass.current

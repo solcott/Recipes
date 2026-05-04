@@ -5,8 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.scottolcott.recipe.domain.producer.RecipesProducer
 import co.touchlab.kermit.Logger
+import com.scottolcott.recipe.domain.producer.RecipesProducer
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -42,6 +42,7 @@ class RecipesPresenter(
           recipesProducer.produceByCategory(screen.category, retryTrigger)
         is RecipesScreen.BySearch ->
           recipesProducer.produceBySearchTerm(screen.searchTerm, retryTrigger)
+        is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
       }
     var lastRecipes by rememberRetained(retryTrigger) { mutableStateOf<List<Recipe>?>(null) }
     val errorEventSink: (RecipesEvent.Error) -> Unit = { event ->
@@ -126,4 +127,6 @@ sealed class RecipesScreen : Screen {
   @Parcelize data class ByCategory(val category: String) : RecipesScreen()
 
   @Parcelize data class BySearch(val searchTerm: String) : RecipesScreen()
+
+  @Parcelize data object Favorites : RecipesScreen()
 }
