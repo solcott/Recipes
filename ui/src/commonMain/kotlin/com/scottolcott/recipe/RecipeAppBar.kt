@@ -33,12 +33,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
+import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.arrow_back_24px
 import com.scottolcott.recipe.ui.check_24px
 import com.scottolcott.recipe.ui.chef_hat_24px
+import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.recipes
 import com.scottolcott.recipe.ui.search
 import com.scottolcott.recipe.ui.search_24px
@@ -110,6 +113,14 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
         title = { Text(stringResource(Res.string.recipes)) },
         navigationIcon = { NavIcon(state.navStack, state.navigator) },
         actions = {
+          IconButton(
+            onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) }
+          ) {
+            Icon(
+              painter = painterResource(Res.drawable.favorite_24px_filled),
+              contentDescription = null,
+            )
+          }
           IconButton(onClick = { state.searchState.eventSink(SearchEvent.SearchButtonClicked) }) {
             Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
           }
