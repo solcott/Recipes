@@ -13,6 +13,7 @@ plugins {
   alias(libs.plugins.dependency.sorter)
   alias(libs.plugins.kmp.parcelize) apply false
   alias(libs.plugins.dependency.analysis)
+  alias(libs.plugins.kotlin.jvm) apply false
 }
 
 subprojects {
