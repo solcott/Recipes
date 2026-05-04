@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.network.api
 
+import com.scottolcott.recipe.network.ApiClient
 import com.scottolcott.recipe.network.dto.CategoryResponseDto
 import com.scottolcott.recipe.network.resource.CategoryResource
 import dev.zacsweers.metro.AppScope
@@ -18,7 +19,7 @@ interface CategoryApi {
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-internal class CategoryApiImpl(private val client: HttpClient) : CategoryApi {
+internal class CategoryApiImpl(@param:ApiClient private val client: HttpClient) : CategoryApi {
   override suspend fun getCategories(): CategoryResponseDto {
     return client.get(CategoryResource()).body()
   }

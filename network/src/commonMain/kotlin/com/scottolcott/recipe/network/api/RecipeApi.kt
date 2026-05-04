@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.network.api
 
 import com.scottolcott.recipe.model.RecipeId
+import com.scottolcott.recipe.network.ApiClient
 import com.scottolcott.recipe.network.dto.RecipeBasicResponseDto
 import com.scottolcott.recipe.network.dto.RecipeFullResponseDto
 import com.scottolcott.recipe.network.resource.FilterResource
@@ -30,7 +31,7 @@ interface RecipeApi {
 @ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 @Inject
-internal class RecipeApiImpl(val client: HttpClient) : RecipeApi {
+internal class RecipeApiImpl(@param:ApiClient val client: HttpClient) : RecipeApi {
   override suspend fun getRandomRecipe(): RecipeFullResponseDto? {
     return client.get(RandomResource()).body()
   }

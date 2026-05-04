@@ -4,6 +4,8 @@ import co.touchlab.kermit.Logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Qualifier
+import dev.zacsweers.metro.SingleIn
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngineConfig
@@ -15,9 +17,15 @@ import io.ktor.client.plugins.resources.Resources
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
+@Qualifier annotation class ApiClient
+
+@Qualifier annotation class CoilClient
+
 @ContributesTo(AppScope::class)
 interface NetworkProviders {
 
+  @ApiClient
+  @SingleIn(AppScope::class)
   @Provides
   fun provideKtorClient(logger: Logger): HttpClient {
     return HttpClient(provideKtorEngineFactory()) {
@@ -27,6 +35,18 @@ interface NetworkProviders {
       install(HttpRequestRetry) { retryOnExceptionOrServerErrors(3) }
 
       install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+
+      installPlatformSpecificKtorPlugins(logger)
+    }
+  }
+
+  @CoilClient
+  @SingleIn(AppScope::class)
+  @Provides
+  fun provideCoilKtorClient(logger: Logger): HttpClient {
+    return HttpClient(provideKtorEngineFactory()) {
+      expectSuccess = true
+      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(3) }
 
       installPlatformSpecificKtorPlugins(logger)
     }

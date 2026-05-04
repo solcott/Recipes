@@ -8,6 +8,7 @@ import coil3.network.CacheStrategy
 import coil3.network.NetworkFetcher
 import coil3.network.ktor3.asNetworkClient
 import coil3.request.crossfade
+import com.scottolcott.recipe.network.CoilClient
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
@@ -22,7 +23,7 @@ interface CoilProviders {
   @OptIn(ExperimentalCoilApi::class)
   @SingleIn(AppScope::class)
   @Provides
-  fun provideNetworkFactory(httpClient: HttpClient): NetworkFetcher.Factory {
+  fun provideNetworkFactory(@CoilClient httpClient: HttpClient): NetworkFetcher.Factory {
     return NetworkFetcher.Factory({ httpClient.asNetworkClient() }, CacheStrategy::DEFAULT)
   }
 
