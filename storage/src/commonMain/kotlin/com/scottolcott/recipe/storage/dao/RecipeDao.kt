@@ -6,6 +6,7 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.Transaction
 import com.scottolcott.recipe.model.RecipeId
+import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.storage.entity.RecipeDetailEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
@@ -15,19 +16,25 @@ import kotlinx.coroutines.flow.Flow
 abstract class RecipeDao {
 
   @Transaction
-  @Query("SELECT * FROM RECIPE WHERE name LIKE '%' || :query || '%' ORDER BY id ASC")
+  @Query("SELECT * FROM recipe WHERE recipe_name LIKE '%' || :query || '%' ORDER BY recipe_id ASC")
   abstract fun queryByName(query: String): Flow<List<RecipeEntityWithDetail>>
 
   @Transaction
-  @Query("SELECT * FROM RECIPE WHERE id = :id")
+  @Query("SELECT * FROM recipe WHERE recipe_id = :id")
   abstract fun getById(id: RecipeId): Flow<RecipeEntityWithDetail?>
 
   @Transaction
-  @Query("SELECT * FROM RECIPE WHERE category = :category ORDER BY id ASC")
+  @Query(
+    "SELECT r.* FROM recipe r INNER JOIN favorite_recipe f ON r.recipe_id = f.favorite_recipe_id ORDER BY f.favorite_recipe_added_date_time"
+  )
+  abstract fun getFavorites(): Flow<List<RecipeEntityWithDetail>>
+
+  @Transaction
+  @Query("SELECT * FROM recipe WHERE recipe_category = :category ORDER BY recipe_id ASC")
   abstract fun getByCategory(category: String): Flow<List<RecipeEntityWithDetail>>
 
   @Transaction
-  @Query("SELECT * FROM RECIPE WHERE area = :area ORDER BY id ASC")
+  @Query("SELECT * FROM recipe WHERE recipe_area = :area ORDER BY recipe_id ASC")
   abstract fun getByArea(area: String): Flow<List<RecipeEntityWithDetail>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -48,4 +55,9 @@ abstract class RecipeDao {
   open suspend fun insert(recipes: List<RecipeEntityWithDetail>) {
     recipes.onEach { recipe -> insert(recipe) }
   }
+
+  @Insert abstract suspend fun insert(recipeFavorites: FavoriteEntity)
+
+  @Query("DELETE FROM favorite_recipe where favorite_recipe_id = :recipeId")
+  abstract suspend fun deleteFavorite(recipeId: RecipeId)
 }

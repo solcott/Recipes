@@ -9,12 +9,14 @@ import androidx.sqlite.SQLiteDriver
 import com.scottolcott.recipe.storage.dao.CategoryDao
 import com.scottolcott.recipe.storage.dao.RecipeDao
 import com.scottolcott.recipe.storage.entity.CategoryEntity
+import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.storage.entity.RecipeDetailEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntity
 import kotlin.coroutines.CoroutineContext
 
 @Database(
-  entities = [RecipeEntity::class, RecipeDetailEntity::class, CategoryEntity::class],
+  entities =
+    [RecipeEntity::class, RecipeDetailEntity::class, CategoryEntity::class, FavoriteEntity::class],
   version = 1,
 )
 @TypeConverters(RoomTypeConverters::class)

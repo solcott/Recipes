@@ -2,57 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a3dfe3dcfd9146f8b330a3fecade968c",
+    "identityHash": "8db0f157cdad1d797351d6977197c961",
     "entities": [
       {
         "tableName": "recipe",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `thumbnail` TEXT NOT NULL, `category` TEXT, `area` TEXT, `lastFetched` TEXT NOT NULL, PRIMARY KEY(`id`))",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "name",
-            "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "thumbnail",
-            "columnName": "thumbnail",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "category",
-            "columnName": "category",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "area",
-            "columnName": "area",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "lastFetched",
-            "columnName": "lastFetched",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        }
-      },
-      {
-        "tableName": "recipe_detail",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`recipe_id` TEXT NOT NULL, `alternate_name` TEXT, `instructions` TEXT NOT NULL, `tags` TEXT, `youtube` TEXT, `source` TEXT, `image_source` TEXT, `creative_commons_confirmed` TEXT, `date_modified` TEXT, `ingredient1` TEXT, `measure1` TEXT, `ingredient2` TEXT, `measure2` TEXT, `ingredient3` TEXT, `measure3` TEXT, `ingredient4` TEXT, `measure4` TEXT, `ingredient5` TEXT, `measure5` TEXT, `ingredient6` TEXT, `measure6` TEXT, `ingredient7` TEXT, `measure7` TEXT, `ingredient8` TEXT, `measure8` TEXT, `ingredient9` TEXT, `measure9` TEXT, `ingredient10` TEXT, `measure10` TEXT, `ingredient11` TEXT, `measure11` TEXT, `ingredient12` TEXT, `measure12` TEXT, `ingredient13` TEXT, `measure13` TEXT, `ingredient14` TEXT, `measure14` TEXT, `ingredient15` TEXT, `measure15` TEXT, `ingredient16` TEXT, `measure16` TEXT, `ingredient17` TEXT, `measure17` TEXT, `ingredient18` TEXT, `measure18` TEXT, `ingredient19` TEXT, `measure19` TEXT, `ingredient20` TEXT, `measure20` TEXT, `lastFetched` TEXT NOT NULL, PRIMARY KEY(`recipe_id`), FOREIGN KEY(`recipe_id`) REFERENCES `recipe`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`recipe_id` TEXT NOT NULL, `recipe_name` TEXT NOT NULL, `recipe_thumbnail` TEXT NOT NULL, `recipe_category` TEXT, `recipe_area` TEXT, `recipe_last_fetched` TEXT NOT NULL, PRIMARY KEY(`recipe_id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -61,249 +15,30 @@
             "notNull": true
           },
           {
-            "fieldPath": "alternateName",
-            "columnName": "alternate_name",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "instructions",
-            "columnName": "instructions",
+            "fieldPath": "name",
+            "columnName": "recipe_name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "tags",
-            "columnName": "tags",
+            "fieldPath": "thumbnail",
+            "columnName": "recipe_thumbnail",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "recipe_category",
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "youtube",
-            "columnName": "youtube",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "source",
-            "columnName": "source",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "imageSource",
-            "columnName": "image_source",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "creativeCommonsConfirmed",
-            "columnName": "creative_commons_confirmed",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "dateModified",
-            "columnName": "date_modified",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient1",
-            "columnName": "ingredient1",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure1",
-            "columnName": "measure1",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient2",
-            "columnName": "ingredient2",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure2",
-            "columnName": "measure2",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient3",
-            "columnName": "ingredient3",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure3",
-            "columnName": "measure3",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient4",
-            "columnName": "ingredient4",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure4",
-            "columnName": "measure4",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient5",
-            "columnName": "ingredient5",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure5",
-            "columnName": "measure5",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient6",
-            "columnName": "ingredient6",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure6",
-            "columnName": "measure6",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient7",
-            "columnName": "ingredient7",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure7",
-            "columnName": "measure7",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient8",
-            "columnName": "ingredient8",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure8",
-            "columnName": "measure8",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient9",
-            "columnName": "ingredient9",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure9",
-            "columnName": "measure9",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient10",
-            "columnName": "ingredient10",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure10",
-            "columnName": "measure10",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient11",
-            "columnName": "ingredient11",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure11",
-            "columnName": "measure11",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient12",
-            "columnName": "ingredient12",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure12",
-            "columnName": "measure12",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient13",
-            "columnName": "ingredient13",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure13",
-            "columnName": "measure13",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient14",
-            "columnName": "ingredient14",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure14",
-            "columnName": "measure14",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient15",
-            "columnName": "ingredient15",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure15",
-            "columnName": "measure15",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient16",
-            "columnName": "ingredient16",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure16",
-            "columnName": "measure16",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient17",
-            "columnName": "ingredient17",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure17",
-            "columnName": "measure17",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient18",
-            "columnName": "ingredient18",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure18",
-            "columnName": "measure18",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient19",
-            "columnName": "ingredient19",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure19",
-            "columnName": "measure19",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "ingredient20",
-            "columnName": "ingredient20",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "measure20",
-            "columnName": "measure20",
+            "fieldPath": "area",
+            "columnName": "recipe_area",
             "affinity": "TEXT"
           },
           {
             "fieldPath": "lastFetched",
-            "columnName": "lastFetched",
+            "columnName": "recipe_last_fetched",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -313,6 +48,271 @@
           "columnNames": [
             "recipe_id"
           ]
+        }
+      },
+      {
+        "tableName": "recipe_detail",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`recipe_detail_recipe_id` TEXT NOT NULL, `recipe_detail_alternate_name` TEXT, `recipe_detail_instructions` TEXT NOT NULL, `recipe_detail_tags` TEXT, `recipe_detail_youtube` TEXT, `recipe_detail_source` TEXT, `recipe_detail_image_source` TEXT, `recipe_detail_creative_commons_confirmed` TEXT, `recipe_detail_date_modified` TEXT, `recipe_detail_ingredient1` TEXT, `recipe_detail_measure1` TEXT, `recipe_detail_ingredient2` TEXT, `recipe_detail_measure2` TEXT, `recipe_detail_ingredient3` TEXT, `recipe_detail_measure3` TEXT, `recipe_detail_ingredient4` TEXT, `recipe_detail_measure4` TEXT, `recipe_detail_ingredient5` TEXT, `recipe_detail_measure5` TEXT, `recipe_detail_ingredient6` TEXT, `recipe_detail_measure6` TEXT, `recipe_detail_ingredient7` TEXT, `recipe_detail_measure7` TEXT, `recipe_detail_ingredient8` TEXT, `recipe_detail_measure8` TEXT, `recipe_detail_ingredient9` TEXT, `recipe_detail_measure9` TEXT, `recipe_detail_ingredient10` TEXT, `recipe_detail_measure10` TEXT, `recipe_detail_ingredient11` TEXT, `recipe_detail_measure11` TEXT, `recipe_detail_ingredient12` TEXT, `recipe_detail_measure12` TEXT, `recipe_detail_ingredient13` TEXT, `recipe_detail_measure13` TEXT, `recipe_detail_ingredient14` TEXT, `recipe_detail_measure14` TEXT, `recipe_detail_ingredient15` TEXT, `recipe_detail_measure15` TEXT, `recipe_detail_ingredient16` TEXT, `recipe_detail_measure16` TEXT, `recipe_detail_ingredient17` TEXT, `recipe_detail_measure17` TEXT, `recipe_detail_ingredient18` TEXT, `recipe_detail_measure18` TEXT, `recipe_detail_ingredient19` TEXT, `recipe_detail_measure19` TEXT, `recipe_detail_ingredient20` TEXT, `recipe_detail_measure20` TEXT, `recipe_detail_last_fetched` TEXT NOT NULL, PRIMARY KEY(`recipe_detail_recipe_id`), FOREIGN KEY(`recipe_detail_recipe_id`) REFERENCES `recipe`(`recipe_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "recipe_detail_recipe_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alternateName",
+            "columnName": "recipe_detail_alternate_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "instructions",
+            "columnName": "recipe_detail_instructions",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "recipe_detail_tags",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "youtube",
+            "columnName": "recipe_detail_youtube",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "recipe_detail_source",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "imageSource",
+            "columnName": "recipe_detail_image_source",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "creativeCommonsConfirmed",
+            "columnName": "recipe_detail_creative_commons_confirmed",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dateModified",
+            "columnName": "recipe_detail_date_modified",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient1",
+            "columnName": "recipe_detail_ingredient1",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure1",
+            "columnName": "recipe_detail_measure1",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient2",
+            "columnName": "recipe_detail_ingredient2",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure2",
+            "columnName": "recipe_detail_measure2",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient3",
+            "columnName": "recipe_detail_ingredient3",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure3",
+            "columnName": "recipe_detail_measure3",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient4",
+            "columnName": "recipe_detail_ingredient4",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure4",
+            "columnName": "recipe_detail_measure4",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient5",
+            "columnName": "recipe_detail_ingredient5",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure5",
+            "columnName": "recipe_detail_measure5",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient6",
+            "columnName": "recipe_detail_ingredient6",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure6",
+            "columnName": "recipe_detail_measure6",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient7",
+            "columnName": "recipe_detail_ingredient7",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure7",
+            "columnName": "recipe_detail_measure7",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient8",
+            "columnName": "recipe_detail_ingredient8",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure8",
+            "columnName": "recipe_detail_measure8",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient9",
+            "columnName": "recipe_detail_ingredient9",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure9",
+            "columnName": "recipe_detail_measure9",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient10",
+            "columnName": "recipe_detail_ingredient10",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure10",
+            "columnName": "recipe_detail_measure10",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient11",
+            "columnName": "recipe_detail_ingredient11",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure11",
+            "columnName": "recipe_detail_measure11",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient12",
+            "columnName": "recipe_detail_ingredient12",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure12",
+            "columnName": "recipe_detail_measure12",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient13",
+            "columnName": "recipe_detail_ingredient13",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure13",
+            "columnName": "recipe_detail_measure13",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient14",
+            "columnName": "recipe_detail_ingredient14",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure14",
+            "columnName": "recipe_detail_measure14",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient15",
+            "columnName": "recipe_detail_ingredient15",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure15",
+            "columnName": "recipe_detail_measure15",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient16",
+            "columnName": "recipe_detail_ingredient16",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure16",
+            "columnName": "recipe_detail_measure16",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient17",
+            "columnName": "recipe_detail_ingredient17",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure17",
+            "columnName": "recipe_detail_measure17",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient18",
+            "columnName": "recipe_detail_ingredient18",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure18",
+            "columnName": "recipe_detail_measure18",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient19",
+            "columnName": "recipe_detail_ingredient19",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure19",
+            "columnName": "recipe_detail_measure19",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ingredient20",
+            "columnName": "recipe_detail_ingredient20",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "measure20",
+            "columnName": "recipe_detail_measure20",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastFetched",
+            "columnName": "recipe_detail_last_fetched",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "recipe_detail_recipe_id"
+          ]
         },
         "foreignKeys": [
           {
@@ -320,10 +320,10 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "recipe_id"
+              "recipe_detail_recipe_id"
             ],
             "referencedColumns": [
-              "id"
+              "recipe_id"
             ]
           }
         ]
@@ -369,11 +369,35 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "favorite_recipe",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`favorite_recipe_id` TEXT NOT NULL, `favorite_recipe_added_date_time` TEXT NOT NULL, PRIMARY KEY(`favorite_recipe_id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "favorite_recipe_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedDateTime",
+            "columnName": "favorite_recipe_added_date_time",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "favorite_recipe_id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3dfe3dcfd9146f8b330a3fecade968c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8db0f157cdad1d797351d6977197c961')"
     ]
   }
 }
