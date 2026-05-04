@@ -6,7 +6,7 @@ Recipes is a Kotlin Multiplatform (KMP) application for browsing and searching r
 
 - **Search**: Quickly find recipes by keyword.
 - **Categories**: Browse recipes organized by categories.
-- **Favorites (WIP)**: Save your favorite recipes for quick access.
+- **Favorites**: Save your favorite recipes for quick access.
 - **Recipe Details**: View detailed instructions and ingredients for each recipe.
 
 ## Technology Stack
