@@ -4,8 +4,6 @@ import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.WebLocalStorage
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
-import com.scottolcott.recipe.storage.datastore.FavoritesJsonSerializer
-import com.scottolcott.recipe.storage.datastore.RecipeFavorites
 import com.scottolcott.recipe.storage.datastore.SearchSuggestions
 import com.scottolcott.recipe.storage.datastore.SuggestionsJsonSerializer
 import dev.zacsweers.metro.AppScope
@@ -22,10 +20,6 @@ actual class StorageFactory {
       name = "recipe.db",
       factory = { AppDatabaseConstructor.initialize() },
     )
-  }
-
-  actual fun createFavoritesDataStoreStorage(): Storage<RecipeFavorites> {
-    return WebLocalStorage(serializer = FavoritesJsonSerializer, name = "recipe_favorites.json")
   }
 
   actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchSuggestions> {

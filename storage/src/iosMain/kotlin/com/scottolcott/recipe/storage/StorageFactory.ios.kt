@@ -3,7 +3,6 @@ package com.scottolcott.recipe.storage
 import androidx.datastore.core.okio.OkioStorage
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
-import com.scottolcott.recipe.storage.datastore.FavoritesJsonSerializer
 import com.scottolcott.recipe.storage.datastore.SuggestionsJsonSerializer
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -23,15 +22,6 @@ actual class StorageFactory {
     return Room.databaseBuilder<AppDatabase>(
       name = dbFilePath,
       factory = { AppDatabaseConstructor.initialize() },
-    )
-  }
-
-  actual fun createFavoritesDataStoreStorage():
-    androidx.datastore.core.Storage<com.scottolcott.recipe.storage.datastore.RecipeFavorites> {
-    return OkioStorage(
-      fileSystem = FileSystem.SYSTEM,
-      serializer = FavoritesJsonSerializer,
-      producePath = { (documentDirectory() + "/recipe_favorites.json").toPath() },
     )
   }
 

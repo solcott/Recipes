@@ -11,8 +11,8 @@ import com.scottolcott.recipe.network.dto.RecipeBasicDto
 import com.scottolcott.recipe.network.dto.RecipeDto
 import com.scottolcott.recipe.network.dto.RecipeFullDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
-import com.scottolcott.recipe.storage.datastore.RecipeFavoritesDataStore
 import com.scottolcott.recipe.storage.datastore.SearchSearchSuggestionsDataStore
+import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.storage.entity.RecipeDetailEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
@@ -26,8 +26,8 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import org.mobilenativefoundation.store.store5.Fetcher
 import org.mobilenativefoundation.store.store5.SourceOfTruth
@@ -47,6 +47,8 @@ interface RecipeRepository {
 
   fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>>
 
+  fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>>
+
   suspend fun addFavorite(id: RecipeId)
 
   suspend fun removeFavorite(id: RecipeId)
@@ -64,6 +66,8 @@ internal sealed class RecipeKey {
   data class ByCategory(val category: String) : RecipeKey()
 
   data class ByArea(val area: String) : RecipeKey()
+
+  data object Favorites : RecipeKey()
 }
 
 @SingleIn(AppScope::class)
@@ -72,7 +76,6 @@ internal sealed class RecipeKey {
 internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
-  private val favoritesDataStore: RecipeFavoritesDataStore,
   private val suggestionsDataStore: SearchSearchSuggestionsDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
@@ -143,16 +146,25 @@ internal class RecipeRepositoryImpl(
       .logErrors(logger, "Error loading recipes by id : $id")
   }
 
-  fun getFavoritesIdsAsFlow(): Flow<List<RecipeId>> {
-    return favoritesDataStore.favorites.map { it.favorites }
+  override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> {
+    return detailedRecipeStore
+      .stream(StoreReadRequest.cached(RecipeKey.Favorites, false))
+      .onEach { logger.e { "Response: $it" } }
+      .map {
+        when (it) {
+          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
+          else -> it.swapType()
+        }
+      }
+      .logErrors(logger, "Error getting recipe favorites")
   }
 
   override suspend fun addFavorite(id: RecipeId) {
-    favoritesDataStore.add(id)
+    recipeDao.insert(FavoriteEntity(id, Clock.System.now()))
   }
 
   override suspend fun removeFavorite(id: RecipeId) {
-    favoritesDataStore.remove(id)
+    recipeDao.deleteFavorite(id)
   }
 
   override suspend fun addSearchSuggestion(suggestion: String) {
@@ -174,6 +186,7 @@ internal class RecipeRepositoryImpl(
         is RecipeKey.ById -> recipeApi.getRecipe(key.id)?.meals.orEmpty()
         is RecipeKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
         is RecipeKey.ByArea -> recipeApi.getByCategory(key.area)?.meals.orEmpty()
+        RecipeKey.Favorites -> emptyList() // No api to support this as favorites are store locally
       }
     }
   }
@@ -182,32 +195,26 @@ internal class RecipeRepositoryImpl(
   private fun createSourceOfTruth(): SourceOfTruth<RecipeKey, List<RecipeDto>, RecipeResponse> {
     return SourceOfTruth.of(
       reader = { key: RecipeKey ->
-        combine(
-            flow =
+        when (key) {
+          is RecipeKey.Query -> recipeDao.queryByName(key.query)
+
+          is RecipeKey.ById -> {
+            recipeDao.getById(key.id).map { listOfNotNull(it) }
+          }
+
+          is RecipeKey.ByCategory -> recipeDao.getByCategory(key.category)
+          is RecipeKey.ByArea -> recipeDao.getByArea(key.area)
+          is RecipeKey.Favorites -> recipeDao.getFavorites()
+        }.map {
+          RecipeResponse(
+            it.toModel(),
+            query =
               when (key) {
-                is RecipeKey.Query -> recipeDao.queryByName(key.query)
-
-                is RecipeKey.ById -> {
-                  recipeDao.getById(key.id).map { listOfNotNull(it) }
-                }
-
-                is RecipeKey.ByCategory -> recipeDao.getByCategory(key.category)
-                is RecipeKey.ByArea -> recipeDao.getByArea(key.area)
+                is RecipeKey.Query -> key.query
+                else -> null
               },
-            getFavoritesIdsAsFlow(),
-          ) { recipes, favorites ->
-            RecipeEntitiesAndFavorites(recipes, favorites)
-          }
-          .map {
-            RecipeResponse(
-              it.toModel(),
-              query =
-                when (key) {
-                  is RecipeKey.Query -> key.query
-                  else -> null
-                },
-            )
-          }
+          )
+        }
       },
       writer = { key, dtos ->
         val area =
@@ -227,11 +234,6 @@ internal class RecipeRepositoryImpl(
   }
 }
 
-private data class RecipeEntitiesAndFavorites(
-  val recipes: List<RecipeEntityWithDetail>,
-  val favorites: List<RecipeId>,
-)
-
 private fun RecipeDto.toEntity(
   category: String?,
   area: String?,
@@ -248,6 +250,7 @@ private fun RecipeDto.toEntity(
           thumbnail = thumbnail,
           lastFetched = lastFetched,
         ),
+        null,
         null,
       )
     is RecipeFullDto ->
@@ -312,6 +315,7 @@ private fun RecipeDto.toEntity(
           measure20 = measure20,
           lastFetched = lastFetched,
         ),
+        null,
       )
   }
 }
@@ -324,7 +328,7 @@ private fun List<RecipeDto>.toEntities(
   return map { it.toEntity(category, area, lastFetched) }
 }
 
-private fun RecipeEntityWithDetail.toModel(favorite: Boolean): Recipe {
+private fun RecipeEntityWithDetail.toModel(): Recipe {
 
   val detail = detail
   val ingredientsList =
@@ -371,7 +375,7 @@ private fun RecipeEntityWithDetail.toModel(favorite: Boolean): Recipe {
     thumbnail = recipe.thumbnail,
     category = recipe.category,
     area = recipe.area,
-    favorite = favorite,
+    favorite = this.favorite != null,
     details =
       if (detail == null) {
         null
@@ -395,8 +399,8 @@ private fun RecipeEntityWithDetail.toModel(favorite: Boolean): Recipe {
   )
 }
 
-private fun RecipeEntitiesAndFavorites.toModel(): List<Recipe> = recipes.map { recipe ->
-  recipe.toModel(favorites.contains(recipe.recipe.id))
+private fun List<RecipeEntityWithDetail>.toModel(): List<Recipe> = map { recipe ->
+  recipe.toModel()
 }
 
 fun <T> StoreReadResponse<*>.swapType(): StoreReadResponse<T> =
