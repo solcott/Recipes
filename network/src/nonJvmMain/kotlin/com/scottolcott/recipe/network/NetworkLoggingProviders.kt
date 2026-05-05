@@ -2,16 +2,12 @@ package com.scottolcott.recipe.network
 
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
+import co.touchlab.kermit.ktor.KermitKtorLogger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.plugins.logging.Logger as KtorLogger
-
-actual fun HttpClientEngineConfig.configureEngine() {
-  // no-op
-}
 
 @ContributesTo(AppScope::class)
 interface NetworkLoggingProviders {

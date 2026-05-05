@@ -1,18 +1,20 @@
 package com.scottolcott.recipe.network
 
-import co.touchlab.kermit.Logger
+import com.scottolcott.recipe.config.RuntimeConfig
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import dev.zacsweers.metro.SingleIn
 import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger as KtorLogger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.resources.Resources
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -29,7 +31,7 @@ interface NetworkProviders {
   @ApiClient
   @SingleIn(AppScope::class)
   @Provides
-  fun provideKtorClient(logger: Logger): HttpClient {
+  fun provideKtorClient(logger: KtorLogger, runtimeConfig: RuntimeConfig): HttpClient {
     return HttpClient(provideKtorEngineFactory()) {
       expectSuccess = true
       install(Resources)
@@ -38,19 +40,27 @@ interface NetworkProviders {
 
       install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
 
-      installPlatformSpecificKtorPlugins(logger)
+      install(Logging) {
+        this.logger = logger
+        level = if (runtimeConfig.debugBuild) LogLevel.ALL else LogLevel.HEADERS
+      }
+
+      engine { configureEngine() }
     }
   }
 
   @CoilClient
   @SingleIn(AppScope::class)
   @Provides
-  fun provideCoilKtorClient(logger: Logger): HttpClient {
+  fun provideCoilKtorClient(logger: KtorLogger, runtimeConfig: RuntimeConfig): HttpClient {
     return HttpClient(provideKtorEngineFactory()) {
       expectSuccess = true
-      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(maxRetries) }
-
-      installPlatformSpecificKtorPlugins(logger)
+      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(MAX_RETRIES) }
+      engine { configureEngine() }
+      install(Logging) {
+        this.logger = logger
+        level = LogLevel.INFO
+      }
     }
   }
 }
@@ -58,6 +68,4 @@ interface NetworkProviders {
 expect fun provideKtorEngineFactory(): HttpClientEngineFactory<*>
 
 // Currently needed until https://github.com/touchlab/Kermit/issues/474 is fixed
-expect fun HttpClientConfig<out HttpClientEngineConfig>.installPlatformSpecificKtorPlugins(
-  logger: Logger
-)
+expect fun HttpClientEngineConfig.configureEngine()

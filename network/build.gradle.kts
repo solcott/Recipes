@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalMetroGradleApi::class, ExperimentalKotlinGradlePluginApi::class)
 
+import com.android.build.api.withAndroid
 import dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -11,8 +12,19 @@ plugins {
 
 kotlin {
   sourceSets {
+    applyDefaultHierarchyTemplate {
+      common {
+        group("nonJvm") {
+          @Suppress("UnstableApiUsage") withAndroid()
+          withNative()
+          withJs()
+          withWasmJs()
+        }
+      }
+    }
     commonMain {
       dependencies {
+        implementation(projects.config)
         api(libs.kermit)
         api(libs.kotlin.serialization.core)
         api(libs.ktor.client.core)
@@ -31,16 +43,10 @@ kotlin {
         implementation(libs.ktor.utils)
       }
     }
-    val commonJvmMain by getting { dependencies { implementation(libs.ktor.client.okhttp) } }
-    androidMain { dependencies { implementation(libs.kermit.ktor) } }
+    commonJvmMain { dependencies { implementation(libs.ktor.client.okhttp) } }
+    val nonJvmMain by getting { dependencies { implementation(libs.kermit.ktor) } }
 
-    webMain { dependencies { implementation(libs.kermit.ktor) } }
-    iosMain {
-      dependencies {
-        implementation(libs.kermit.ktor)
-        implementation(libs.ktor.client.darwin)
-      }
-    }
+    iosMain { dependencies { implementation(libs.ktor.client.darwin) } }
     jsMain { dependencies {} }
     wasmJsMain { dependencies {} }
   }
