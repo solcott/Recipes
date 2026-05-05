@@ -10,5 +10,6 @@ actual fun getSqliteDriver(): androidx.sqlite.SQLiteDriver {
 }
 
 actual fun getRoomCoroutineContext(): CoroutineContext {
+  @Suppress("InjectDispatcher")
   return Dispatchers.IO
 }
