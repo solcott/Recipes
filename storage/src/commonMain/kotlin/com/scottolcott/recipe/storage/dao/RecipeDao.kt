@@ -13,6 +13,7 @@ import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@Suppress("AbstractClassCanBeInterface")
 abstract class RecipeDao {
 
   @Transaction
@@ -25,7 +26,10 @@ abstract class RecipeDao {
 
   @Transaction
   @Query(
-    "SELECT r.* FROM recipe r INNER JOIN favorite_recipe f ON r.recipe_id = f.favorite_recipe_id ORDER BY f.favorite_recipe_added_date_time"
+    """SELECT r.* 
+        FROM recipe r 
+        INNER JOIN favorite_recipe f ON r.recipe_id = f.favorite_recipe_id 
+        ORDER BY f.favorite_recipe_added_date_time"""
   )
   abstract fun getFavorites(): Flow<List<RecipeEntityWithDetail>>
 
