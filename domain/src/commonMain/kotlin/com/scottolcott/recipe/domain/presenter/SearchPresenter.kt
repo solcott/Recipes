@@ -71,10 +71,10 @@ data class SearchState(
   val eventSink: (SearchEvent) -> Unit,
 ) : CircuitUiState
 
-sealed class SearchEvent {
-  data object SearchButtonClicked : SearchEvent()
+sealed interface SearchEvent {
+  data object SearchButtonClicked : SearchEvent
 
-  data class PerformSearch(val query: String) : SearchEvent()
+  data class PerformSearch(val query: String) : SearchEvent
 
-  data object ExitSearch : SearchEvent()
+  data object ExitSearch : SearchEvent
 }

@@ -98,35 +98,34 @@ class RecipesPresenter(
   }
 }
 
-sealed class RecipesEvent : CircuitUiEvent {
-  sealed class Error : RecipesEvent() {
-    data object RetryClicked : Error()
+sealed interface RecipesEvent : CircuitUiEvent {
+  sealed interface Error : RecipesEvent {
+    data object RetryClicked : Error
   }
 
-  sealed class Success : RecipesEvent() {
-    data class RecipeClicked(val id: RecipeId) : Success()
+  sealed interface Success : RecipesEvent {
+    data class RecipeClicked(val id: RecipeId) : Success
   }
 }
 
-sealed class RecipesState : CircuitUiState {
-  data object Loading : RecipesState()
+sealed interface RecipesState : CircuitUiState {
+  data object Loading : RecipesState
 
-  data class Error(val message: String, val eventSink: (RecipesEvent.Error) -> Unit) :
-    RecipesState()
+  data class Error(val message: String, val eventSink: (RecipesEvent.Error) -> Unit) : RecipesState
 
   data class Success(
     val recipes: List<Recipe>,
     val isRefreshing: Boolean,
     val showAreaLabel: Boolean,
     @Redacted val eventSink: (RecipesEvent.Success) -> Unit,
-  ) : RecipesState()
+  ) : RecipesState
 }
 
 @Parcelize
-sealed class RecipesScreen : Screen {
-  @Parcelize data class ByCategory(val category: String) : RecipesScreen()
+sealed interface RecipesScreen : Screen {
+  @Parcelize data class ByCategory(val category: String) : RecipesScreen
 
-  @Parcelize data class BySearch(val searchTerm: String) : RecipesScreen()
+  @Parcelize data class BySearch(val searchTerm: String) : RecipesScreen
 
-  @Parcelize data object Favorites : RecipesScreen()
+  @Parcelize data object Favorites : RecipesScreen
 }

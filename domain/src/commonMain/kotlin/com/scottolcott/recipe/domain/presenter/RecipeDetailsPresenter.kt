@@ -74,6 +74,7 @@ class RecipeDetailsPresenter(
               }
             }
           }
+        RecipeDetailsEvent.RetryClicked -> retryTrigger++
       }
     }
   }
@@ -92,8 +93,10 @@ data class RecipeDetailsState(
   @Redacted val eventSink: (RecipeDetailsEvent) -> Unit,
 ) : CircuitUiState
 
-sealed class RecipeDetailsEvent : CircuitUiEvent {
-  data object ToggleFavorite : RecipeDetailsEvent()
+sealed interface RecipeDetailsEvent : CircuitUiEvent {
+  data object ToggleFavorite : RecipeDetailsEvent
+
+  data object RetryClicked : RecipeDetailsEvent
 }
 
 @Parcelize data class RecipeDetailsScreen(val id: RecipeId) : Screen

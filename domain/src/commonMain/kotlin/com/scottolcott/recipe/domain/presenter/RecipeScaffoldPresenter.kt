@@ -54,8 +54,8 @@ class RecipeScaffoldPresenter(
   }
 }
 
-sealed class RecipeScaffoldEvent : CircuitUiEvent {
-  data class GoTo(val screen: Screen) : RecipeScaffoldEvent()
+sealed interface RecipeScaffoldEvent : CircuitUiEvent {
+  data class GoTo(val screen: Screen) : RecipeScaffoldEvent
 }
 
 data class RecipeScaffoldState(

@@ -93,26 +93,26 @@ class CategoriesPresenter(
   }
 }
 
-sealed class CategoriesState : CircuitUiState {
-  data object Loading : CategoriesState()
+sealed interface CategoriesState : CircuitUiState {
+  data object Loading : CategoriesState
 
   data class Error(val message: String, @Redacted val eventSink: (CategoriesEvent.Error) -> Unit) :
-    CategoriesState()
+    CategoriesState
 
   data class Success(
     val categories: List<Category>,
     val isRefreshing: Boolean,
     @Redacted val eventSink: (CategoriesEvent.Success) -> Unit,
-  ) : CategoriesState()
+  ) : CategoriesState
 }
 
-sealed class CategoriesEvent {
-  sealed class Success : CategoriesEvent() {
-    data class CategoryClicked(val category: String) : Success()
+sealed interface CategoriesEvent {
+  sealed interface Success : CategoriesEvent {
+    data class CategoryClicked(val category: String) : Success
   }
 
-  sealed class Error : CategoriesEvent() {
-    data object RetryClicked : Error()
+  sealed interface Error : CategoriesEvent {
+    data object RetryClicked : Error
   }
 }
 
