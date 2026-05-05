@@ -77,11 +77,9 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
           items(state.categories, key = { it.id }, contentType = { "category_item" }) {
             CategoryItem(
               it,
-              Modifier.animateItem(),
               labelTextStyle = labelTextStyle,
-              onCategoryClick = {
-                state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name))
-              },
+              { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
+              Modifier.animateItem(),
             )
           }
         }
@@ -93,9 +91,9 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
 @Composable
 fun CategoryItem(
   category: Category,
-  modifier: Modifier = Modifier,
   labelTextStyle: TextStyle,
   onCategoryClick: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
 
   OutlinedCard(modifier.clickable(true, onClick = onCategoryClick)) {

@@ -44,7 +44,7 @@ import org.jetbrains.compose.resources.stringResource
 @Suppress("unused")
 @Composable
 @CircuitInject(RecipesScreen::class, AppScope::class)
-fun RecipesScreen(state: RecipesState, modifier: Modifier) {
+fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
   val cells = rememberAdaptiveGridCells()
   when (state) {
     is RecipesState.Error ->
@@ -128,7 +128,7 @@ private fun RecipeCardContent(
 }
 
 @Composable
-private fun RecipeDetails(recipe: Recipe, showAreaLabel: Boolean, modifier: Modifier) {
+private fun RecipeDetails(recipe: Recipe, showAreaLabel: Boolean, modifier: Modifier = Modifier) {
   Column(
     verticalArrangement = Arrangement.spacedBy(4.dp),
     modifier = modifier.padding(horizontal = 8.dp),
