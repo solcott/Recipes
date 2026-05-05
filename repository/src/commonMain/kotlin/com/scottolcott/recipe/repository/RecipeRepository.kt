@@ -2,20 +2,14 @@ package com.scottolcott.recipe.repository
 
 import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
-import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.Recipe
-import com.scottolcott.recipe.model.RecipeDetails
 import com.scottolcott.recipe.model.RecipeId
 import com.scottolcott.recipe.network.api.RecipeApi
-import com.scottolcott.recipe.network.dto.RecipeBasicDto
 import com.scottolcott.recipe.network.dto.RecipeDto
-import com.scottolcott.recipe.network.dto.RecipeFullDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
 import com.scottolcott.recipe.storage.datastore.SearchSearchSuggestionsDataStore
 import com.scottolcott.recipe.storage.entity.FavoriteEntity
-import com.scottolcott.recipe.storage.entity.RecipeDetailEntity
-import com.scottolcott.recipe.storage.entity.RecipeEntity
-import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
+import com.scottolcott.recipe.swapType
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -23,7 +17,6 @@ import dev.zacsweers.metro.SingleIn
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -36,8 +29,6 @@ import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 import org.mobilenativefoundation.store.store5.StoreReadResponse.Data
-import org.mobilenativefoundation.store.store5.StoreReadResponse.Loading
-import org.mobilenativefoundation.store.store5.StoreReadResponse.NoNewData
 import org.mobilenativefoundation.store.store5.Validator
 
 interface RecipeRepository {
@@ -58,16 +49,16 @@ interface RecipeRepository {
   fun getSearchSuggestionsAsFlow(query: String): Flow<List<String>>
 }
 
-internal sealed class RecipeKey {
-  data class Query(val query: String) : RecipeKey()
+internal sealed interface RecipeKey {
+  data class Query(val query: String) : RecipeKey
 
-  data class ById(val id: RecipeId) : RecipeKey()
+  data class ById(val id: RecipeId) : RecipeKey
 
-  data class ByCategory(val category: String) : RecipeKey()
+  data class ByCategory(val category: String) : RecipeKey
 
-  data class ByArea(val area: String) : RecipeKey()
+  data class ByArea(val area: String) : RecipeKey
 
-  data object Favorites : RecipeKey()
+  data object Favorites : RecipeKey
 }
 
 @SingleIn(AppScope::class)
@@ -233,183 +224,5 @@ internal class RecipeRepositoryImpl(
     )
   }
 }
-
-private fun RecipeDto.toEntity(
-  category: String?,
-  area: String?,
-  lastFetched: Instant,
-): RecipeEntityWithDetail {
-  return when (this) {
-    is RecipeBasicDto ->
-      RecipeEntityWithDetail(
-        RecipeEntity(
-          id = id,
-          name = name,
-          category = category,
-          area = area,
-          thumbnail = thumbnail,
-          lastFetched = lastFetched,
-        ),
-        null,
-        null,
-      )
-    is RecipeFullDto ->
-      RecipeEntityWithDetail(
-        RecipeEntity(
-          id = id,
-          name = name,
-          category = this.category,
-          area = this.area,
-          thumbnail = thumbnail,
-          lastFetched = lastFetched,
-        ),
-        RecipeDetailEntity(
-          id = id,
-          alternateName = alternateName,
-          instructions = instructions,
-          tags = tags,
-          youtube = youtube,
-          source = source,
-          imageSource = imageSource,
-          creativeCommonsConfirmed = creativeCommonsConfirmed,
-          dateModified = dateModified,
-          ingredient1 = ingredient1,
-          measure1 = measure1,
-          ingredient2 = ingredient2,
-          measure2 = measure2,
-          ingredient3 = ingredient3,
-          measure3 = measure3,
-          ingredient4 = ingredient4,
-          measure4 = measure4,
-          ingredient5 = ingredient5,
-          measure5 = measure5,
-          ingredient6 = ingredient6,
-          measure6 = measure6,
-          ingredient7 = ingredient7,
-          measure7 = measure7,
-          ingredient8 = ingredient8,
-          measure8 = measure8,
-          ingredient9 = ingredient9,
-          measure9 = measure9,
-          ingredient10 = ingredient10,
-          measure10 = measure10,
-          ingredient11 = ingredient11,
-          measure11 = measure11,
-          ingredient12 = ingredient12,
-          measure12 = measure12,
-          ingredient13 = ingredient13,
-          measure13 = measure13,
-          ingredient14 = ingredient14,
-          measure14 = measure14,
-          ingredient15 = ingredient15,
-          measure15 = measure15,
-          ingredient16 = ingredient16,
-          measure16 = measure16,
-          ingredient17 = ingredient17,
-          measure17 = measure17,
-          ingredient18 = ingredient18,
-          measure18 = measure18,
-          ingredient19 = ingredient19,
-          measure19 = measure19,
-          ingredient20 = ingredient20,
-          measure20 = measure20,
-          lastFetched = lastFetched,
-        ),
-        null,
-      )
-  }
-}
-
-private fun List<RecipeDto>.toEntities(
-  category: String?,
-  area: String?,
-): List<RecipeEntityWithDetail> {
-  val lastFetched = Clock.System.now()
-  return map { it.toEntity(category, area, lastFetched) }
-}
-
-private fun RecipeEntityWithDetail.toModel(): Recipe {
-
-  val detail = detail
-  val ingredientsList =
-    with(detail) {
-        if (this == null) return@with emptyList()
-        listOf(
-          ingredient1 to measure1,
-          ingredient2 to measure2,
-          ingredient3 to measure3,
-          ingredient4 to measure4,
-          ingredient5 to measure5,
-          ingredient6 to measure6,
-          ingredient7 to measure7,
-          ingredient8 to measure8,
-          ingredient9 to measure9,
-          ingredient10 to measure10,
-          ingredient11 to measure11,
-          ingredient12 to measure12,
-          ingredient13 to measure13,
-          ingredient14 to measure14,
-          ingredient15 to measure15,
-          ingredient16 to measure16,
-          ingredient17 to measure17,
-          ingredient18 to measure18,
-          ingredient19 to measure19,
-          ingredient20 to measure20,
-        )
-      }
-      .mapNotNull { (ingredientName, measureAmount) ->
-        // if ingredient name is null or empt filter it out
-        if (!ingredientName.isNullOrBlank()) {
-          Ingredient(
-            ingredient = ingredientName,
-            // This assumes measurement can be null as long as the name isn't
-            measure = measureAmount ?: "",
-          )
-        } else {
-          null
-        }
-      }
-  return Recipe(
-    id = recipe.id,
-    name = recipe.name,
-    thumbnail = recipe.thumbnail,
-    category = recipe.category,
-    area = recipe.area,
-    favorite = this.favorite != null,
-    details =
-      if (detail == null) {
-        null
-      } else {
-        with(detail) {
-          RecipeDetails(
-            alternateName = alternateName,
-            instructions = instructions,
-            tags = tags,
-            youtube = youtube,
-            source = source,
-            imageSource = imageSource,
-            creativeCommonsConfirmed = creativeCommonsConfirmed,
-            dateModified = dateModified,
-            ingredients = ingredientsList,
-            lastFetched = lastFetched,
-          )
-        }
-      },
-    lastFetched = recipe.lastFetched,
-  )
-}
-
-private fun List<RecipeEntityWithDetail>.toModel(): List<Recipe> = map { recipe ->
-  recipe.toModel()
-}
-
-fun <T> StoreReadResponse<*>.swapType(): StoreReadResponse<T> =
-  when (this) {
-    is StoreReadResponse.Error -> this
-    is Loading -> this
-    is NoNewData -> this
-    is Data -> throw RuntimeException("cannot swap type for StoreResponse.Data")
-    is StoreReadResponse.Initial -> this
-  }
 
 data class RecipeResponse(val recipes: List<Recipe>, val query: String?, val id: RecipeId? = null)

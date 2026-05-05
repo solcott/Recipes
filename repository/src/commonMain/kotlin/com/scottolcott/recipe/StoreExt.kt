@@ -4,6 +4,9 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import org.mobilenativefoundation.store.store5.StoreReadResponse
+import org.mobilenativefoundation.store.store5.StoreReadResponse.Data
+import org.mobilenativefoundation.store.store5.StoreReadResponse.Loading
+import org.mobilenativefoundation.store.store5.StoreReadResponse.NoNewData
 
 fun <T> Flow<StoreReadResponse<T>>.logErrors(
   logger: Logger,
@@ -19,7 +22,16 @@ fun <T> Flow<StoreReadResponse<T>>.logErrors(
 }
 
 val StoreReadResponse<*>.isLoading: Boolean
-  get() = this is StoreReadResponse.Loading
+  get() = this is Loading
 
 val StoreReadResponse<*>.isError: Boolean
   get() = this is StoreReadResponse.Error
+
+fun <T> StoreReadResponse<*>.swapType(): StoreReadResponse<T> =
+  when (this) {
+    is StoreReadResponse.Error -> this
+    is Loading -> this
+    is NoNewData -> this
+    is Data -> error("cannot swap type for StoreResponse.Data")
+    is StoreReadResponse.Initial -> this
+  }
