@@ -44,5 +44,6 @@ fun RecipeApp(
   }
 }
 
+@Suppress("CompositionLocalAllowlist")
 val LocalWindowSizeClass =
   compositionLocalOf<WindowSizeClass> { error("No WindowSizeClass provided") }
