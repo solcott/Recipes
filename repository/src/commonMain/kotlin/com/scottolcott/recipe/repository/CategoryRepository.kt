@@ -92,6 +92,6 @@ internal class CategoryRepositoryImpl(
   }
 }
 
-internal sealed class CategoryKey {
-  data object GetCategories : CategoryKey()
+internal sealed interface CategoryKey {
+  data object GetCategories : CategoryKey
 }
