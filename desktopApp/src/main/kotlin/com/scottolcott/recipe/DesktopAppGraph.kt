@@ -5,6 +5,7 @@ import co.touchlab.kermit.NoTagFormatter
 import co.touchlab.kermit.loggerConfigInit
 import co.touchlab.kermit.platformLogWriter
 import coil3.PlatformContext
+import com.scottolcott.recipe.config.RuntimeConfig
 import com.scottolcott.recipe.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
@@ -20,4 +21,17 @@ interface DesktopAppGraph : AppGraph {
   @Provides
   override fun provideLogger(): Logger =
     Logger(loggerConfigInit(platformLogWriter(NoTagFormatter)), "RecipeApp")
+
+  @Provides
+  override fun provideRuntimeConfig(): RuntimeConfig {
+    return object : RuntimeConfig {
+
+      override val debugBuild: Boolean by lazy {
+        // FIXME This doesn't work
+        val location =
+          DesktopAppGraph::class.java.protectionDomain?.codeSource?.location?.path.orEmpty()
+        location.isNotEmpty() && !location.endsWith(".jar")
+      }
+    }
+  }
 }

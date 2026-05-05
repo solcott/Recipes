@@ -31,6 +31,7 @@ kotlin {
         api(libs.circuit.foundation)
         api(libs.circuit.runtime.presenter)
         api(libs.kotlinx.coroutines)
+        api(projects.config)
         api(projects.domain)
         api(projects.model)
         api(projects.network)

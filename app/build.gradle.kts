@@ -40,12 +40,16 @@ android {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.jvmSourceCompatibility.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTargetCompatibility.get())
   }
-  buildFeatures { compose = true }
+  buildFeatures {
+    compose = true
+    buildConfig = true
+  }
 }
 
 kotlin {
   jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
   dependencies {
+    api(projects.config)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation.layout)

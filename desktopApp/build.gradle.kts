@@ -20,6 +20,7 @@ kotlin {
     api(libs.coil.core)
     api(libs.compose.ui.desktop)
     api(libs.ktor.client.core)
+    api(projects.config)
     api(projects.domain)
     api(projects.network)
     api(projects.repository)
