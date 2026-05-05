@@ -23,10 +23,7 @@ interface AndroidAppGraph : AppGraph, MetroAppComponentProviders {
 
   @Provides
   override fun provideRuntimeConfig(): RuntimeConfig {
-    return object : RuntimeConfig {
-
-      override val debugBuild: Boolean = BuildConfig.DEBUG
-    }
+    return RuntimeConfigImpl()
 
   }
 
@@ -35,3 +32,4 @@ interface AndroidAppGraph : AppGraph, MetroAppComponentProviders {
     fun create(@Provides application: Application): AndroidAppGraph
   }
 }
+

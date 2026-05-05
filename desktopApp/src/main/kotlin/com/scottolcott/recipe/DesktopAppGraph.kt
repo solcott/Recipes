@@ -24,14 +24,6 @@ interface DesktopAppGraph : AppGraph {
 
   @Provides
   override fun provideRuntimeConfig(): RuntimeConfig {
-    return object : RuntimeConfig {
-
-      override val debugBuild: Boolean by lazy {
-        // FIXME This doesn't work
-        val location =
-          DesktopAppGraph::class.java.protectionDomain?.codeSource?.location?.path.orEmpty()
-        location.isNotEmpty() && !location.endsWith(".jar")
-      }
-    }
+    return RuntimeConfigImpl()
   }
 }

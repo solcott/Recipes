@@ -10,7 +10,6 @@ import com.scottolcott.recipe.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
-import kotlin.experimental.ExperimentalNativeApi
 
 @DependencyGraph(AppScope::class)
 interface IOSAppGraph : AppGraph {
@@ -23,11 +22,9 @@ interface IOSAppGraph : AppGraph {
   override fun provideLogger(): Logger =
     Logger(loggerConfigInit(platformLogWriter(NoTagFormatter)), "RecipeApp")
 
-  @OptIn(ExperimentalNativeApi::class)
   @Provides
   override fun provideRuntimeConfig(): RuntimeConfig {
-    return object : RuntimeConfig {
-      override val debugBuild: Boolean by lazy { Platform.isDebugBinary }
-    }
+
+    return RuntimeConfigImpl()
   }
 }
