@@ -21,6 +21,8 @@ import kotlinx.serialization.json.Json
 
 @Qualifier annotation class CoilClient
 
+private const val MAX_RETRIES = 3
+
 @ContributesTo(AppScope::class)
 interface NetworkProviders {
 
@@ -32,7 +34,7 @@ interface NetworkProviders {
       expectSuccess = true
       install(Resources)
       install(DefaultRequest) { url("https://www.themealdb.com/api/json/v1/1/") }
-      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(3) }
+      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(MAX_RETRIES) }
 
       install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
 
@@ -46,7 +48,7 @@ interface NetworkProviders {
   fun provideCoilKtorClient(logger: Logger): HttpClient {
     return HttpClient(provideKtorEngineFactory()) {
       expectSuccess = true
-      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(3) }
+      install(HttpRequestRetry) { retryOnExceptionOrServerErrors(maxRetries) }
 
       installPlatformSpecificKtorPlugins(logger)
     }
