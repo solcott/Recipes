@@ -26,7 +26,7 @@ junitVersion = "1.3.0"
 jvm-compat = "17"
 # Should be synced with gradle/gradle-daemon-jvm.properties which can be updated with ./gradlew updateDaemonJvm --jvm-version=25
 #noinspection UnusedVersionCatalogEntry
-jvm-toolchain = "25"
+jvm-toolchain = "17"
 #noinspection UnusedVersionCatalogEntry
 jvmSourceCompatibility = "17"
 #noinspection UnusedVersionCatalogEntry
@@ -114,6 +114,8 @@ compose-ui-text-desktop = { module = "org.jetbrains.compose.ui:ui-text-desktop",
 compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 compose-ui-unit-desktop = { module = "org.jetbrains.compose.ui:ui-unit-desktop", version.ref = "composeMultiplatform" }
+#noinspection UnusedVersionCatalogEntry
+detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version = "0.5.8" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kermit-android-debug = { module = "co.touchlab:kermit-android-debug", version.ref = "kermit" }
@@ -150,6 +152,7 @@ androidx-room = { id = "androidx.room3", version.ref = "room" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependency-analysis" }
 dependency-sorter = { id = "com.squareup.sort-dependencies", version = "0.17.1" }
+detekt = { id = "dev.detekt", version = "2.0.0-alpha.3" }
 kmp-parcelize = { id = "io.github.solcott.kmp.parcelize", version.ref = "kmp-parcelize" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

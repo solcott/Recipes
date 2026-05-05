@@ -1,6 +1,10 @@
+import dev.detekt.gradle.Detekt
+import org.gradle.kotlin.dsl.withType
+
 plugins {
   `kotlin-dsl`
   alias(libs.plugins.ktfmt)
+  alias(libs.plugins.detekt)
 }
 
 dependencies {
@@ -10,12 +14,26 @@ dependencies {
   compileOnly(libs.plugins.dependency.analysis.toDep())
   compileOnly(libs.plugins.ktfmt.toDep())
   compileOnly(libs.plugins.kmp.parcelize.toDep())
+  compileOnly(libs.plugins.detekt.toDep())
 }
 
-// Should be synced with gradle/gradle-daemon-jvm.properties
 kotlin { jvmToolchain(libs.versions.jvm.toolchain.get().toInt()) }
 
 tasks.validatePlugins { enableStricterValidation = true }
+
+detekt {
+  config.setFrom(files("$rootDir/../config/detekt/detekt.yml"))
+  buildUponDefaultConfig = true
+  allRules = false
+}
+
+tasks.withType<Detekt> {
+  reports {
+    html.required = true
+  }
+  exclude("**/build/**")
+  exclude("**/generated/**")
+}
 
 ktfmt {
   googleStyle()

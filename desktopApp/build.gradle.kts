@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.metro)
   alias(libs.plugins.dependency.sorter)
   id("dependency.analysis")
+  id("detekt")
 }
 
 kotlin {

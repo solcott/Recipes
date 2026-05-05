@@ -10,6 +10,7 @@ plugins {
   alias(libs.plugins.dependency.sorter)
   alias(libs.plugins.ktfmt)
   id("dependency.analysis")
+  id("detekt")
 }
 
 android {

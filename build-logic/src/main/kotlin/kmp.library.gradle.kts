@@ -1,6 +1,7 @@
 @file:Suppress("OPT_IN_USAGE")
 
 import com.android.build.api.withAndroid
+import com.scottolcott.gradle.versionCatalog
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinJsCompilerType
 
@@ -11,6 +12,7 @@ plugins {
   id("com.squareup.sort-dependencies")
   id("com.ncorti.ktfmt.gradle")
   id("dependency.analysis")
+  id("detekt")
 }
 
 kotlin {
@@ -72,5 +74,3 @@ kotlin {
   }
 }
 
-internal val Project.versionCatalog
-  get() = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
