@@ -21,3 +21,4 @@ local.properties
 # IntelliJ IDEA / Android Studio
 .idea/
 *.iml
+.artifacts
