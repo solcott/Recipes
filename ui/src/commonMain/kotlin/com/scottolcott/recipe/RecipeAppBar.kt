@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
@@ -70,35 +71,17 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
         }
       }
     }
+
   val inputField =
     @Composable {
-      SearchBarDefaults.InputField(
-        modifier = Modifier.fillMaxWidth(),
-        textFieldState = state.searchState.searchText,
+      RecipeSearchBarInputField(
+        searchText = state.searchState.searchText,
         searchBarState = searchBarState,
-        colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
         onSearch = onSearch,
-        placeholder = {
-          Text(
-            modifier = Modifier.clearAndSetSemantics {},
-            text = stringResource(Res.string.search),
-          )
-        },
-        leadingIcon = {
-          Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = "")
-        },
-        trailingIcon = {
-          if (searchBarState.currentValue == SearchBarValue.Expanded) {
-            IconButton(
-              { onSearch(state.searchState.searchText.text.toString()) },
-              enabled = state.searchState.searchText.text.length >= 3,
-            ) {
-              Icon(painter = painterResource(Res.drawable.check_24px), contentDescription = "")
-            }
-          }
-        },
+        colors = appBarWithSearchColors,
       )
     }
+
   AnimatedContent(state.searchState.isSearchActive) { isActive ->
     if (isActive) {
       AppBarWithSearch(
@@ -109,26 +92,64 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
       )
       ExpandedSearchBar(searchBarState, inputField, appBarWithSearchColors, state, onSearch)
     } else {
-      TopAppBar(
-        title = { Text(stringResource(Res.string.recipes)) },
-        navigationIcon = { NavIcon(state.navStack, state.navigator) },
-        actions = {
-          IconButton(
-            onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) }
-          ) {
-            Icon(
-              painter = painterResource(Res.drawable.favorite_24px_filled),
-              contentDescription = null,
-            )
-          }
-          IconButton(onClick = { state.searchState.eventSink(SearchEvent.SearchButtonClicked) }) {
-            Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
-          }
-        },
-        modifier = modifier,
-      )
+      RecipeTopAppBar(state, modifier)
     }
   }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun RecipeSearchBarInputField(
+  searchText: TextFieldState,
+  searchBarState: SearchBarState,
+  onSearch: (String) -> Unit,
+  colors: AppBarWithSearchColors,
+  modifier: Modifier = Modifier,
+) {
+  SearchBarDefaults.InputField(
+    modifier = modifier.fillMaxWidth(),
+    textFieldState = searchText,
+    searchBarState = searchBarState,
+    colors = colors.searchBarColors.inputFieldColors,
+    onSearch = onSearch,
+    placeholder = {
+      Text(modifier = Modifier.clearAndSetSemantics {}, text = stringResource(Res.string.search))
+    },
+    leadingIcon = {
+      Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = "")
+    },
+    trailingIcon = {
+      if (searchBarState.currentValue == SearchBarValue.Expanded) {
+        IconButton(
+          { onSearch(searchText.text.toString()) },
+          enabled = searchText.text.length >= 3,
+        ) {
+          Icon(painter = painterResource(Res.drawable.check_24px), contentDescription = "")
+        }
+      }
+    },
+  )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
+  TopAppBar(
+    title = { Text(stringResource(Res.string.recipes)) },
+    navigationIcon = { NavIcon(state.navStack, state.navigator) },
+    actions = {
+      IconButton(onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) }) {
+        Icon(
+          painter = painterResource(Res.drawable.favorite_24px_filled),
+          contentDescription = null,
+        )
+      }
+      IconButton(onClick = { state.searchState.eventSink(SearchEvent.SearchButtonClicked) }) {
+        Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
+      }
+    },
+    modifier = modifier,
+  )
 }
 
 @Composable
