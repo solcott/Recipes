@@ -178,7 +178,7 @@ fun FavoriteIcon(
     else painterResource(Res.drawable.favorite_24px),
     contentDescription = "favorite",
     modifier =
-      modifier.clickable(enabled = onClick != null) { onClick?.invoke() }.clip(CircleShape),
+      modifier.clip(CircleShape).clickable(enabled = onClick != null) { onClick?.invoke() },
     tint = MaterialTheme.colorScheme.primary,
   )
 }
