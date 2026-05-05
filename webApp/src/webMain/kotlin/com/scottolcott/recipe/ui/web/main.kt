@@ -9,12 +9,6 @@ import dev.zacsweers.metro.createGraph
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-  try {
-    val graph = createGraph<WebAppGraph>()
-    ComposeViewport { RecipeApp(circuit = graph.circuit, modifier = Modifier.fillMaxSize()) }
-  } catch (e: Throwable) {
-    // Annoyingly this is the only way to get a useful stacktrace in the web console
-    e.printStackTrace()
-    throw e
-  }
+  val graph = createGraph<WebAppGraph>()
+  ComposeViewport { RecipeApp(circuit = graph.circuit, modifier = Modifier.fillMaxSize()) }
 }
