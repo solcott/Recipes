@@ -6,8 +6,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import co.touchlab.kermit.Logger
-import com.scottolcott.recipe.domain.presenter.CategoriesState.*
+import com.scottolcott.recipe.domain.presenter.CategoriesState.Error
+import com.scottolcott.recipe.domain.presenter.CategoriesState.Loading
+import com.scottolcott.recipe.domain.presenter.CategoriesState.Success
 import com.scottolcott.recipe.domain.producer.CategoriesProducer
 import com.scottolcott.recipe.model.Category
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -28,7 +29,6 @@ import org.mobilenativefoundation.store.store5.StoreReadResponse
 class CategoriesPresenter(
   @Assisted private val navigator: Navigator,
   private val categoriesProducer: CategoriesProducer,
-  private val logger: Logger,
 ) : Presenter<CategoriesState> {
   @Composable
   override fun present(): CategoriesState {

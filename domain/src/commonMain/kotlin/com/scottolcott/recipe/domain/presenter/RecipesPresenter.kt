@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.domain.producer.RecipesProducer
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
@@ -29,7 +28,6 @@ class RecipesPresenter(
   @Assisted private val screen: Screen,
   @Assisted private val navigator: Navigator,
   private val recipesProducer: RecipesProducer,
-  private val logger: Logger,
 ) : Presenter<RecipesState> {
   @Composable
   override fun present(): RecipesState {
@@ -45,6 +43,9 @@ class RecipesPresenter(
         is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
       }
     var lastRecipes by rememberRetained(retryTrigger) { mutableStateOf<List<Recipe>?>(null) }
+    if (recipesResponse is StoreReadResponse.Data) {
+      lastRecipes = recipesResponse.value
+    }
     val errorEventSink: (RecipesEvent.Error) -> Unit = { event ->
       when (event) {
         RecipesEvent.Error.RetryClicked -> retryTrigger++

@@ -16,7 +16,6 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.produceRetainedState
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
-import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import dev.zacsweers.metro.AppScope
@@ -32,7 +31,6 @@ import org.mobilenativefoundation.store.store5.StoreReadResponse
 @AssistedInject
 class RecipeDetailsPresenter(
   @Assisted private val screen: Screen,
-  @Assisted private val navigator: Navigator,
   private val recipeRepository: RecipeRepository,
   private val logger: Logger,
 ) : Presenter<RecipeDetailsState> {
@@ -82,7 +80,7 @@ class RecipeDetailsPresenter(
   @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
   @AssistedFactory
   interface Factory {
-    @Suppress("unused") fun create(screen: Screen, navigator: Navigator): RecipeDetailsPresenter
+    @Suppress("unused") fun create(screen: Screen): RecipeDetailsPresenter
   }
 }
 
