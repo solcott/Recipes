@@ -2,6 +2,7 @@ package com.scottolcott.recipe
 
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.NoTagFormatter
+import co.touchlab.kermit.Severity
 import co.touchlab.kermit.loggerConfigInit
 import co.touchlab.kermit.platformLogWriter
 import coil3.PlatformContext
@@ -19,8 +20,14 @@ interface DesktopAppGraph : AppGraph {
   fun providePlatformContext(): PlatformContext = PlatformContext.INSTANCE
 
   @Provides
-  override fun provideLogger(): Logger =
-    Logger(loggerConfigInit(platformLogWriter(NoTagFormatter)), "RecipeApp")
+  override fun provideLogger(): Logger {
+    val runtimeConfig = provideRuntimeConfig()
+    val minSeverity = if (runtimeConfig.debugBuild) Severity.Verbose else Severity.Info
+    return Logger(
+      loggerConfigInit(platformLogWriter(NoTagFormatter), minSeverity = minSeverity),
+      "RecipeApp",
+    )
+  }
 
   @Provides
   override fun provideRuntimeConfig(): RuntimeConfig {
