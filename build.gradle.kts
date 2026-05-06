@@ -22,3 +22,8 @@ subprojects {
   configure<KtfmtExtension> {
     googleStyle() }
 }
+
+tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
+  languageVersion = JavaLanguageVersion.of(25)
+  vendor.set(JvmVendorSpec.AMAZON)
+}
