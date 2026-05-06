@@ -11,6 +11,8 @@ plugins {
 }
 
 kotlin {
+  jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
+  compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
   dependencies {
     api(libs.androidx.compose.runtime.desktop)
     api(libs.circuit.foundation)
@@ -32,6 +34,7 @@ kotlin {
     implementation(libs.androidx.window.core)
     implementation(libs.compose.ui.graphics.desktop)
     implementation(libs.compose.ui.unit.desktop)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.kermit)
     implementation(libs.kermit.core)
     implementation(libs.kotlinx.coroutines.swing)
@@ -41,10 +44,16 @@ kotlin {
 compose.desktop {
   application {
     mainClass = "com.scottolcott.recipe.MainKt"
+    buildTypes.release.proguard {
+      version = "7.9.1"
+      obfuscate.set(true)
+      configurationFiles.from(project.file("compose-desktop.pro"))
+    }
     nativeDistributions {
       targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
       packageName = "com.scottolcott.recipe.composedemo"
       packageVersion = version.toString()
+      modules("java.base", "java.desktop", "java.sql", "java.xml", "java.naming")
     }
   }
 }
@@ -56,5 +65,11 @@ dependencyAnalysis {
       exclude("org.jetbrains.compose.hot-reload:hot-reload-runtime-api")
     }
     onRuntimeOnly { exclude(libs.kotlinx.coroutines.swing) }
+  }
+}
+
+tasks.withType<JavaExec>().configureEach {
+  if (name == "run") {
+    systemProperty("debug", "true")
   }
 }
