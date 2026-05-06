@@ -24,7 +24,6 @@ kotlin {
     }
     commonMain {
       dependencies {
-        implementation(projects.config)
         api(libs.kermit)
         api(libs.kotlin.serialization.core)
         api(libs.ktor.client.core)
@@ -41,6 +40,7 @@ kotlin {
         implementation(libs.ktor.serialization)
         implementation(libs.ktor.serialization.kotlinx.json)
         implementation(libs.ktor.utils)
+        implementation(projects.config)
       }
     }
     commonJvmMain { dependencies { implementation(libs.ktor.client.okhttp) } }

@@ -34,10 +34,10 @@ kotlin {
     implementation(libs.androidx.window.core)
     implementation(libs.compose.ui.graphics.desktop)
     implementation(libs.compose.ui.unit.desktop)
-    implementation(libs.ktor.client.okhttp)
     implementation(libs.kermit)
     implementation(libs.kermit.core)
     implementation(libs.kotlinx.coroutines.swing)
+    implementation(libs.ktor.client.okhttp)
   }
 }
 

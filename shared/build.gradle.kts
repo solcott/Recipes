@@ -1,12 +1,20 @@
-@file:OptIn(ExperimentalMetroGradleApi::class)
-
-import dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi
+import com.codingfeline.buildkonfig.compiler.FieldSpec
+import com.scottolcott.gradle.mealDbApiKey
 
 plugins {
   id("kmp.library")
   alias(libs.plugins.metro)
   alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.buildkonfig)
+}
+
+buildkonfig {
+  packageName = "com.scottolcott.recipe"
+  exposeObjectWithName = "SharedBuildConfig"
+  defaultConfigs {
+    buildConfigField(FieldSpec.Type.STRING, "MEALDB_API_KEY", project.mealDbApiKey ?: "")
+  }
 }
 
 compose.resources {

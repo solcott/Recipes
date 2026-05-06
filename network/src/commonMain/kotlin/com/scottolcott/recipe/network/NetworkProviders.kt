@@ -35,7 +35,15 @@ interface NetworkProviders {
     return HttpClient(provideKtorEngineFactory()) {
       expectSuccess = true
       install(Resources)
-      install(DefaultRequest) { url("https://www.themealdb.com/api/json/v1/1/") }
+      install(DefaultRequest) {
+        val baseUrl =
+          if (runtimeConfig.mealDbApiKey != null) {
+            "https://www.themealdb.com/api/json/v2/${runtimeConfig.mealDbApiKey}/"
+          } else {
+            "https://www.themealdb.com/api/json/v1/1/"
+          }
+        url(baseUrl)
+      }
       install(HttpRequestRetry) { retryOnExceptionOrServerErrors(MAX_RETRIES) }
 
       install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }

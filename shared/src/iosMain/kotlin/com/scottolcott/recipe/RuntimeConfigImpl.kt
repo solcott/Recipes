@@ -6,4 +6,6 @@ import kotlin.experimental.ExperimentalNativeApi
 class RuntimeConfigImpl : RuntimeConfig {
   @OptIn(ExperimentalNativeApi::class)
   override val debugBuild: Boolean by lazy { Platform.isDebugBinary }
+
+  override val mealDbApiKey: String? = SharedBuildConfig.MEALDB_API_KEY.takeIf { it.isNotEmpty() }
 }
