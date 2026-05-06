@@ -20,7 +20,6 @@ import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import org.mobilenativefoundation.store.store5.Fetcher
 import org.mobilenativefoundation.store.store5.SourceOfTruth
@@ -140,7 +139,6 @@ internal class RecipeRepositoryImpl(
   override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> {
     return detailedRecipeStore
       .stream(StoreReadRequest.cached(RecipeKey.Favorites, false))
-      .onEach { logger.e { "Response: $it" } }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
