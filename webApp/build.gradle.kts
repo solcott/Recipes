@@ -11,6 +11,7 @@ plugins {
 }
 
 kotlin {
+  jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
   js {
     browser()
     binaries.executable()
