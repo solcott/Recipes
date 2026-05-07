@@ -27,6 +27,13 @@ internal fun RecipeEntityWithDetail.toModel(): Recipe {
         null
       } else {
         with(detail) {
+          val tags =
+            detail.tags
+              ?.splitToSequence(',')
+              ?.map { it.trim() }
+              ?.filter { it.isNotEmpty() }
+              ?.toList()
+              .orEmpty()
           RecipeDetails(
             alternateName = alternateName,
             instructions = instructions,

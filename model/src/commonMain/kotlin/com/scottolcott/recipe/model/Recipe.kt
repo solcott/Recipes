@@ -16,7 +16,7 @@ data class Recipe(
 data class RecipeDetails(
   val alternateName: String? = null,
   val instructions: String,
-  val tags: String? = null,
+  val tags: List<String> = emptyList(),
   val youtube: String? = null,
   val source: String? = null,
   val imageSource: String? = null,
