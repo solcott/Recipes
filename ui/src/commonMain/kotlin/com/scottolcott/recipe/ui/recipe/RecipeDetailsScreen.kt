@@ -5,17 +5,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalGridApi
+import androidx.compose.foundation.layout.FlexBox
+import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -27,9 +31,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_EXPANDED_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_LARGE_LOWER_BOUND
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
@@ -37,13 +50,25 @@ import com.scottolcott.recipe.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsEvent
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsState
+import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.Recipe
+import com.scottolcott.recipe.model.RecipeDetails
+import com.scottolcott.recipe.model.RecipeId
 import com.scottolcott.recipe.ui.Res
+import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.an_error_occurred
 import com.scottolcott.recipe.ui.favorite_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
+import com.scottolcott.recipe.ui.image_24px
+import com.scottolcott.recipe.ui.ingredient_with_measure
+import com.scottolcott.recipe.ui.ingredients
+import com.scottolcott.recipe.ui.instructions
+import com.scottolcott.recipe.ui.label_24px
+import com.scottolcott.recipe.ui.link_24px
+import com.scottolcott.recipe.ui.location_on_24px
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
+import kotlin.time.Clock
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -58,64 +83,115 @@ fun RecipeDetailsScreen(state: RecipeDetailsState, modifier: Modifier = Modifier
     } else if (state.error) {
       Text(stringResource(Res.string.an_error_occurred))
     } else {
-      recipe?.let { RecipeDetails(it, state) }
+      recipe?.let { RecipeDetails(it, state.eventSink) }
     }
   }
 }
 
-@OptIn(ExperimentalFlexBoxApi::class)
+@OptIn(ExperimentalGridApi::class)
 @Composable
-private fun RecipeDetails(recipe: Recipe, state: RecipeDetailsState) {
+private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Unit) {
   val windowSizeClass = LocalWindowSizeClass.current
 
+  val isMediumWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
   val isExpandedWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND)
-  val isShortHeight = !windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
+  val isLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_LARGE_LOWER_BOUND)
+  val isExtraLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXTRA_LARGE_LOWER_BOUND)
 
-  val useSideBySide = isExpandedWidth || isShortHeight
+  val isMediumHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
+  val isExpandedHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_EXPANDED_LOWER_BOUND)
 
-  if (!useSideBySide) {
-    // Standard Vertical Layout (Phone Portrait / Small Tablets)
-    LazyColumn(
-      Modifier.fillMaxSize(),
-      contentPadding = PaddingValues(16.dp),
-      verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-      item {
-        RecipeImage(
-          recipe,
-          recipe.favorite,
-          onToggleFavorite = { state.eventSink(RecipeDetailsEvent.ToggleFavorite) },
-          modifier = Modifier.fillMaxWidth(),
-        )
-      }
-      item { RecipeTextDetails(recipe) }
+  val columns =
+    when {
+      isLargeWidth || isExtraLargeWidth -> 3
+      isMediumWidth && !isExpandedHeight -> 2
+      else -> 1
     }
-  } else {
-    // Side-by-Side Layout (Desktop / Tablets / Phone Landscape)
-    Row(
-      Modifier.fillMaxSize().padding(horizontal = if (isExpandedWidth) 32.dp else 16.dp),
-      horizontalArrangement = Arrangement.spacedBy(if (isExpandedWidth) 32.dp else 16.dp),
-    ) {
-      Box(
-        modifier =
-          Modifier.weight(if (isExpandedWidth) 0.4f else 0.5f)
-            .fillMaxHeight()
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.TopCenter,
-      ) {
-        RecipeImage(
-          recipe,
-          recipe.favorite,
-          onToggleFavorite = { state.eventSink(RecipeDetailsEvent.ToggleFavorite) },
-          modifier = Modifier.fillMaxWidth(),
-        )
-      }
 
-      LazyColumn(
-        modifier = Modifier.weight(if (isExpandedWidth) 0.6f else 0.5f).fillMaxHeight(),
-        contentPadding = PaddingValues(vertical = 16.dp),
+  val horizontalPadding =
+    when {
+      isExtraLargeWidth -> 48.dp
+      isLargeWidth -> 32.dp
+      isExpandedWidth -> 24.dp
+      isMediumWidth -> 24.dp
+      else -> 16.dp
+    }
+
+  val verticalPadding =
+    when {
+      isExpandedHeight -> 32.dp
+      isMediumHeight -> 24.dp
+      else -> 16.dp
+    }
+
+  SelectionContainer {
+    Column(
+      Modifier.fillMaxSize()
+        .verticalScroll(rememberScrollState())
+        .padding(horizontal = horizontalPadding, vertical = verticalPadding)
+    ) {
+      Grid(
+        config = {
+          repeat(columns) { column(1.fr) }
+          // We'll use Auto rows and items will span as needed
+          gap(horizontalPadding)
+        },
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
       ) {
-        item { RecipeTextDetails(recipe) }
+        // Row 1: Title (Full Width)
+        RecipeTitle(recipe, Modifier.gridItem(row = 1, column = 1, columnSpan = columns))
+
+        when (columns) {
+          1 -> {
+            // Stacked layout
+            RecipeImage(
+              recipe,
+              recipe.favorite,
+              onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
+              modifier = Modifier.gridItem(row = 2, column = 1),
+            )
+            RecipeIngredients(recipe, Modifier.gridItem(row = 3, column = 1))
+            RecipeInstructions(recipe, Modifier.gridItem(row = 4, column = 1))
+            RecipeMetaInfo(recipe, Modifier.gridItem(row = 5, column = 1))
+          }
+          2 -> {
+            // 2 Columns: Image on left, Everything else on right
+            Column(
+              Modifier.gridItem(row = 2, column = 1),
+              verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+              RecipeImage(
+                recipe,
+                recipe.favorite,
+                onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
+              )
+              RecipeMetaInfo(recipe)
+            }
+            Column(
+              Modifier.gridItem(row = 2, column = 2),
+              verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+              RecipeIngredients(recipe)
+              RecipeInstructions(recipe)
+            }
+          }
+          3 -> {
+            // 3 Columns: Image, Ingredients, Instructions all side-by-side
+            Column(
+              Modifier.gridItem(row = 2, column = 1),
+              verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+              RecipeImage(
+                recipe,
+                recipe.favorite,
+                onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
+              )
+              RecipeMetaInfo(recipe)
+            }
+            RecipeIngredients(recipe, Modifier.gridItem(row = 2, column = 2))
+            RecipeInstructions(recipe, Modifier.gridItem(row = 2, column = 3))
+          }
+        }
       }
     }
   }
@@ -123,23 +199,111 @@ private fun RecipeDetails(recipe: Recipe, state: RecipeDetailsState) {
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private fun RecipeTextDetails(recipe: Recipe, modifier: Modifier = Modifier) {
-  SelectionContainer {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      Text(recipe.name, style = MaterialTheme.typography.headlineMediumEmphasized)
-      val details = recipe.details
-      val ingredients = details?.ingredients.orEmpty()
-      ingredients.forEach {
-        Row(
-          modifier = Modifier.padding(start = 8.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-          Text("•", style = MaterialTheme.typography.bodyMedium)
-          Text("${it.measure} ${it.ingredient}", style = MaterialTheme.typography.bodyMedium)
+private fun RecipeTitle(recipe: Recipe, modifier: Modifier = Modifier) {
+  Text(
+    recipe.name,
+    style = MaterialTheme.typography.headlineMediumEmphasized,
+    modifier = modifier.fillMaxWidth(),
+  )
+}
+
+@Composable
+private fun RecipeIngredients(recipe: Recipe, modifier: Modifier = Modifier) {
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text(stringResource(Res.string.ingredients), style = MaterialTheme.typography.titleMedium)
+    val ingredients = recipe.details?.ingredients.orEmpty()
+    ingredients.forEach {
+      Row(
+        modifier = Modifier.padding(start = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        Text("•", style = MaterialTheme.typography.bodyMedium)
+        Text(
+          stringResource(Res.string.ingredient_with_measure, it.measure, it.ingredient),
+          style = MaterialTheme.typography.bodyMedium,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun RecipeInstructions(recipe: Recipe, modifier: Modifier = Modifier) {
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text(stringResource(Res.string.instructions), style = MaterialTheme.typography.titleMedium)
+    recipe.details?.instructions?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+  }
+}
+
+@OptIn(ExperimentalFlexBoxApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun RecipeMetaInfo(recipe: Recipe, modifier: Modifier = Modifier) {
+  val details = recipe.details
+  val tags = details?.tags.orEmpty()
+  val uriHandler = LocalUriHandler.current
+
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    // Tags
+    if (tags.isNotEmpty()) {
+      FlexBox(config = { gap(8.dp) }) {
+        for (tag in tags) {
+          AssistChip(onClick = {}, label = { Text(tag) })
         }
       }
-      val instructions = details?.instructions
-      instructions?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+    }
+
+    // Category and Area
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      recipe.category?.let {
+        AssistChip(
+          onClick = {},
+          label = { Text(it) },
+          leadingIcon = { Icon(painterResource(Res.drawable.label_24px), null) },
+          colors =
+            AssistChipDefaults.assistChipColors(
+              leadingIconContentColor = MaterialTheme.colorScheme.tertiary
+            ),
+        )
+      }
+      recipe.area?.let {
+        AssistChip(
+          onClick = {},
+          label = { Text(it) },
+          leadingIcon = { Icon(painterResource(Res.drawable.location_on_24px), null) },
+          colors =
+            AssistChipDefaults.assistChipColors(
+              leadingIconContentColor = MaterialTheme.colorScheme.tertiary
+            ),
+        )
+      }
+    }
+
+    // Source and Image Source
+    val source = details?.source
+    if (!source.isNullOrBlank())
+      AssistChip(
+        onClick = { uriHandler.openUri(source) },
+        label = { Text(source) },
+        leadingIcon = { Icon(painterResource(Res.drawable.link_24px), null) },
+        colors =
+          AssistChipDefaults.assistChipColors(
+            labelColor = MaterialTheme.colorScheme.primary,
+            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
+          ),
+      )
+    val imageSource = details?.imageSource
+
+    if (!imageSource.isNullOrBlank()) {
+      AssistChip(
+        onClick = { uriHandler.openUri(imageSource) },
+        label = { Text(imageSource) },
+        leadingIcon = { Icon(painterResource(Res.drawable.image_24px), null) },
+        colors =
+          AssistChipDefaults.assistChipColors(
+            labelColor = MaterialTheme.colorScheme.secondary,
+            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
+          ),
+      )
     }
   }
 }
@@ -181,4 +345,49 @@ fun FavoriteIcon(
       modifier.clip(CircleShape).clickable(enabled = onClick != null) { onClick?.invoke() },
     tint = MaterialTheme.colorScheme.primary,
   )
+}
+
+@PreviewWrapper(ThemeWrapper::class)
+@Preview
+@PreviewScreenSizes
+@PreviewLightDark
+@Composable
+fun RecipeDetailsPreview() {
+  val details =
+    RecipeDetails(
+      alternateName = null,
+      instructions =
+        "Preheat oven to 350° F. Spray a 9x13-inch baking pan with non-stick spray.\\r\\nCombine soy sauce, ½ cup water, brown sugar, ginger and garlic in a small saucepan and cover. Bring to a boil over medium heat. Remove lid and cook for one minute once boiling.\\r\\nMeanwhile, stir together the corn starch and 2 tablespoons of water in a separate dish until smooth. Once sauce is boiling, add mixture to the saucepan and stir to combine. Cook until the sauce starts to thicken then remove from heat.\\r\\nPlace the chicken breasts in the prepared pan. Pour one cup of the sauce over top of chicken. Place chicken in oven and bake 35 minutes or until cooked through. Remove from oven and shred chicken in the dish using two forks.\\r\\n*Meanwhile, steam or cook the vegetables according to package directions.\\r\\nAdd the cooked vegetables and rice to the casserole dish with the chicken. Add most of the remaining sauce, reserving a bit to drizzle over the top when serving. Gently toss everything together in the casserole dish until combined. Return to oven and cook 15 minutes. Remove from oven and let stand 5 minutes before serving. Drizzle each serving with remaining sauce. Enjoy!",
+      tags = listOf("Meat", "Casserole"),
+      youtube = "https://www.youtube.com/watch?v=4aZr5hZXP_s",
+      source = null,
+      imageSource = null,
+      creativeCommonsConfirmed = null,
+      dateModified = null,
+      ingredients =
+        listOf(
+          Ingredient("soy sauce", "3/4 cup"),
+          Ingredient("water", "1/2 cup"),
+          Ingredient("brown sugar", "1/4 cup"),
+          Ingredient("ground ginger", "1/2 teaspoon"),
+          Ingredient("minced garlic", "1/2 teaspoon"),
+          Ingredient("cornstarch", "4 Tablespoons"),
+          Ingredient("chicken breasts", "2"),
+          Ingredient("stir-fry vegetables", "1 (12 oz.)"),
+          Ingredient("brown rice", "3 cups"),
+        ),
+      lastFetched = Clock.System.now(),
+    )
+  val recipe =
+    Recipe(
+      id = RecipeId("52772"),
+      name = "Teriyaki Chicken Casserole",
+      thumbnail = "https://www.themealdb.com/images/media/meals/wvpsxx1468256321.jpg",
+      category = "Chicken",
+      area = "Japanese",
+      favorite = true,
+      details = details,
+      lastFetched = Clock.System.now(),
+    )
+  RecipeDetails(recipe, {})
 }

@@ -5,4 +5,12 @@
     <string name="no_recipes_found">No recipes found</string>
     <string name="no_categories_found">No categories found</string>
     <string name="recipes">Recipes</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="instructions">Instructions</string>
+    <string name="tags">Tags</string>
+    <string name="category">Category: %1$s</string>
+    <string name="area">Area: %1$s</string>
+    <string name="source">Source</string>
+    <string name="image_source">Image Source</string>
+    <string name="ingredient_with_measure">%1$s %2$s</string>
 </resources>

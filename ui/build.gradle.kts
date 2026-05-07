@@ -100,6 +100,8 @@ kotlin {
 
 metro { enableCircuitCodegen = true }
 
+dependencies { androidRuntimeClasspath(libs.compose.ui.tooling) }
+
 dependencyAnalysis {
   issues {
     onUnusedDependencies {
