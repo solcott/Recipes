@@ -282,6 +282,7 @@ private fun RecipeMetaInfo(recipe: Recipe, modifier: Modifier = Modifier) {
     val source = details?.source
     if (!source.isNullOrBlank())
       AssistChip(
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
         onClick = { uriHandler.openUri(source) },
         label = { Text(source) },
         leadingIcon = { Icon(painterResource(Res.drawable.link_24px), null) },
@@ -295,6 +296,7 @@ private fun RecipeMetaInfo(recipe: Recipe, modifier: Modifier = Modifier) {
 
     if (!imageSource.isNullOrBlank()) {
       AssistChip(
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
         onClick = { uriHandler.openUri(imageSource) },
         label = { Text(imageSource) },
         leadingIcon = { Icon(painterResource(Res.drawable.image_24px), null) },
@@ -325,7 +327,7 @@ private fun RecipeImage(
     )
     FavoriteIcon(
       isFavorite,
-      modifier = Modifier.padding(12.dp).size(48.dp),
+      modifier = Modifier.padding(12.dp).size(48.dp).pointerHoverIcon(PointerIcon.Hand, true),
       onClick = onToggleFavorite,
     )
   }
