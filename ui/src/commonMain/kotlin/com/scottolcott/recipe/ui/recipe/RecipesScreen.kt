@@ -3,7 +3,6 @@ package com.scottolcott.recipe.ui.recipe
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,6 +20,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.no_recipes_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
+import com.scottolcott.recipe.ui.rememberAdaptivePadding
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
 import org.jetbrains.compose.resources.stringResource
@@ -46,6 +48,7 @@ import org.jetbrains.compose.resources.stringResource
 @CircuitInject(RecipesScreen::class, AppScope::class)
 fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
   val cells = rememberAdaptiveGridCells()
+  val padding = rememberAdaptivePadding()
   when (state) {
     is RecipesState.Error ->
       Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -66,7 +69,7 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
           modifier = modifier.fillMaxSize(),
           verticalArrangement = Arrangement.spacedBy(12.dp),
           horizontalArrangement = Arrangement.spacedBy(12.dp),
-          contentPadding = PaddingValues(16.dp),
+          contentPadding = padding,
         ) {
           items(state.recipes, key = { it.id }, contentType = { "recipe_item" }) {
             RecipeCard(
@@ -89,7 +92,7 @@ private fun RecipeCard(
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  OutlinedCard(onClick = onClick, modifier = modifier) {
+  OutlinedCard(onClick = onClick, modifier = modifier.pointerHoverIcon(PointerIcon.Hand, true)) {
     if (LocalWindowSizeClass.current.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)) {
       Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),

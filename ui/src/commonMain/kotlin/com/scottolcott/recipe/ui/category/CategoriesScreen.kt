@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +20,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,7 @@ import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.no_categories_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
+import com.scottolcott.recipe.ui.rememberAdaptivePadding
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
 import org.jetbrains.compose.resources.stringResource
@@ -46,6 +48,7 @@ import org.jetbrains.compose.resources.stringResource
 @CircuitInject(CategoriesScreen::class, AppScope::class)
 fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
   val cells = rememberAdaptiveGridCells()
+  val padding = rememberAdaptivePadding()
   val labelTextStyle =
     if (LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)) {
       MaterialTheme.typography.titleLargeEmphasized
@@ -72,14 +75,14 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
           modifier = modifier.fillMaxSize(),
           verticalArrangement = Arrangement.spacedBy(12.dp),
           horizontalArrangement = Arrangement.spacedBy(12.dp),
-          contentPadding = PaddingValues(16.dp),
+          contentPadding = padding,
         ) {
           items(state.categories, key = { it.id }, contentType = { "category_item" }) {
             CategoryItem(
               it,
               labelTextStyle = labelTextStyle,
               { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
-              Modifier.animateItem(),
+              Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
             )
           }
         }
