@@ -147,7 +147,7 @@ private fun LookaheadScope.RecipeGrid(
   }
   val metaInfo = remember {
     movableContentOf { modifier: Modifier ->
-      RecipeMetaInfo(recipe, modifier.animateBounds(this@RecipeGrid))
+      RecipeMetaInfo(recipe, eventSink, modifier.animateBounds(this@RecipeGrid))
     }
   }
 
@@ -246,13 +246,17 @@ private fun RecipeInstructions(recipe: Recipe, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun RecipeMetaInfo(recipe: Recipe, modifier: Modifier = Modifier) {
+private fun RecipeMetaInfo(
+  recipe: Recipe,
+  eventSink: (RecipeDetailsEvent) -> Unit,
+  modifier: Modifier = Modifier,
+) {
   val details = recipe.details
   val uriHandler = LocalUriHandler.current
 
   Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
     RecipeTags(details?.tags.orEmpty())
-    RecipeCategoryAndArea(recipe)
+    RecipeCategoryAndArea(recipe, eventSink)
     RecipeSources(details, uriHandler)
   }
 }
@@ -270,28 +274,32 @@ private fun RecipeTags(tags: List<String>) {
 }
 
 @Composable
-private fun RecipeCategoryAndArea(recipe: Recipe) {
+private fun RecipeCategoryAndArea(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Unit) {
   Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    recipe.category?.let {
+    recipe.category?.let { category ->
       AssistChip(
-        onClick = {},
-        label = { Text(it) },
+        onClick = { eventSink(RecipeDetailsEvent.CategoryClicked(category)) },
+        label = { Text(category) },
         leadingIcon = { Icon(painterResource(Res.drawable.label_24px), null) },
         colors =
           AssistChipDefaults.assistChipColors(
-            leadingIconContentColor = MaterialTheme.colorScheme.tertiary
+            labelColor = MaterialTheme.colorScheme.primary,
+            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
           ),
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
       )
     }
-    recipe.area?.let {
+    recipe.area?.let { area ->
       AssistChip(
-        onClick = {},
-        label = { Text(it) },
+        onClick = { eventSink(RecipeDetailsEvent.AreaClicked(area)) },
+        label = { Text(area) },
         leadingIcon = { Icon(painterResource(Res.drawable.location_on_24px), null) },
         colors =
           AssistChipDefaults.assistChipColors(
-            leadingIconContentColor = MaterialTheme.colorScheme.tertiary
+            labelColor = MaterialTheme.colorScheme.primary,
+            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
           ),
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
       )
     }
   }

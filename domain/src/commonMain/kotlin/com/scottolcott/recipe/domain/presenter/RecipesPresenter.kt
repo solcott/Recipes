@@ -41,6 +41,7 @@ class RecipesPresenter(
         is RecipesScreen.BySearch ->
           recipesProducer.produceBySearchTerm(screen.searchTerm, retryTrigger)
         is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
+        is RecipesScreen.ByArea -> recipesProducer.produceByArea(screen.area, retryTrigger)
       }
     var lastRecipes by rememberRetained(retryTrigger) { mutableStateOf<List<Recipe>?>(null) }
     if (recipesResponse is StoreReadResponse.Data) {
@@ -125,6 +126,8 @@ sealed interface RecipesState : CircuitUiState {
 @Parcelize
 sealed interface RecipesScreen : Screen {
   @Parcelize data class ByCategory(val category: String) : RecipesScreen
+
+  @Parcelize data class ByArea(val area: String) : RecipesScreen
 
   @Parcelize data class BySearch(val searchTerm: String) : RecipesScreen
 

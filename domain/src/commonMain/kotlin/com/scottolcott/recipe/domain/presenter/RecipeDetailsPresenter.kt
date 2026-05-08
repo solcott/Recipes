@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import co.touchlab.kermit.Logger
+import com.scottolcott.recipe.domain.presenter.RecipesScreen.*
 import com.scottolcott.recipe.isError
 import com.scottolcott.recipe.isLoading
 import com.scottolcott.recipe.model.Recipe
@@ -16,6 +17,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.produceRetainedState
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
+import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import dev.zacsweers.metro.AppScope
@@ -31,6 +33,7 @@ import org.mobilenativefoundation.store.store5.StoreReadResponse
 @AssistedInject
 class RecipeDetailsPresenter(
   @Assisted private val screen: Screen,
+  @Assisted private val navigator: Navigator,
   private val recipeRepository: RecipeRepository,
   private val logger: Logger,
 ) : Presenter<RecipeDetailsState> {
@@ -73,6 +76,9 @@ class RecipeDetailsPresenter(
             }
           }
         RecipeDetailsEvent.RetryClicked -> retryTrigger++
+        is RecipeDetailsEvent.CategoryClicked -> navigator.goTo(ByCategory(event.category))
+
+        is RecipeDetailsEvent.AreaClicked -> navigator.goTo(ByArea(event.area))
       }
     }
   }
@@ -80,7 +86,7 @@ class RecipeDetailsPresenter(
   @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
   @AssistedFactory
   interface Factory {
-    @Suppress("unused") fun create(screen: Screen): RecipeDetailsPresenter
+    @Suppress("unused") fun create(screen: Screen, navigator: Navigator): RecipeDetailsPresenter
   }
 }
 
@@ -95,6 +101,10 @@ sealed interface RecipeDetailsEvent : CircuitUiEvent {
   data object ToggleFavorite : RecipeDetailsEvent
 
   data object RetryClicked : RecipeDetailsEvent
+
+  data class CategoryClicked(val category: String) : RecipeDetailsEvent
+
+  data class AreaClicked(val area: String) : RecipeDetailsEvent
 }
 
 @Parcelize data class RecipeDetailsScreen(val id: RecipeId) : Screen

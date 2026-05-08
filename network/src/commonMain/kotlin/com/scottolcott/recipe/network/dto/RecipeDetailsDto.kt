@@ -30,7 +30,7 @@ data class RecipeFullDto(
   @SerialName("strMeal") override val name: String,
   @SerialName("strMealAlternate") val alternateName: String? = null,
   @SerialName("strCategory") val category: String,
-  @SerialName("strArea") val area: String,
+  @SerialName("strArea") val area: String? = null,
   @SerialName("strInstructions") val instructions: String,
   @SerialName("strMealThumb") override val thumbnail: String,
   @SerialName("strTags") val tags: String? = null,

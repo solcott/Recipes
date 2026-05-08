@@ -35,6 +35,8 @@ interface RecipeRepository {
 
   fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>>
 
+  fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>>
+
   fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>>
 
   fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>>
@@ -124,6 +126,18 @@ internal class RecipeRepositoryImpl(
       .logErrors(logger, "Error loading recipes by category $category")
   }
 
+  override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> {
+    return basicRecipeStore
+      .stream(StoreReadRequest.cached(RecipeKey.ByArea(area), false))
+      .map {
+        when (it) {
+          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
+          else -> it.swapType()
+        }
+      }
+      .logErrors(logger, "Error loading recipes by area $area")
+  }
+
   override fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>> {
     return detailedRecipeStore
       .stream(StoreReadRequest.cached(RecipeKey.ById(id), false))
@@ -174,7 +188,7 @@ internal class RecipeRepositoryImpl(
         is RecipeKey.Query -> recipeApi.searchRecipe(key.query)?.meals.orEmpty()
         is RecipeKey.ById -> recipeApi.getRecipe(key.id)?.meals.orEmpty()
         is RecipeKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
-        is RecipeKey.ByArea -> recipeApi.getByCategory(key.area)?.meals.orEmpty()
+        is RecipeKey.ByArea -> recipeApi.getByArea(key.area)?.meals.orEmpty()
         RecipeKey.Favorites -> emptyList() // No api to support this as favorites are store locally
       }
     }

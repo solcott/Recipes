@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 abstract class RecipeDao {
 
   @Transaction
-  @Query("SELECT * FROM recipe WHERE recipe_name LIKE '%' || :query || '%' ORDER BY recipe_id ASC")
+  @Query("SELECT * FROM recipe WHERE recipe_name LIKE '%' || :query || '%' ORDER BY recipe_id DESC")
   abstract fun queryByName(query: String): Flow<List<RecipeEntityWithDetail>>
 
   @Transaction
@@ -34,11 +34,11 @@ abstract class RecipeDao {
   abstract fun getFavorites(): Flow<List<RecipeEntityWithDetail>>
 
   @Transaction
-  @Query("SELECT * FROM recipe WHERE recipe_category = :category ORDER BY recipe_id ASC")
+  @Query("SELECT * FROM recipe WHERE recipe_category = :category ORDER BY recipe_id DESC")
   abstract fun getByCategory(category: String): Flow<List<RecipeEntityWithDetail>>
 
   @Transaction
-  @Query("SELECT * FROM recipe WHERE recipe_area = :area ORDER BY recipe_id ASC")
+  @Query("SELECT * FROM recipe WHERE recipe_area = :area ORDER BY recipe_id DESC")
   abstract fun getByArea(area: String): Flow<List<RecipeEntityWithDetail>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
