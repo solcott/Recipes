@@ -29,7 +29,7 @@ abstract class RecipeDao {
     """SELECT r.* 
         FROM recipe r 
         INNER JOIN favorite_recipe f ON r.recipe_id = f.favorite_recipe_id 
-        ORDER BY f.favorite_recipe_added_date_time"""
+        ORDER BY f.favorite_recipe_added_date_time DESC"""
   )
   abstract fun getFavorites(): Flow<List<RecipeEntityWithDetail>>
 
