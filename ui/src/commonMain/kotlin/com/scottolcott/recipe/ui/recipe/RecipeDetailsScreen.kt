@@ -119,13 +119,13 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
           when (columns) {
             1 -> column(1.fr)
             2 -> {
-              column(2.fr)
+              column(1.fr)
               column(3.fr)
             }
             3 -> {
-              column(2.fr)
+              column(1.fr)
               column(3.fr)
-              column(3.fr)
+              column(7.fr)
             }
           }
           gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
