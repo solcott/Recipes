@@ -47,7 +47,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(CategoriesScreen::class, AppScope::class)
 fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
-  val cells = rememberAdaptiveGridCells()
+  val cells = rememberAdaptiveGridCells(minWidthMediumCompact = 225.dp)
   val padding = rememberAdaptivePadding()
   val labelTextStyle =
     if (LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)) {

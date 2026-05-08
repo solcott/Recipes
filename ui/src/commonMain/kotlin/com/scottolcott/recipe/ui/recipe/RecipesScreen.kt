@@ -47,7 +47,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(RecipesScreen::class, AppScope::class)
 fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
-  val cells = rememberAdaptiveGridCells()
+  val cells = rememberAdaptiveGridCells(minWidthMediumCompact = 350.dp)
   val padding = rememberAdaptivePadding()
   when (state) {
     is RecipesState.Error ->
