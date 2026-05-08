@@ -30,6 +30,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,8 +40,6 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_EXPANDED_LOWER_BOUND
-import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
-import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_LARGE_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
@@ -66,6 +66,7 @@ import com.scottolcott.recipe.ui.instructions
 import com.scottolcott.recipe.ui.label_24px
 import com.scottolcott.recipe.ui.link_24px
 import com.scottolcott.recipe.ui.location_on_24px
+import com.scottolcott.recipe.ui.rememberAdaptivePadding
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
 import kotlin.time.Clock
@@ -94,11 +95,9 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
   val windowSizeClass = LocalWindowSizeClass.current
 
   val isMediumWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
-  val isExpandedWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND)
   val isLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_LARGE_LOWER_BOUND)
   val isExtraLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXTRA_LARGE_LOWER_BOUND)
 
-  val isMediumHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
   val isExpandedHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_EXPANDED_LOWER_BOUND)
 
   val columns =
@@ -108,39 +107,31 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
       else -> 1
     }
 
-  val horizontalPadding =
-    when {
-      isExtraLargeWidth -> 48.dp
-      isLargeWidth -> 32.dp
-      isExpandedWidth -> 24.dp
-      isMediumWidth -> 24.dp
-      else -> 16.dp
-    }
-
-  val verticalPadding =
-    when {
-      isExpandedHeight -> 32.dp
-      isMediumHeight -> 24.dp
-      else -> 16.dp
-    }
+  val padding = rememberAdaptivePadding()
 
   SelectionContainer {
-    Column(
-      Modifier.fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = horizontalPadding, vertical = verticalPadding)
-    ) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
+      // Title (Full Width)
+      RecipeTitle(recipe, Modifier.padding(bottom = 16.dp))
+
       Grid(
         config = {
-          repeat(columns) { column(1.fr) }
-          // We'll use Auto rows and items will span as needed
-          gap(horizontalPadding)
+          when (columns) {
+            1 -> column(1.fr)
+            2 -> {
+              column(2.fr)
+              column(3.fr)
+            }
+            3 -> {
+              column(2.fr)
+              column(3.fr)
+              column(3.fr)
+            }
+          }
+          gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
         },
-        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
       ) {
-        // Row 1: Title (Full Width)
-        RecipeTitle(recipe, Modifier.gridItem(row = 1, column = 1, columnSpan = columns))
-
         when (columns) {
           1 -> {
             // Stacked layout
@@ -148,16 +139,16 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
               recipe,
               recipe.favorite,
               onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
-              modifier = Modifier.gridItem(row = 2, column = 1),
+              modifier = Modifier.gridItem(row = 1, column = 1),
             )
-            RecipeIngredients(recipe, Modifier.gridItem(row = 3, column = 1))
-            RecipeInstructions(recipe, Modifier.gridItem(row = 4, column = 1))
-            RecipeMetaInfo(recipe, Modifier.gridItem(row = 5, column = 1))
+            RecipeIngredients(recipe, Modifier.gridItem(row = 2, column = 1))
+            RecipeInstructions(recipe, Modifier.gridItem(row = 3, column = 1))
+            RecipeMetaInfo(recipe, Modifier.gridItem(row = 4, column = 1))
           }
           2 -> {
             // 2 Columns: Image on left, Everything else on right
             Column(
-              Modifier.gridItem(row = 2, column = 1),
+              Modifier.gridItem(row = 1, column = 1),
               verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
               RecipeImage(
@@ -168,7 +159,7 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
               RecipeMetaInfo(recipe)
             }
             Column(
-              Modifier.gridItem(row = 2, column = 2),
+              Modifier.gridItem(row = 1, column = 2),
               verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
               RecipeIngredients(recipe)
@@ -178,7 +169,7 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
           3 -> {
             // 3 Columns: Image, Ingredients, Instructions all side-by-side
             Column(
-              Modifier.gridItem(row = 2, column = 1),
+              Modifier.gridItem(row = 1, column = 1),
               verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
               RecipeImage(
@@ -188,8 +179,8 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
               )
               RecipeMetaInfo(recipe)
             }
-            RecipeIngredients(recipe, Modifier.gridItem(row = 2, column = 2))
-            RecipeInstructions(recipe, Modifier.gridItem(row = 2, column = 3))
+            RecipeIngredients(recipe, Modifier.gridItem(row = 1, column = 2))
+            RecipeInstructions(recipe, Modifier.gridItem(row = 1, column = 3))
           }
         }
       }
@@ -317,13 +308,13 @@ private fun RecipeImage(
   onToggleFavorite: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  Box(modifier = modifier.aspectRatio(1f), contentAlignment = Alignment.BottomEnd) {
+  Box(modifier = modifier, contentAlignment = Alignment.BottomEnd) {
     AsyncImage(
       recipe.thumbnail,
       contentDescription = null,
       SingletonImageLoader.get(LocalPlatformContext.current),
-      contentScale = ContentScale.Crop,
-      modifier = Modifier.fillMaxSize(),
+      contentScale = ContentScale.Fit,
+      modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.medium),
     )
     FavoriteIcon(
       isFavorite,
