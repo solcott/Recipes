@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.ui.recipe
 
+import androidx.compose.animation.animateBounds
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,12 +28,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -106,78 +110,95 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
 
   val padding = rememberAdaptivePadding()
 
-  SelectionContainer {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
-      // Title (Full Width)
-      RecipeTitle(recipe, Modifier.padding(bottom = 16.dp))
+  LookaheadScope {
+    SelectionContainer {
+      Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
+        // Title (Full Width)
+        RecipeTitle(recipe, Modifier.padding(bottom = 16.dp))
 
-      Grid(
-        config = {
-          when (columns) {
-            1 -> column(1.fr)
-            2 -> {
-              column(1.fr)
-              column(3.fr)
-            }
-            3 -> {
-              column(1.fr)
-              column(3.fr)
-              column(7.fr)
-            }
-          }
-          gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
-        },
-        modifier = Modifier.fillMaxWidth(),
-      ) {
-        when (columns) {
-          1 -> {
-            // Stacked layout
+        val recipeImage = remember {
+          movableContentOf { modifier: Modifier ->
             RecipeImage(
               recipe,
               recipe.favorite,
               onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
-              modifier = Modifier.gridItem(row = 1, column = 1),
+              modifier = modifier.animateBounds(this@LookaheadScope),
             )
-            RecipeIngredients(recipe, Modifier.gridItem(row = 2, column = 1))
-            RecipeInstructions(recipe, Modifier.gridItem(row = 3, column = 1))
-            RecipeMetaInfo(recipe, Modifier.gridItem(row = 4, column = 1))
           }
-          2 -> {
-            // 2 Columns: Image on left, Everything else on right
-            Column(
-              Modifier.gridItem(row = 1, column = 1),
-              verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-              RecipeImage(
-                recipe,
-                recipe.favorite,
-                onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
-              )
-              RecipeMetaInfo(recipe)
-            }
-            Column(
-              Modifier.gridItem(row = 1, column = 2),
-              verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-              RecipeIngredients(recipe)
-              RecipeInstructions(recipe)
-            }
+        }
+
+        val ingredients = remember {
+          movableContentOf { modifier: Modifier ->
+            RecipeIngredients(recipe, modifier.animateBounds(this@LookaheadScope))
           }
-          3 -> {
-            // 3 Columns: Image, Ingredients, Instructions all side-by-side
-            Column(
-              Modifier.gridItem(row = 1, column = 1),
-              verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-              RecipeImage(
-                recipe,
-                recipe.favorite,
-                onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
-              )
-              RecipeMetaInfo(recipe)
+        }
+
+        val instructions = remember {
+          movableContentOf { modifier: Modifier ->
+            RecipeInstructions(recipe, modifier.animateBounds(this@LookaheadScope))
+          }
+        }
+        val metaInfo = remember {
+          movableContentOf { modifier: Modifier ->
+            RecipeMetaInfo(recipe, modifier.animateBounds(this@LookaheadScope))
+          }
+        }
+        Grid(
+          config = {
+            when (columns) {
+              1 -> column(1.fr)
+              2 -> {
+                column(1.fr)
+                column(3.fr)
+              }
+              3 -> {
+                column(1.fr)
+                column(3.fr)
+                column(7.fr)
+              }
             }
-            RecipeIngredients(recipe, Modifier.gridItem(row = 1, column = 2))
-            RecipeInstructions(recipe, Modifier.gridItem(row = 1, column = 3))
+            gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
+          },
+          modifier = Modifier.fillMaxWidth(),
+        ) {
+          when (columns) {
+            1 -> {
+              // Stacked layout`
+              recipeImage(Modifier.gridItem(row = 1, column = 1))
+              ingredients(Modifier.gridItem(row = 2, column = 1))
+              instructions(Modifier.gridItem(row = 3, column = 1))
+              metaInfo(Modifier.gridItem(row = 4, column = 1))
+            }
+            2 -> {
+              // 2 Columns: Image on left, Everything else on right
+              Column(
+                Modifier.gridItem(row = 1, column = 1),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+              ) {
+                recipeImage(Modifier)
+                metaInfo(Modifier)
+                RecipeMetaInfo(recipe)
+              }
+              Column(
+                Modifier.gridItem(row = 1, column = 2),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+              ) {
+                ingredients(Modifier)
+                instructions(Modifier)
+              }
+            }
+            3 -> {
+              // 3 Columns: Image, Ingredients, Instructions all side-by-side
+              Column(
+                Modifier.gridItem(row = 1, column = 1),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+              ) {
+                recipeImage(Modifier)
+                metaInfo(Modifier)
+              }
+              ingredients(Modifier.gridItem(row = 1, column = 2))
+              instructions(Modifier.gridItem(row = 1, column = 3))
+            }
           }
         }
       }
