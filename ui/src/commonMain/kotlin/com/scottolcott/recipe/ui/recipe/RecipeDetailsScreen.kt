@@ -92,19 +92,14 @@ fun RecipeDetailsScreen(state: RecipeDetailsState, modifier: Modifier = Modifier
   }
 }
 
-@OptIn(ExperimentalGridApi::class)
 @Composable
 private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Unit) {
   val windowSizeClass = LocalWindowSizeClass.current
-
-  val isMediumWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
-  val isLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_LARGE_LOWER_BOUND)
-  val isExtraLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXTRA_LARGE_LOWER_BOUND)
-
   val columns =
     when {
-      isLargeWidth || isExtraLargeWidth -> 3
-      isMediumWidth -> 2
+      windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_LARGE_LOWER_BOUND) ||
+        windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXTRA_LARGE_LOWER_BOUND) -> 3
+      windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND) -> 2
       else -> 1
     }
 
@@ -113,94 +108,100 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
   LookaheadScope {
     SelectionContainer {
       Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
-        // Title (Full Width)
         RecipeTitle(recipe, Modifier.padding(bottom = 16.dp))
+        RecipeGrid(recipe, columns, padding, eventSink)
+      }
+    }
+  }
+}
 
-        val recipeImage = remember {
-          movableContentOf { modifier: Modifier ->
-            RecipeImage(
-              recipe,
-              recipe.favorite,
-              onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
-              modifier = modifier.animateBounds(this@LookaheadScope),
-            )
-          }
-        }
+@OptIn(ExperimentalGridApi::class)
+@Composable
+private fun LookaheadScope.RecipeGrid(
+  recipe: Recipe,
+  columns: Int,
+  padding: androidx.compose.foundation.layout.PaddingValues,
+  eventSink: (RecipeDetailsEvent) -> Unit,
+) {
+  val recipeImage = remember {
+    movableContentOf { modifier: Modifier ->
+      RecipeImage(
+        recipe,
+        recipe.favorite,
+        onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
+        modifier = modifier.animateBounds(this@RecipeGrid),
+      )
+    }
+  }
 
-        val ingredients = remember {
-          movableContentOf { modifier: Modifier ->
-            RecipeIngredients(recipe, modifier.animateBounds(this@LookaheadScope))
-          }
-        }
+  val ingredients = remember {
+    movableContentOf { modifier: Modifier ->
+      RecipeIngredients(recipe, modifier.animateBounds(this@RecipeGrid))
+    }
+  }
 
-        val instructions = remember {
-          movableContentOf { modifier: Modifier ->
-            RecipeInstructions(recipe, modifier.animateBounds(this@LookaheadScope))
-          }
+  val instructions = remember {
+    movableContentOf { modifier: Modifier ->
+      RecipeInstructions(recipe, modifier.animateBounds(this@RecipeGrid))
+    }
+  }
+  val metaInfo = remember {
+    movableContentOf { modifier: Modifier ->
+      RecipeMetaInfo(recipe, modifier.animateBounds(this@RecipeGrid))
+    }
+  }
+
+  Grid(
+    config = {
+      when (columns) {
+        1 -> column(1.fr)
+        2 -> {
+          column(1.fr)
+          column(3.fr)
         }
-        val metaInfo = remember {
-          movableContentOf { modifier: Modifier ->
-            RecipeMetaInfo(recipe, modifier.animateBounds(this@LookaheadScope))
-          }
+        else -> {
+          column(1.fr)
+          column(3.fr)
+          column(7.fr)
         }
-        Grid(
-          config = {
-            when (columns) {
-              1 -> column(1.fr)
-              2 -> {
-                column(1.fr)
-                column(3.fr)
-              }
-              3 -> {
-                column(1.fr)
-                column(3.fr)
-                column(7.fr)
-              }
-            }
-            gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
-          },
-          modifier = Modifier.fillMaxWidth(),
+      }
+      gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
+    },
+    modifier = Modifier.fillMaxWidth(),
+  ) {
+    when (columns) {
+      1 -> {
+        recipeImage(Modifier.gridItem(row = 1, column = 1))
+        ingredients(Modifier.gridItem(row = 2, column = 1))
+        instructions(Modifier.gridItem(row = 3, column = 1))
+        metaInfo(Modifier.gridItem(row = 4, column = 1))
+      }
+      2 -> {
+        Column(
+          Modifier.gridItem(row = 1, column = 1),
+          verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-          when (columns) {
-            1 -> {
-              // Stacked layout`
-              recipeImage(Modifier.gridItem(row = 1, column = 1))
-              ingredients(Modifier.gridItem(row = 2, column = 1))
-              instructions(Modifier.gridItem(row = 3, column = 1))
-              metaInfo(Modifier.gridItem(row = 4, column = 1))
-            }
-            2 -> {
-              // 2 Columns: Image on left, Everything else on right
-              Column(
-                Modifier.gridItem(row = 1, column = 1),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-              ) {
-                recipeImage(Modifier)
-                metaInfo(Modifier)
-                RecipeMetaInfo(recipe)
-              }
-              Column(
-                Modifier.gridItem(row = 1, column = 2),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-              ) {
-                ingredients(Modifier)
-                instructions(Modifier)
-              }
-            }
-            3 -> {
-              // 3 Columns: Image, Ingredients, Instructions all side-by-side
-              Column(
-                Modifier.gridItem(row = 1, column = 1),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-              ) {
-                recipeImage(Modifier)
-                metaInfo(Modifier)
-              }
-              ingredients(Modifier.gridItem(row = 1, column = 2))
-              instructions(Modifier.gridItem(row = 1, column = 3))
-            }
-          }
+          recipeImage(Modifier)
+          metaInfo(Modifier)
         }
+        Column(
+          Modifier.gridItem(row = 1, column = 2),
+          verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+          ingredients(Modifier)
+          instructions(Modifier)
+        }
+      }
+      else -> {
+        Column(
+          Modifier.gridItem(row = 1, column = 1),
+          verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+          recipeImage(Modifier)
+          metaInfo(Modifier)
+        }
+        ingredients(Modifier.gridItem(row = 1, column = 2))
+        instructions(Modifier.gridItem(row = 1, column = 3))
       }
     }
   }
@@ -244,78 +245,90 @@ private fun RecipeInstructions(recipe: Recipe, modifier: Modifier = Modifier) {
   }
 }
 
-@OptIn(ExperimentalFlexBoxApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun RecipeMetaInfo(recipe: Recipe, modifier: Modifier = Modifier) {
   val details = recipe.details
-  val tags = details?.tags.orEmpty()
   val uriHandler = LocalUriHandler.current
 
   Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    // Tags
-    if (tags.isNotEmpty()) {
-      FlexBox(config = { gap(8.dp) }) {
-        for (tag in tags) {
-          AssistChip(onClick = {}, label = { Text(tag) })
-        }
+    RecipeTags(details?.tags.orEmpty())
+    RecipeCategoryAndArea(recipe)
+    RecipeSources(details, uriHandler)
+  }
+}
+
+@OptIn(ExperimentalFlexBoxApi::class)
+@Composable
+private fun RecipeTags(tags: List<String>) {
+  if (tags.isNotEmpty()) {
+    FlexBox(config = { gap(8.dp) }) {
+      for (tag in tags) {
+        AssistChip(onClick = {}, label = { Text(tag) })
       }
     }
+  }
+}
 
-    // Category and Area
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      recipe.category?.let {
-        AssistChip(
-          onClick = {},
-          label = { Text(it) },
-          leadingIcon = { Icon(painterResource(Res.drawable.label_24px), null) },
-          colors =
-            AssistChipDefaults.assistChipColors(
-              leadingIconContentColor = MaterialTheme.colorScheme.tertiary
-            ),
-        )
-      }
-      recipe.area?.let {
-        AssistChip(
-          onClick = {},
-          label = { Text(it) },
-          leadingIcon = { Icon(painterResource(Res.drawable.location_on_24px), null) },
-          colors =
-            AssistChipDefaults.assistChipColors(
-              leadingIconContentColor = MaterialTheme.colorScheme.tertiary
-            ),
-        )
-      }
-    }
-
-    // Source and Image Source
-    val source = details?.source
-    if (!source.isNullOrBlank())
+@Composable
+private fun RecipeCategoryAndArea(recipe: Recipe) {
+  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    recipe.category?.let {
       AssistChip(
-        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
-        onClick = { uriHandler.openUri(source) },
-        label = { Text(source) },
-        leadingIcon = { Icon(painterResource(Res.drawable.link_24px), null) },
+        onClick = {},
+        label = { Text(it) },
+        leadingIcon = { Icon(painterResource(Res.drawable.label_24px), null) },
         colors =
           AssistChipDefaults.assistChipColors(
-            labelColor = MaterialTheme.colorScheme.primary,
-            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
-          ),
-      )
-    val imageSource = details?.imageSource
-
-    if (!imageSource.isNullOrBlank()) {
-      AssistChip(
-        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
-        onClick = { uriHandler.openUri(imageSource) },
-        label = { Text(imageSource) },
-        leadingIcon = { Icon(painterResource(Res.drawable.image_24px), null) },
-        colors =
-          AssistChipDefaults.assistChipColors(
-            labelColor = MaterialTheme.colorScheme.secondary,
-            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
+            leadingIconContentColor = MaterialTheme.colorScheme.tertiary
           ),
       )
     }
+    recipe.area?.let {
+      AssistChip(
+        onClick = {},
+        label = { Text(it) },
+        leadingIcon = { Icon(painterResource(Res.drawable.location_on_24px), null) },
+        colors =
+          AssistChipDefaults.assistChipColors(
+            leadingIconContentColor = MaterialTheme.colorScheme.tertiary
+          ),
+      )
+    }
+  }
+}
+
+@Composable
+private fun RecipeSources(
+  details: RecipeDetails?,
+  uriHandler: androidx.compose.ui.platform.UriHandler,
+) {
+  val source = details?.source
+  if (!source.isNullOrBlank()) {
+    AssistChip(
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
+      onClick = { uriHandler.openUri(source) },
+      label = { Text(source) },
+      leadingIcon = { Icon(painterResource(Res.drawable.link_24px), null) },
+      colors =
+        AssistChipDefaults.assistChipColors(
+          labelColor = MaterialTheme.colorScheme.primary,
+          leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
+        ),
+    )
+  }
+  val imageSource = details?.imageSource
+  if (!imageSource.isNullOrBlank()) {
+    AssistChip(
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
+      onClick = { uriHandler.openUri(imageSource) },
+      label = { Text(imageSource) },
+      leadingIcon = { Icon(painterResource(Res.drawable.image_24px), null) },
+      colors =
+        AssistChipDefaults.assistChipColors(
+          labelColor = MaterialTheme.colorScheme.secondary,
+          leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
+        ),
+    )
   }
 }
 
@@ -414,5 +427,5 @@ private fun RecipeDetailsPreview() {
       details = details,
       lastFetched = Clock.System.now(),
     )
-  RecipeDetails(recipe, {})
+  RecipeDetails(recipe) {}
 }
