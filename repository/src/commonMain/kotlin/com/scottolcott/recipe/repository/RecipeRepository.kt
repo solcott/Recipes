@@ -238,7 +238,8 @@ internal class RecipeRepositoryImpl(
           }
 
         recipeDao.insert(dtos.toEntities(category, area))
-        fetchHistoryDataStore.updateLastFetchTime(key, Clock.System.now())
+        val now = Clock.System.now()
+        fetchHistoryDataStore.updateLastFetchTime(key, now, now.minus(cacheExpiration))
       },
     )
   }

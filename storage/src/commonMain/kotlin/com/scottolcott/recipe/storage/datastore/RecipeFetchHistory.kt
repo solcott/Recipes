@@ -42,8 +42,19 @@ class RecipeFetchHistoryDataStore(private val storage: Storage<RecipeFetchHistor
   val history: Flow<RecipeFetchHistory>
     get() = dataStore.data
 
-  suspend fun updateLastFetchTime(key: RecipeKey, time: Instant) = dataStore.updateData { prev ->
-    prev.copy(lastFetchTimes = prev.lastFetchTimes.toMutableMap().apply { put(key, time) })
+  suspend fun updateLastFetchTime(
+    key: RecipeKey,
+    time: Instant,
+    expirationThreshold: Instant? = null,
+  ) = dataStore.updateData { prev ->
+    val updatedTimes = prev.lastFetchTimes.toMutableMap().apply { put(key, time) }
+    val finalTimes =
+      if (expirationThreshold != null) {
+        updatedTimes.filterValues { it >= expirationThreshold }
+      } else {
+        updatedTimes
+      }
+    prev.copy(lastFetchTimes = finalTimes)
   }
 
   suspend fun getLastFetchTime(key: RecipeKey): Instant? {
