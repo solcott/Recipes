@@ -4,9 +4,11 @@ import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
+import com.scottolcott.recipe.model.RecipeKey
 import com.scottolcott.recipe.network.api.RecipeApi
 import com.scottolcott.recipe.network.dto.RecipeDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
+import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.SearchSearchSuggestionsDataStore
 import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.swapType
@@ -19,6 +21,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import org.mobilenativefoundation.store.store5.Fetcher
@@ -50,18 +54,6 @@ interface RecipeRepository {
   fun getSearchSuggestionsAsFlow(query: String): Flow<List<String>>
 }
 
-internal sealed interface RecipeKey {
-  data class Query(val query: String) : RecipeKey
-
-  data class ById(val id: RecipeId) : RecipeKey
-
-  data class ByCategory(val category: String) : RecipeKey
-
-  data class ByArea(val area: String) : RecipeKey
-
-  data object Favorites : RecipeKey
-}
-
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
 @Inject
@@ -69,6 +61,7 @@ internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
   private val suggestionsDataStore: SearchSearchSuggestionsDataStore,
+  private val fetchHistoryDataStore: RecipeFetchHistoryDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
 ) : RecipeRepository {
@@ -101,9 +94,13 @@ internal class RecipeRepositoryImpl(
   private val basicRecipeStore: Store<RecipeKey, RecipeResponse> =
     storeBuilder.validator(basicRecipeValidator).build()
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> {
-    return detailedRecipeStore
-      .stream(StoreReadRequest.cached(RecipeKey.Query(query.trim()), false))
+    val key = RecipeKey.Query(query.trim())
+    return refreshNeeded(key)
+      .flatMapLatest { refresh ->
+        detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
+      }
       .onStart { addSearchSuggestion(query) }
       .map {
         when (it) {
@@ -114,9 +111,11 @@ internal class RecipeRepositoryImpl(
       .logErrors(logger, "Error searching recipes by $query")
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>> {
-    return basicRecipeStore
-      .stream(StoreReadRequest.cached(RecipeKey.ByCategory(category), false))
+    val key = RecipeKey.ByCategory(category)
+    return refreshNeeded(key)
+      .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -126,9 +125,11 @@ internal class RecipeRepositoryImpl(
       .logErrors(logger, "Error loading recipes by category $category")
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> {
-    return basicRecipeStore
-      .stream(StoreReadRequest.cached(RecipeKey.ByArea(area), false))
+    val key = RecipeKey.ByArea(area)
+    return refreshNeeded(key)
+      .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -138,9 +139,13 @@ internal class RecipeRepositoryImpl(
       .logErrors(logger, "Error loading recipes by area $area")
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   override fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>> {
-    return detailedRecipeStore
-      .stream(StoreReadRequest.cached(RecipeKey.ById(id), false))
+    val key = RecipeKey.ById(id)
+    return refreshNeeded(key)
+      .flatMapLatest { refresh ->
+        detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
+      }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes.firstOrNull(), it.origin)
@@ -150,6 +155,7 @@ internal class RecipeRepositoryImpl(
       .logErrors(logger, "Error loading recipes by id : $id")
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> {
     return detailedRecipeStore
       .stream(StoreReadRequest.cached(RecipeKey.Favorites, false))
@@ -232,8 +238,16 @@ internal class RecipeRepositoryImpl(
           }
 
         recipeDao.insert(dtos.toEntities(category, area))
+        fetchHistoryDataStore.updateLastFetchTime(key, Clock.System.now())
       },
     )
+  }
+
+  private fun refreshNeeded(key: RecipeKey): Flow<Boolean> {
+    return fetchHistoryDataStore.history.map { history ->
+      val lastFetch = history.lastFetchTimes[key]
+      lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()
+    }
   }
 }
 

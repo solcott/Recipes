@@ -3,6 +3,8 @@ package com.scottolcott.recipe.storage.datastore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioSerializer
+import com.scottolcott.recipe.serialization.StorageJson
+import dev.zacsweers.metro.Inject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
@@ -13,15 +15,17 @@ import okio.use
 
 @Serializable data class SearchSuggestions(val suggestions: List<String>)
 
-internal object SuggestionsJsonSerializer : OkioSerializer<SearchSuggestions> {
+@Inject
+class SuggestionsJsonSerializer(@param:StorageJson private val json: Json) :
+  OkioSerializer<SearchSuggestions> {
   override val defaultValue: SearchSuggestions = SearchSuggestions(persistentListOf())
 
   override suspend fun readFrom(source: BufferedSource): SearchSuggestions {
-    return Json.decodeFromString<SearchSuggestions>(source.readUtf8())
+    return json.decodeFromString<SearchSuggestions>(source.readUtf8())
   }
 
   override suspend fun writeTo(t: SearchSuggestions, sink: BufferedSink) {
-    sink.use { it.writeUtf8(Json.encodeToString(SearchSuggestions.serializer(), t)) }
+    sink.use { it.writeUtf8(json.encodeToString(SearchSuggestions.serializer(), t)) }
   }
 }
 

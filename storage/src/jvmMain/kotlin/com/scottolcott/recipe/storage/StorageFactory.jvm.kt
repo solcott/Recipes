@@ -4,6 +4,8 @@ import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioStorage
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import com.scottolcott.recipe.storage.datastore.RecipeFetchHistory
+import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.SearchSuggestions
 import com.scottolcott.recipe.storage.datastore.SuggestionsJsonSerializer
 import dev.zacsweers.metro.AppScope
@@ -15,7 +17,10 @@ import okio.Path.Companion.toOkioPath
 
 @SingleIn(AppScope::class)
 @Inject
-actual class StorageFactory {
+actual class StorageFactory(
+  private val suggestionsSerializer: SuggestionsJsonSerializer,
+  private val historySerializer: RecipeFetchHistoryJsonSerializer,
+) {
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     // Note: System.getProperty("java.io.tmpdir") points to the temporary folder on the system,
     // which might be cleaned upon reboot. On macOS, you can instead use the ~/Library/Application
@@ -32,10 +37,23 @@ actual class StorageFactory {
     // which might be cleaned upon reboot. On macOS, you can instead use the ~/Library/Application
     // Support/[your-app] folder.
     return OkioStorage(
-      serializer = SuggestionsJsonSerializer,
+      serializer = suggestionsSerializer,
       fileSystem = FileSystem.SYSTEM,
       producePath = {
         File(System.getProperty("java.io.tmpdir"), "search_suggestions.json").toOkioPath()
+      },
+    )
+  }
+
+  actual fun createRecipeFetchHistoryDataStoreStorage(): Storage<RecipeFetchHistory> {
+    // Note: System.getProperty("java.io.tmpdir") points to the temporary folder on the system,
+    // which might be cleaned upon reboot. On macOS, you can instead use the ~/Library/Application
+    // Support/[your-app] folder.
+    return OkioStorage(
+      serializer = historySerializer,
+      fileSystem = FileSystem.SYSTEM,
+      producePath = {
+        File(System.getProperty("java.io.tmpdir"), "recipe_fetch_history.json").toOkioPath()
       },
     )
   }

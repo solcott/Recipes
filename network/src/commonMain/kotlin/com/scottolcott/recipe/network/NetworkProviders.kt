@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.network
 
 import com.scottolcott.recipe.config.RuntimeConfig
+import com.scottolcott.recipe.serialization.NetworkJson
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
@@ -28,10 +29,19 @@ private const val MAX_RETRIES = 3
 @ContributesTo(AppScope::class)
 interface NetworkProviders {
 
+  @Provides
+  @NetworkJson
+  @SingleIn(AppScope::class)
+  fun provideNetworkJson(): Json = Json { ignoreUnknownKeys = true }
+
   @ApiClient
   @SingleIn(AppScope::class)
   @Provides
-  fun provideKtorClient(logger: KtorLogger, runtimeConfig: RuntimeConfig): HttpClient {
+  fun provideKtorClient(
+    logger: KtorLogger,
+    runtimeConfig: RuntimeConfig,
+    @NetworkJson json: Json,
+  ): HttpClient {
     return HttpClient(provideKtorEngineFactory()) {
       expectSuccess = true
       install(Resources)
@@ -46,7 +56,7 @@ interface NetworkProviders {
       }
       install(HttpRequestRetry) { retryOnExceptionOrServerErrors(MAX_RETRIES) }
 
-      install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+      install(ContentNegotiation) { json(json) }
 
       install(Logging) {
         this.logger = logger
