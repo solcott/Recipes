@@ -346,6 +346,7 @@ naming:
   MatchingDeclarationName:
     active: true
     mustBeFirst: true
+    excludes: ['**/build/**', '**/generated/**']
     multiplatformTargets:
       - 'ios'
       - 'android'
@@ -693,6 +694,7 @@ style:
     maxChainedCalls: 5
   MaxLineLength:
     active: true
+    excludes: ['**/build/**', '**/generated/**']
     maxLineLength: 120
     excludePackageStatements: true
     excludeImportStatements: true

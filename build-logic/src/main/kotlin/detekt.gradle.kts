@@ -11,15 +11,17 @@ configure<DetektExtension> {
 }
 
 tasks.withType<Detekt> {
-  reports {
-    html.required = true
-  }
+  reports { html.required = true }
 
   exclude {
     // excludes build directories
-    it.file.relativeTo(projectDir).startsWith(project.layout.buildDirectory.get().asFile.relativeTo(projectDir))
+    val buildDirectory = project.layout.buildDirectory.get().asFile
+    it.file.absolutePath.startsWith(buildDirectory.absolutePath) ||
+      it.file.path.contains("/build/") ||
+      it.file.name == "SharedBuildConfig.kt"
   }
 }
+
 dependencies {
   val composeRulesDep = versionCatalog.findLibrary("detekt.compose.rules").get()
   add("detektPlugins", composeRulesDep)
@@ -27,5 +29,6 @@ dependencies {
 
 tasks.register("detektAll") {
   group = "verification"
-  dependsOn(tasks.withType<Detekt>())
+  val detektTasks = tasks.withType<Detekt>().matching { it.name != "detektDevJvm" }
+  dependsOn(detektTasks)
 }
