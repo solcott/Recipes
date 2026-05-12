@@ -1,7 +1,6 @@
 package com.scottolcott.recipe.ui.recipe
 
 import androidx.compose.animation.animateBounds
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
@@ -39,6 +37,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
@@ -61,8 +60,6 @@ import com.scottolcott.recipe.model.RecipeId
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.an_error_occurred
-import com.scottolcott.recipe.ui.favorite_24px
-import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.image_24px
 import com.scottolcott.recipe.ui.ingredient_with_measure
 import com.scottolcott.recipe.ui.ingredients
@@ -360,22 +357,6 @@ private fun RecipeImage(
       onClick = onToggleFavorite,
     )
   }
-}
-
-@Composable
-fun FavoriteIcon(
-  isFavorite: Boolean,
-  modifier: Modifier = Modifier,
-  onClick: (() -> Unit)? = null,
-) {
-  Icon(
-    if (isFavorite) painterResource(Res.drawable.favorite_24px_filled)
-    else painterResource(Res.drawable.favorite_24px),
-    contentDescription = "favorite",
-    modifier =
-      modifier.clip(CircleShape).clickable(enabled = onClick != null) { onClick?.invoke() },
-    tint = MaterialTheme.colorScheme.primary,
-  )
 }
 
 @PreviewWrapper(ThemeWrapper::class)
