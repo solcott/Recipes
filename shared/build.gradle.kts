@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalMetroGradleApi::class)
+
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import com.scottolcott.gradle.mealDbApiKey
+import dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi
 
 plugins {
   id("kmp.library")
