@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.producer.RecipesProducer
+import com.scottolcott.recipe.errorMessage
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -33,30 +34,25 @@ class RecipesPresenter(
   override fun present(): RecipesState {
     var retryTrigger by rememberRetained { mutableIntStateOf(0) }
     val showAreaLabel = screen is RecipesScreen.BySearch
-    screen as RecipesScreen
-    val recipesResponse =
-      when (screen) {
-        is RecipesScreen.ByCategory ->
-          recipesProducer.produceByCategory(screen.category, retryTrigger)
-        is RecipesScreen.BySearch ->
-          recipesProducer.produceBySearchTerm(screen.searchTerm, retryTrigger)
-        is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
-        is RecipesScreen.ByArea -> recipesProducer.produceByArea(screen.area, retryTrigger)
-      }
+    val recipesResponse = produceRecipesResponse(screen as RecipesScreen, retryTrigger)
+
     var lastRecipes by rememberRetained(retryTrigger) { mutableStateOf<List<Recipe>?>(null) }
     if (recipesResponse is StoreReadResponse.Data) {
       lastRecipes = recipesResponse.value
     }
+
     val errorEventSink: (RecipesEvent.Error) -> Unit = { event ->
       when (event) {
         RecipesEvent.Error.RetryClicked -> retryTrigger++
       }
     }
+
     val successEventSink: (RecipesEvent.Success) -> Unit = { event ->
       when (event) {
         is RecipesEvent.Success.RecipeClicked -> navigator.goTo(RecipeDetailsScreen(event.id))
       }
     }
+
     return when (recipesResponse) {
       is StoreReadResponse.Data<List<Recipe>> ->
         RecipesState.Success(
@@ -66,14 +62,7 @@ class RecipesPresenter(
           successEventSink,
         )
 
-      is StoreReadResponse.Error.Exception ->
-        RecipesState.Error(recipesResponse.error.message ?: "Unknown Error", errorEventSink)
-
-      is StoreReadResponse.Error.Message ->
-        RecipesState.Error(recipesResponse.message, errorEventSink)
-      // TODO not sure how to handle this
-      is StoreReadResponse.Error.Custom<*> ->
-        RecipesState.Error(recipesResponse.toString(), errorEventSink)
+      is StoreReadResponse.Error -> RecipesState.Error(recipesResponse.errorMessage, errorEventSink)
 
       is StoreReadResponse.Initial,
       is StoreReadResponse.Loading,
@@ -90,6 +79,21 @@ class RecipesPresenter(
           RecipesState.Loading
         }
       }
+    }
+  }
+
+  @Composable
+  private fun produceRecipesResponse(
+    screen: RecipesScreen,
+    retryTrigger: Int,
+  ): StoreReadResponse<List<Recipe>> {
+    return when (screen) {
+      is RecipesScreen.ByCategory ->
+        recipesProducer.produceByCategory(screen.category, retryTrigger)
+      is RecipesScreen.BySearch ->
+        recipesProducer.produceBySearchTerm(screen.searchTerm, retryTrigger)
+      is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
+      is RecipesScreen.ByArea -> recipesProducer.produceByArea(screen.area, retryTrigger)
     }
   }
 

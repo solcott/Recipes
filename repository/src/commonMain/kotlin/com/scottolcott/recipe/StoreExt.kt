@@ -21,6 +21,14 @@ fun <T> Flow<StoreReadResponse<T>>.logErrors(
   }
 }
 
+val StoreReadResponse.Error.errorMessage: String
+  get() =
+    when (this) {
+      is StoreReadResponse.Error.Exception -> error.message ?: "Unknown Error"
+      is StoreReadResponse.Error.Message -> message
+      is StoreReadResponse.Error.Custom<*> -> toString()
+    }
+
 val StoreReadResponse<*>.isLoading: Boolean
   get() = this is Loading
 
