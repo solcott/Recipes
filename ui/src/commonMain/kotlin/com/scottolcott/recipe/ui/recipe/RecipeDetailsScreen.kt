@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.FlexBox
@@ -305,11 +306,9 @@ private fun RecipeCategoryAndArea(recipe: Recipe, eventSink: (RecipeDetailsEvent
   }
 }
 
+@Suppress("UnusedReceiverParameter")
 @Composable
-private fun RecipeSources(
-  details: RecipeDetails?,
-  uriHandler: androidx.compose.ui.platform.UriHandler,
-) {
+private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHandler) {
   val source = details?.source
   if (!source.isNullOrBlank()) {
     AssistChip(
@@ -384,6 +383,7 @@ fun FavoriteIcon(
 @PreviewScreenSizes
 @PreviewLightDark
 @Composable
+@Suppress("UnusedPrivateFunction")
 private fun RecipeDetailsPreview() {
   val details =
     RecipeDetails(
