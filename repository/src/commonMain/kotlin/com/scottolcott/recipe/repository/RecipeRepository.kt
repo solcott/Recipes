@@ -97,7 +97,8 @@ internal class RecipeRepositoryImpl(
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> {
     val key = RecipeKey.Query(query.trim())
-    return refreshNeeded(key)
+    return fetchHistoryDataStore
+      .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh ->
         detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
       }
@@ -114,7 +115,8 @@ internal class RecipeRepositoryImpl(
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>> {
     val key = RecipeKey.ByCategory(category)
-    return refreshNeeded(key)
+    return fetchHistoryDataStore
+      .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
@@ -128,7 +130,8 @@ internal class RecipeRepositoryImpl(
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> {
     val key = RecipeKey.ByArea(area)
-    return refreshNeeded(key)
+    return fetchHistoryDataStore
+      .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
@@ -142,7 +145,8 @@ internal class RecipeRepositoryImpl(
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>> {
     val key = RecipeKey.ById(id)
-    return refreshNeeded(key)
+    return fetchHistoryDataStore
+      .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh ->
         detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
       }
@@ -242,13 +246,6 @@ internal class RecipeRepositoryImpl(
         fetchHistoryDataStore.updateLastFetchTime(key, now, now.minus(cacheExpiration))
       },
     )
-  }
-
-  private fun refreshNeeded(key: RecipeKey): Flow<Boolean> {
-    return fetchHistoryDataStore.history.map { history ->
-      val lastFetch = history.lastFetchTimes[key]
-      lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()
-    }
   }
 }
 

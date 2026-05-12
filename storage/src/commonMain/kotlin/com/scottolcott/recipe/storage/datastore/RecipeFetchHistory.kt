@@ -6,10 +6,13 @@ import androidx.datastore.core.okio.OkioSerializer
 import com.scottolcott.recipe.model.RecipeKey
 import com.scottolcott.recipe.serialization.StorageJson
 import dev.zacsweers.metro.Inject
+import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okio.BufferedSink
@@ -59,5 +62,12 @@ class RecipeFetchHistoryDataStore(private val storage: Storage<RecipeFetchHistor
 
   suspend fun getLastFetchTime(key: RecipeKey): Instant? {
     return history.first().lastFetchTimes[key]
+  }
+
+  fun refreshNeeded(key: RecipeKey, cacheExpiration: Duration): Flow<Boolean> {
+    return history.map { history ->
+      val lastFetch = history.lastFetchTimes[key]
+      lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()
+    }
   }
 }
