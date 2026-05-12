@@ -5,16 +5,22 @@ plugins {
   `kotlin-dsl`
   alias(libs.plugins.ktfmt)
   alias(libs.plugins.detekt)
+  alias(libs.plugins.dependency.sorter)
 }
 
 dependencies {
   implementation(libs.android.gradle.plugin)
   implementation(libs.kotlin.gradle.plugin)
-  compileOnly(libs.plugins.dependency.sorter.toDep())
+
   compileOnly(libs.plugins.dependency.analysis.toDep())
-  compileOnly(libs.plugins.ktfmt.toDep())
-  compileOnly(libs.plugins.kmp.parcelize.toDep())
+  compileOnly(libs.plugins.dependency.sorter.toDep())
   compileOnly(libs.plugins.detekt.toDep())
+  compileOnly(libs.plugins.kmp.parcelize.toDep())
+  compileOnly(libs.plugins.ktfmt.toDep())
+
+  detektPlugins(
+    libs.detekt.compose.rules
+  ) // required in order to use same detekt.yml as main project
 }
 
 kotlin { jvmToolchain(libs.versions.jvm.toolchain.get().toInt()) }
