@@ -7,7 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import co.touchlab.kermit.Logger
-import com.scottolcott.recipe.domain.presenter.RecipesScreen.*
+import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByArea
+import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByCategory
 import com.scottolcott.recipe.isError
 import com.scottolcott.recipe.isLoading
 import com.scottolcott.recipe.model.Recipe
