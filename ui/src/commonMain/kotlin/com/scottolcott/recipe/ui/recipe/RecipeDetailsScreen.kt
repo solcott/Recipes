@@ -5,14 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.ExperimentalGridApi
-import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.GridConfigurationScope
 import androidx.compose.foundation.layout.GridScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -65,9 +62,7 @@ import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.an_error_occurred
 import com.scottolcott.recipe.ui.image_24px
-import com.scottolcott.recipe.ui.label_24px
 import com.scottolcott.recipe.ui.link_24px
-import com.scottolcott.recipe.ui.location_on_24px
 import com.scottolcott.recipe.ui.rememberAdaptivePadding
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
@@ -107,7 +102,11 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
   LookaheadScope {
     SelectionContainer {
       Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
-        RecipeTitle(recipe, Modifier.padding(bottom = 16.dp))
+        Text(
+          recipe.name,
+          style = MaterialTheme.typography.headlineMediumEmphasized,
+          modifier = Modifier.padding(bottom = 16.dp).fillMaxWidth(),
+        )
         RecipeGrid(recipe, columns, padding, eventSink)
       }
     }
@@ -220,16 +219,6 @@ private fun GridScope.RecipeGridLayout(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private fun RecipeTitle(recipe: Recipe, modifier: Modifier = Modifier) {
-  Text(
-    recipe.name,
-    style = MaterialTheme.typography.headlineMediumEmphasized,
-    modifier = modifier.fillMaxWidth(),
-  )
-}
-
-@Composable
 private fun RecipeMetaInfo(
   recipe: Recipe,
   eventSink: (RecipeDetailsEvent) -> Unit,
@@ -242,50 +231,6 @@ private fun RecipeMetaInfo(
     RecipeTags(details?.tags.orEmpty())
     RecipeCategoryAndArea(recipe, eventSink)
     RecipeSources(details, uriHandler)
-  }
-}
-
-@OptIn(ExperimentalFlexBoxApi::class)
-@Composable
-private fun RecipeTags(tags: List<String>) {
-  if (tags.isNotEmpty()) {
-    FlexBox(config = { gap(8.dp) }) {
-      for (tag in tags) {
-        AssistChip(onClick = {}, label = { Text(tag) })
-      }
-    }
-  }
-}
-
-@Composable
-private fun RecipeCategoryAndArea(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Unit) {
-  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    recipe.category?.let { category ->
-      AssistChip(
-        onClick = { eventSink(RecipeDetailsEvent.CategoryClicked(category)) },
-        label = { Text(category) },
-        leadingIcon = { Icon(painterResource(Res.drawable.label_24px), null) },
-        colors =
-          AssistChipDefaults.assistChipColors(
-            labelColor = MaterialTheme.colorScheme.primary,
-            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
-          ),
-        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
-      )
-    }
-    recipe.area?.let { area ->
-      AssistChip(
-        onClick = { eventSink(RecipeDetailsEvent.AreaClicked(area)) },
-        label = { Text(area) },
-        leadingIcon = { Icon(painterResource(Res.drawable.location_on_24px), null) },
-        colors =
-          AssistChipDefaults.assistChipColors(
-            labelColor = MaterialTheme.colorScheme.primary,
-            leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
-          ),
-        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
-      )
-    }
   }
 }
 
