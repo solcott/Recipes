@@ -18,10 +18,7 @@ plugins {
 kotlin {
   jvmToolchain(project.versionCatalog.findVersion("jvm-toolchain").get().requiredVersion.toInt())
   compilerOptions {
-    freeCompilerArgs.addAll(
-      "-Xexpect-actual-classes",
-      "-opt-in=kotlin.time.ExperimentalTime",
-    )
+    freeCompilerArgs.addAll("-Xexpect-actual-classes", "-opt-in=kotlin.time.ExperimentalTime")
   }
   android {
     val libs = project.versionCatalog
@@ -53,17 +50,16 @@ kotlin {
           withJvm()
           @Suppress("UnstableApiUsage") withAndroid()
         }
-        group("web"){
+        group("web") {
           withJs()
           withWasmJs()
         }
-        group("nonWeb"){
-          @Suppress("UnstableApiUsage")
-          withAndroid()
+        group("nonWeb") {
+          @Suppress("UnstableApiUsage") withAndroid()
           withNative()
           withJvm()
         }
-        group("nonAndroid"){
+        group("nonAndroid") {
           withNative()
           withJvm()
           withJs()
@@ -73,4 +69,3 @@ kotlin {
     }
   }
 }
-

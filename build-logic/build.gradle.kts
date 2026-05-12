@@ -28,9 +28,7 @@ detekt {
 }
 
 tasks.withType<Detekt> {
-  reports {
-    html.required = true
-  }
+  reports { html.required = true }
   exclude("**/build/**")
   exclude("**/generated/**")
 }
