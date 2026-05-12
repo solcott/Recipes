@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.Grid
+import androidx.compose.foundation.layout.GridConfigurationScope
+import androidx.compose.foundation.layout.GridScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.tooling.preview.PreviewWrapper
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_LARGE_LOWER_BOUND
@@ -61,9 +65,6 @@ import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.an_error_occurred
 import com.scottolcott.recipe.ui.image_24px
-import com.scottolcott.recipe.ui.ingredient_with_measure
-import com.scottolcott.recipe.ui.ingredients
-import com.scottolcott.recipe.ui.instructions
 import com.scottolcott.recipe.ui.label_24px
 import com.scottolcott.recipe.ui.link_24px
 import com.scottolcott.recipe.ui.location_on_24px
@@ -118,7 +119,7 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
 private fun LookaheadScope.RecipeGrid(
   recipe: Recipe,
   columns: Int,
-  padding: androidx.compose.foundation.layout.PaddingValues,
+  padding: PaddingValues,
   eventSink: (RecipeDetailsEvent) -> Unit,
 ) {
   val recipeImage = remember {
@@ -149,58 +150,71 @@ private fun LookaheadScope.RecipeGrid(
     }
   }
 
-  Grid(
-    config = {
-      when (columns) {
-        1 -> column(1.fr)
-        2 -> {
-          column(1.fr)
-          column(3.fr)
-        }
-        else -> {
-          column(1.fr)
-          column(3.fr)
-          column(7.fr)
-        }
+  Grid(config = { recipeGridConfig(columns, padding) }, modifier = Modifier.fillMaxWidth()) {
+    RecipeGridLayout(columns, recipeImage, ingredients, instructions, metaInfo)
+  }
+}
+
+@OptIn(ExperimentalGridApi::class)
+private fun GridConfigurationScope.recipeGridConfig(columns: Int, padding: PaddingValues) {
+  when (columns) {
+    1 -> column(1.fr)
+    2 -> {
+      column(1.fr)
+      column(3.fr)
+    }
+    else -> {
+      column(1.fr)
+      column(3.fr)
+      column(7.fr)
+    }
+  }
+  gap(padding.calculateLeftPadding(LayoutDirection.Ltr))
+}
+
+@Suppress("ContentSlotReused")
+@OptIn(ExperimentalGridApi::class)
+@Composable
+private fun GridScope.RecipeGridLayout(
+  columns: Int,
+  recipeImage: @Composable (Modifier) -> Unit,
+  ingredients: @Composable (Modifier) -> Unit,
+  instructions: @Composable (Modifier) -> Unit,
+  metaInfo: @Composable (Modifier) -> Unit,
+) {
+  when (columns) {
+    1 -> {
+      recipeImage(Modifier.gridItem(row = 1, column = 1))
+      ingredients(Modifier.gridItem(row = 2, column = 1))
+      instructions(Modifier.gridItem(row = 3, column = 1))
+      metaInfo(Modifier.gridItem(row = 4, column = 1))
+    }
+    2 -> {
+      Column(
+        Modifier.gridItem(row = 1, column = 1),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+      ) {
+        recipeImage(Modifier)
+        metaInfo(Modifier)
       }
-      gap(padding.calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
-    },
-    modifier = Modifier.fillMaxWidth(),
-  ) {
-    when (columns) {
-      1 -> {
-        recipeImage(Modifier.gridItem(row = 1, column = 1))
-        ingredients(Modifier.gridItem(row = 2, column = 1))
-        instructions(Modifier.gridItem(row = 3, column = 1))
-        metaInfo(Modifier.gridItem(row = 4, column = 1))
+      Column(
+        Modifier.gridItem(row = 1, column = 2),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+      ) {
+        ingredients(Modifier)
+        instructions(Modifier)
       }
-      2 -> {
-        Column(
-          Modifier.gridItem(row = 1, column = 1),
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-          recipeImage(Modifier)
-          metaInfo(Modifier)
-        }
-        Column(
-          Modifier.gridItem(row = 1, column = 2),
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-          ingredients(Modifier)
-          instructions(Modifier)
-        }
+    }
+    else -> {
+      Column(
+        Modifier.gridItem(row = 1, column = 1),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+      ) {
+        recipeImage(Modifier)
+        metaInfo(Modifier)
       }
-      else -> {
-        Column(
-          Modifier.gridItem(row = 1, column = 1),
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-          recipeImage(Modifier)
-          metaInfo(Modifier)
-        }
-        ingredients(Modifier.gridItem(row = 1, column = 2))
-        instructions(Modifier.gridItem(row = 1, column = 3))
-      }
+      ingredients(Modifier.gridItem(row = 1, column = 2))
+      instructions(Modifier.gridItem(row = 1, column = 3))
     }
   }
 }
@@ -213,34 +227,6 @@ private fun RecipeTitle(recipe: Recipe, modifier: Modifier = Modifier) {
     style = MaterialTheme.typography.headlineMediumEmphasized,
     modifier = modifier.fillMaxWidth(),
   )
-}
-
-@Composable
-private fun RecipeIngredients(recipe: Recipe, modifier: Modifier = Modifier) {
-  Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(stringResource(Res.string.ingredients), style = MaterialTheme.typography.titleMedium)
-    val ingredients = recipe.details?.ingredients.orEmpty()
-    ingredients.forEach {
-      Row(
-        modifier = Modifier.padding(start = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-      ) {
-        Text("•", style = MaterialTheme.typography.bodyMedium)
-        Text(
-          stringResource(Res.string.ingredient_with_measure, it.measure, it.ingredient),
-          style = MaterialTheme.typography.bodyMedium,
-        )
-      }
-    }
-  }
-}
-
-@Composable
-private fun RecipeInstructions(recipe: Recipe, modifier: Modifier = Modifier) {
-  Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(stringResource(Res.string.instructions), style = MaterialTheme.typography.titleMedium)
-    recipe.details?.instructions?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-  }
 }
 
 @Composable
