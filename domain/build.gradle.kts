@@ -11,6 +11,7 @@ plugins {
 }
 
 kotlin {
+  android { withHostTest { isReturnDefaultValues = true } }
   sourceSets {
     commonMain {
       dependencies {
@@ -29,6 +30,15 @@ kotlin {
         implementation(libs.circuit.retained)
         implementation(libs.kermit.core)
         implementation(projects.repository)
+      }
+    }
+
+    commonTest {
+      dependencies {
+        implementation(libs.circuit.test)
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.turbine)
       }
     }
 
