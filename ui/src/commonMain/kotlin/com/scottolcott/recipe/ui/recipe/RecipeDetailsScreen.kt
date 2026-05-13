@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.GridConfigurationScope
 import androidx.compose.foundation.layout.GridScope
+import androidx.compose.foundation.layout.GridTrackSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -159,8 +160,8 @@ private fun GridConfigurationScope.recipeGridConfig(columns: Int, padding: Paddi
   when (columns) {
     1 -> column(1.fr)
     2 -> {
-      column(1.fr)
-      column(3.fr)
+      column(GridTrackSize.MinMax(300.dp, 1.fr))
+      column(GridTrackSize.MinMax(200.dp, 3.fr))
     }
     else -> {
       column(1.fr)
