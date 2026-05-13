@@ -26,7 +26,8 @@ fun RecipeCategoryAndArea(
   modifier: Modifier = Modifier,
 ) {
   Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    recipe.category?.let { category ->
+    val category = recipe.category.orEmpty()
+    if (category.isNotBlank()) {
       AssistChip(
         onClick = { eventSink(RecipeDetailsEvent.CategoryClicked(category)) },
         label = { Text(category) },
@@ -39,7 +40,8 @@ fun RecipeCategoryAndArea(
         modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
       )
     }
-    recipe.area?.let { area ->
+    val area = recipe.area.orEmpty()
+    if (area.isNotBlank()) {
       AssistChip(
         onClick = { eventSink(RecipeDetailsEvent.AreaClicked(area)) },
         label = { Text(area) },
