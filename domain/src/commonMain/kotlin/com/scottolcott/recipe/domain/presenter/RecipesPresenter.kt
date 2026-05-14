@@ -26,7 +26,7 @@ import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 @AssistedInject
 class RecipesPresenter(
-  @Assisted private val screen: Screen,
+  @Assisted private val screen: RecipesScreen,
   @Assisted private val navigator: Navigator,
   private val recipesProducer: RecipesProducer,
 ) : Presenter<RecipesState> {
@@ -34,7 +34,7 @@ class RecipesPresenter(
   override fun present(): RecipesState {
     var retryTrigger by rememberRetained { mutableIntStateOf(0) }
     val showAreaLabel = screen is RecipesScreen.BySearch
-    val recipesResponse = produceRecipesResponse(screen as RecipesScreen, retryTrigger)
+    val recipesResponse = produceRecipesResponse(screen, retryTrigger)
 
     var lastRecipes by rememberRetained(retryTrigger) { mutableStateOf<List<Recipe>?>(null) }
     if (recipesResponse is StoreReadResponse.Data) {
@@ -100,7 +100,7 @@ class RecipesPresenter(
   @CircuitInject(RecipesScreen::class, AppScope::class)
   @AssistedFactory
   interface Factory {
-    @Suppress("unused") fun create(screen: Screen, navigator: Navigator): RecipesPresenter
+    @Suppress("unused") fun create(screen: RecipesScreen, navigator: Navigator): RecipesPresenter
   }
 }
 

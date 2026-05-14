@@ -33,7 +33,7 @@ import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 @AssistedInject
 class RecipeDetailsPresenter(
-  @Assisted private val screen: Screen,
+  @Assisted private val screen: RecipeDetailsScreen,
   @Assisted private val navigator: Navigator,
   private val recipeRepository: RecipeRepository,
   private val logger: Logger,
@@ -42,7 +42,6 @@ class RecipeDetailsPresenter(
   override fun present(): RecipeDetailsState {
     val coroutineScope = rememberCoroutineScope()
     var retryTrigger by remember { mutableIntStateOf(0) }
-    screen as RecipeDetailsScreen
     val recipeResponse by
       produceRetainedState<StoreReadResponse<Recipe?>>(StoreReadResponse.Initial, retryTrigger) {
         recipeRepository
@@ -87,7 +86,8 @@ class RecipeDetailsPresenter(
   @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
   @AssistedFactory
   interface Factory {
-    @Suppress("unused") fun create(screen: Screen, navigator: Navigator): RecipeDetailsPresenter
+    @Suppress("unused")
+    fun create(screen: RecipeDetailsScreen, navigator: Navigator): RecipeDetailsPresenter
   }
 }
 
