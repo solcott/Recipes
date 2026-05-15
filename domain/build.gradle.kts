@@ -8,6 +8,7 @@ plugins {
   alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.redacted)
+  alias(libs.plugins.test.balloon)
 }
 
 kotlin {
@@ -39,6 +40,7 @@ kotlin {
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.turbine)
+        implementation(libs.test.balloon.framework.core)
       }
     }
 

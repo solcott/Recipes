@@ -39,6 +39,7 @@ metro = "1.1.1"
 room = "3.0.0-alpha04"
 sqlite = "2.7.0-alpha04"
 store = "5.1.0-alpha08"
+test-balloon = "1.0.0-K2.3.20"
 #noinspection UnusedVersionCatalogEntry
 ws = "8.18.3"
 
@@ -144,6 +145,7 @@ metro-android = { module = "dev.zacsweers.metro:metrox-android", version.ref = "
 metro-runtime = { module = "dev.zacsweers.metro:runtime", version.ref = "metro" }
 okio = { module = "com.squareup.okio:okio", version = "3.17.0" }
 store = { module = "org.mobilenativefoundation.store:store5", version.ref = "store" }
+test-balloon-framework-core = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "test-balloon" }
 turbine = { module = "app.cash.turbine:turbine", version = "1.2.1" }
 
 [plugins]
@@ -164,3 +166,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.26.0" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 redacted = { id = "dev.zacsweers.redacted", version = "1.16.0" }
+test-balloon = { id = "de.infix.testBalloon", version.ref = "test-balloon" }
