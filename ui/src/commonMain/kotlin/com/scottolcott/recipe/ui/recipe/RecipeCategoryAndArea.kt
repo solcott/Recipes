@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.ui.recipe
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -38,6 +39,7 @@ fun RecipeCategoryAndArea(
             leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
           ),
         modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
+        contentPadding = PaddingValues(8.dp),
       )
     }
     val area = recipe.area.orEmpty()
@@ -52,6 +54,7 @@ fun RecipeCategoryAndArea(
             leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
           ),
         modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
+        contentPadding = PaddingValues(8.dp),
       )
     }
   }

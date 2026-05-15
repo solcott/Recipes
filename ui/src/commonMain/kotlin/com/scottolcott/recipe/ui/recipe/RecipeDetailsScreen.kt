@@ -250,6 +250,7 @@ private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHa
           labelColor = MaterialTheme.colorScheme.primary,
           leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
         ),
+      contentPadding = PaddingValues(8.dp),
     )
   }
   val imageSource = details?.imageSource
@@ -264,6 +265,7 @@ private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHa
           labelColor = MaterialTheme.colorScheme.secondary,
           leadingIconContentColor = MaterialTheme.colorScheme.tertiary,
         ),
+      contentPadding = PaddingValues(8.dp),
     )
   }
 }
