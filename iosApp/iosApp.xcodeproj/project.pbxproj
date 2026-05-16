@@ -31,7 +31,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3C7C9EBE2FA3E02C0081A13D /* Exceptions for "Recipes" folder in "iosApp" target */ = {
+		3C7C9EBE2FA3E02C0081A13D /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"/Localized: en.lproj/InfoPlist.strings",
@@ -44,7 +44,7 @@
 		3CC94E6A2FA39E6E00345DEA /* Recipes */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				3C7C9EBE2FA3E02C0081A13D /* Exceptions for "Recipes" folder in "iosApp" target */,
+				3C7C9EBE2FA3E02C0081A13D /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
 			);
 			path = Recipes;
 			sourceTree = "<group>";
@@ -265,7 +265,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode";
 		};
 /* End PBXShellScriptBuildPhase section */
 
