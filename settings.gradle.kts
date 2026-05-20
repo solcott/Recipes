@@ -34,4 +34,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Recipes"
-include(":app", ":network", ":storage", ":repository", ":domain", ":model", ":ui", ":shared", ":sqliteWasmWorker", ":webApp", ":desktopApp", ":config")
+include(":app", ":network", ":storage", ":repository", ":domain", ":model", ":ui", ":shared", ":sqliteWasmWorker", ":webApp", ":desktopApp", ":config", ":core")

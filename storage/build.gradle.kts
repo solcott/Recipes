@@ -26,6 +26,7 @@ kotlin {
         api(libs.kotlinx.collections.immutable)
         api(libs.kotlinx.coroutines)
         api(projects.model)
+        api(projects.core)
 
         implementation(libs.androidx.collection)
         implementation(libs.androidx.datastore.core.okio)

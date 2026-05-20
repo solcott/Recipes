@@ -33,6 +33,7 @@ kotlin {
         api(libs.kotlinx.coroutines)
         api(projects.domain)
         api(projects.model)
+        api(projects.core)
 
         implementation(libs.circuit.backstack)
         implementation(libs.circuit.retained)

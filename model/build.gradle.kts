@@ -10,7 +10,6 @@ kotlin {
     commonMain {
       dependencies {
         api(libs.kotlin.serialization.core)
-        api(libs.metro.runtime)
       }
     }
   }

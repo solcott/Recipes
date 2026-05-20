@@ -52,6 +52,7 @@ kotlin {
   jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
   dependencies {
     api(projects.config)
+    api(projects.core)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation.layout)

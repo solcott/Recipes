@@ -28,6 +28,7 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       api(projects.config)
+      api(projects.core)
       implementation(projects.ui)
       implementation(projects.shared)
 
