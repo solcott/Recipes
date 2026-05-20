@@ -16,7 +16,10 @@ compose.resources {
 }
 
 kotlin {
-  android { androidResources { enable = true } }
+  android {
+    androidResources { enable = true }
+    withHostTest { isReturnDefaultValues = true }
+  }
 
   sourceSets {
     commonMain {
