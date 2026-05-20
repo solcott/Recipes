@@ -2,6 +2,7 @@ package com.scottolcott.recipe
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +10,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExpandedDockedSearchBar
 import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.window.core.layout.WindowSizeClass
@@ -134,22 +138,38 @@ private fun RecipeSearchBarInputField(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
-  TopAppBar(
-    title = { Text(stringResource(Res.string.recipes)) },
-    navigationIcon = { NavIcon(state.navStack, state.navigator) },
-    actions = {
-      IconButton(onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) }) {
-        Icon(
-          painter = painterResource(Res.drawable.favorite_24px_filled),
-          contentDescription = null,
-        )
-      }
-      IconButton(onClick = { state.searchState.eventSink(SearchEvent.SearchButtonClicked) }) {
-        Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
-      }
-    },
-    modifier = modifier,
-  )
+  val title = @Composable { Text(stringResource(Res.string.recipes)) }
+  val navigationIcon = @Composable { NavIcon(state.navStack, state.navigator) }
+  val actions: @Composable RowScope.() -> Unit = {
+    IconButton(
+      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) },
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+    ) {
+      Icon(painter = painterResource(Res.drawable.favorite_24px_filled), contentDescription = null)
+    }
+    IconButton(
+      onClick = { state.searchState.eventSink(SearchEvent.SearchButtonClicked) },
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+    ) {
+      Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
+    }
+  }
+
+  if (isIos()) {
+    CenterAlignedTopAppBar(
+      title = title,
+      navigationIcon = navigationIcon,
+      actions = actions,
+      modifier = modifier,
+    )
+  } else {
+    TopAppBar(
+      title = title,
+      navigationIcon = navigationIcon,
+      actions = actions,
+      modifier = modifier,
+    )
+  }
 }
 
 @Composable
