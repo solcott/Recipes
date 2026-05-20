@@ -5,12 +5,4 @@ plugins {
   alias(libs.plugins.kotlinx.serialation)
 }
 
-kotlin {
-  sourceSets {
-    commonMain {
-      dependencies {
-        api(libs.kotlin.serialization.core)
-      }
-    }
-  }
-}
+kotlin { sourceSets { commonMain { dependencies { api(libs.kotlin.serialization.core) } } } }

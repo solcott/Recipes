@@ -44,6 +44,7 @@ import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.arrow_back_24px
+import com.scottolcott.recipe.ui.arrow_back_ios_24px
 import com.scottolcott.recipe.ui.check_24px
 import com.scottolcott.recipe.ui.chef_hat_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
@@ -176,7 +177,8 @@ private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Mod
 private fun NavIcon(backStack: NavStack<out NavStack.Record>, navigator: Navigator) {
   if (backStack.canGoBack) {
     IconButton(onClick = { navigator.pop() }) {
-      Icon(painter = painterResource(Res.drawable.arrow_back_24px), contentDescription = null)
+      val icon = if (isIos()) Res.drawable.arrow_back_ios_24px else Res.drawable.arrow_back_24px
+      Icon(painter = painterResource(icon), contentDescription = null)
     }
   } else {
     IconButton(
