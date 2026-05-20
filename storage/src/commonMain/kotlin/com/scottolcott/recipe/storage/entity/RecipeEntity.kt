@@ -13,16 +13,15 @@ import kotlin.time.Instant
 
 data class RecipeEntityWithDetail(
   @Embedded val recipe: RecipeEntity,
-  @Relation(parentColumn = "recipe_id", entityColumn = "recipe_detail_recipe_id")
+  @Relation(parentColumns = ["recipe_id"], entityColumns = ["recipe_detail_recipe_id"])
   val detail: RecipeDetailEntity?,
-  @Relation(parentColumn = "recipe_id", entityColumn = "favorite_recipe_id")
+  @Relation(parentColumns = ["recipe_id"], entityColumns = ["favorite_recipe_id"])
   val favorite: FavoriteEntity?,
 )
 
-@Entity(tableName = "recipe")
-data class RecipeEntity
 @OptIn(ExperimentalTime::class)
-constructor(
+@Entity(tableName = "recipe")
+data class RecipeEntity(
   @PrimaryKey @ColumnInfo(name = "recipe_id") val id: RecipeId,
   @ColumnInfo(name = "recipe_name") val name: String,
   @ColumnInfo(name = "recipe_thumbnail") val thumbnail: String,

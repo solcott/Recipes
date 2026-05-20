@@ -6,10 +6,9 @@ import com.scottolcott.recipe.model.CategoryId
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-@Entity(tableName = "category")
-data class CategoryEntity
 @OptIn(ExperimentalTime::class)
-constructor(
+@Entity(tableName = "category")
+data class CategoryEntity(
   @PrimaryKey val id: CategoryId,
   val name: String,
   val thumb: String,
