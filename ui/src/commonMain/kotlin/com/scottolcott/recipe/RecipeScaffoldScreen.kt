@@ -72,10 +72,7 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
           NavigableCircuitContent(
             navigator = state.navigator,
             navStack = state.navStack,
-            decoratorFactory =
-              remember(state.navigator) {
-                GestureNavigationDecorationFactory(onBackInvoked = state.navigator::pop)
-              },
+            decoratorFactory = remember(state.navigator) { GestureNavigationDecorationFactory() },
             modifier = Modifier.fillMaxSize().padding(paddingValues),
           )
         }

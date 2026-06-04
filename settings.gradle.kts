@@ -29,6 +29,8 @@ dependencyResolutionManagement {
         mavenLocal()
         maven {
             url = URI("https://central.sonatype.com/repository/maven-snapshots/")
+            mavenContent { snapshotsOnly() }
+            content { includeGroup("com.slack.circuit") }
         }
     }
 }
