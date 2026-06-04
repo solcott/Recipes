@@ -31,9 +31,9 @@ kotlin {
         api(libs.circuit.runtime.ui)
         api(libs.compose.components.resources)
         api(libs.kotlinx.coroutines)
+        api(projects.core)
         api(projects.domain)
         api(projects.model)
-        api(projects.core)
 
         implementation(libs.circuit.backstack)
         implementation(libs.circuit.retained)

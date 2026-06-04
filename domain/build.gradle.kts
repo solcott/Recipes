@@ -39,8 +39,8 @@ kotlin {
         implementation(libs.circuit.test)
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)
-        implementation(libs.turbine)
         implementation(libs.test.balloon.framework.core)
+        implementation(libs.turbine)
       }
     }
 

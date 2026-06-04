@@ -25,8 +25,8 @@ kotlin {
         api(libs.kotlin.serialization.core)
         api(libs.kotlinx.collections.immutable)
         api(libs.kotlinx.coroutines)
-        api(projects.model)
         api(projects.core)
+        api(projects.model)
 
         implementation(libs.androidx.collection)
         implementation(libs.androidx.datastore.core.okio)

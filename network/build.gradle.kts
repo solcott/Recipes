@@ -28,8 +28,8 @@ kotlin {
         api(libs.kotlin.serialization.core)
         api(libs.ktor.client.core)
         api(libs.metro.runtime)
-        api(projects.model)
         api(projects.core)
+        api(projects.model)
 
         implementation(libs.kermit.core)
         implementation(libs.kotlin.serialization.json)
