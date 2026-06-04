@@ -29,17 +29,17 @@ jvmSourceCompatibility = "17"
 #noinspection UnusedVersionCatalogEntry
 jvmTargetCompatibility = "17"
 kermit = "2.1.0"
-kmp-parcelize = "1.0.3"
-kotlin = "2.3.21"
+kmp-parcelize = "1.0.4"
+kotlin = "2.4.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
-ksp = "2.3.8"
+ksp = "2.3.9"
 ktor = "3.5.0"
 metro = "1.1.1"
 room = "3.0.0-alpha05"
 sqlite = "2.7.0-alpha05"
 store = "5.1.0-alpha08"
-test-balloon = "1.0.0-K2.3.20"
+test-balloon = "1.0.0-K2.4.0"
 #noinspection UnusedVersionCatalogEntry
 ws = "8.18.3"
 
@@ -165,5 +165,5 @@ kotlinx-serialation = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.26.0" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
-redacted = { id = "dev.zacsweers.redacted", version = "1.16.0" }
+redacted = { id = "dev.zacsweers.redacted", version = "1.17.0" }
 test-balloon = { id = "de.infix.testBalloon", version.ref = "test-balloon" }

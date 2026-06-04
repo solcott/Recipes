@@ -3,7 +3,6 @@
 import com.android.build.api.withAndroid
 import com.scottolcott.gradle.versionCatalog
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinJsCompilerType
 
 plugins {
   id("org.jetbrains.kotlin.multiplatform")
@@ -33,7 +32,7 @@ kotlin {
   jvm()
   iosArm64()
   iosSimulatorArm64()
-  js(compiler = KotlinJsCompilerType.IR) {
+  js {
     browser()
     useEsModules()
   }
