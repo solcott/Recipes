@@ -96,7 +96,9 @@ kotlin {
     webMain {
       dependencies {
         val wsDependency = npm("ws", libs.versions.ws.get())
+
         api(wsDependency)
+        implementation(libs.kotlinx.browser)
       }
     }
   }

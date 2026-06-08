@@ -25,6 +25,7 @@ kotlin {
         api(libs.circuit.runtime.ui)
         api(libs.kermit)
         api(libs.kotlinx.coroutines)
+        api(libs.ktor.http) // Used for url encode/decode in ScreenUrlMapper
         api(libs.store)
         api(projects.model)
 

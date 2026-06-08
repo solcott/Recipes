@@ -49,6 +49,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @Suppress("unused")
 fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
+  BrowserHistoryEffect(navStack = state.navStack, navigator = state.navigator)
   val windowSizeClass = LocalWindowSizeClass.current
   val showNavRail =
     windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) &&

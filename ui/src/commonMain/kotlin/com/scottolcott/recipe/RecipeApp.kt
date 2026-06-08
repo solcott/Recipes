@@ -9,6 +9,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.ui.theme.RecipeAppTheme
 import com.slack.circuit.foundation.Circuit
@@ -30,9 +31,13 @@ fun RecipeApp(
   modifier: Modifier = Modifier,
   onRootPop: (result: PopResult?) -> Unit = {},
   windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass,
+  initialScreen: Screen? = null,
 ) {
   RecipeAppTheme {
-    CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
+    CompositionLocalProvider(
+      LocalWindowSizeClass provides windowSizeClass,
+      LocalDeepLinkScreen provides initialScreen,
+    ) {
       CircuitCompositionLocals(circuit) {
         val initialBackstack = remember { listOf<Screen>(RecipeScaffoldScreen) }
         val backStack = rememberSaveableNavStack(initialBackstack)

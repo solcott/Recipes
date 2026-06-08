@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.scottolcott.recipe.domain.navigation.urlPathToScreen
 import com.slack.circuit.foundation.Circuit
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -21,8 +22,15 @@ class MainActivity(private val circuit: Circuit) : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // intent.data is non-null when launched via a deep link (recipes://app/...)
+        val initialScreen = intent.data?.path?.let { urlPathToScreen(it) }
         setContent {
-            RecipeApp(circuit, modifier = Modifier.fillMaxSize(), onRootPop = { finish() })
+            RecipeApp(
+                circuit,
+                modifier = Modifier.fillMaxSize(),
+                onRootPop = { finish() },
+                initialScreen = initialScreen,
+            )
         }
     }
 }

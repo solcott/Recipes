@@ -26,6 +26,16 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Deep link: recipes://app/recipe/52772 etc.
+                 Demo: adb shell am start -a android.intent.action.VIEW -d "recipes://app/recipe/52772" -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="recipes" android:host="app" />
+            </intent-filter>
         </activity>
     </application>
 
