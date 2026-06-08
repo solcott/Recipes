@@ -43,8 +43,9 @@ import org.w3c.dom.events.Event
  * | 0     | < 0    | backward() — existing record | history.back    |
  *
  * ## Counter semantics
- * - [BrowserNavState.pendingPopStateIgnore]: incremented before every [org.w3c.dom.History.go] / [org.w3c.dom.History.back]
- *   / [org.w3c.dom.History.forward] call we make so the async `popstate` it fires is silently dropped.
+ * - [BrowserNavState.pendingPopStateIgnore]: incremented before every [org.w3c.dom.History.go] /
+ *   [org.w3c.dom.History.back] / [org.w3c.dom.History.forward] call we make so the async `popstate`
+ *   it fires is silently dropped.
  * - [BrowserNavState.pendingSnapshotIgnore]: incremented before every browser-initiated navigator
  *   call so the resulting [snapshotFlow] emission doesn't try to re-sync the browser history.
  */
@@ -163,7 +164,10 @@ internal expect fun historyDepth(): Int
 private class BrowserNavState(initialDepth: Int) {
   var depth: Int = initialDepth
 
-  /** Upcoming `popstate` events to silently ignore (we called [org.w3c.dom.History.go] / back / forward). */
+  /**
+   * Upcoming `popstate` events to silently ignore (we called [org.w3c.dom.History.go] / back /
+   * forward).
+   */
   var pendingPopStateIgnore: Int = 0
 
   /** Upcoming [snapshotFlow] emissions to silently ignore (browser initiated navigation). */

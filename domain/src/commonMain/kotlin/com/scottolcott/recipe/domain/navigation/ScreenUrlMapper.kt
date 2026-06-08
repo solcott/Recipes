@@ -87,7 +87,8 @@ fun urlPathToScreen(rawPathOrUrl: String): Screen? {
 }
 
 /**
- * Provides the initial deep-link [Screen] to [com.scottolcott.recipe.domain.presenter.RecipeScaffoldPresenter] so the inner nav stack is
+ * Provides the initial deep-link [Screen] to
+ * [com.scottolcott.recipe.domain.presenter.RecipeScaffoldPresenter] so the inner nav stack is
  * seeded correctly on first composition.
  *
  * Provided by [RecipeApp] on every platform; defaults to `null` (no deep link).
