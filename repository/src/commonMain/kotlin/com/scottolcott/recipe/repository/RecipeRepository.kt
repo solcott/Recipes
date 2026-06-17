@@ -4,7 +4,7 @@ import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
-import com.scottolcott.recipe.model.RecipeKey
+import com.scottolcott.recipe.model.store.RecipesKey
 import com.scottolcott.recipe.network.api.RecipeApi
 import com.scottolcott.recipe.network.dto.RecipeDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
@@ -21,7 +21,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -65,7 +64,8 @@ internal class RecipeRepositoryImpl(
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
 ) : RecipeRepository {
-  private val storeBuilder: StoreBuilder<RecipeKey, RecipeResponse> =
+
+  private val storeBuilder: StoreBuilder<RecipesKey, RecipeResponse> =
     StoreBuilder.from(createFetcher(), createSourceOfTruth())
 
   val detailedRecipeValidator =
@@ -81,7 +81,7 @@ internal class RecipeRepositoryImpl(
     }
 
   /** This store is for api methods that return full recipe details */
-  private val detailedRecipeStore: Store<RecipeKey, RecipeResponse> =
+  private val detailedRecipeStore: Store<RecipesKey, RecipeResponse> =
     storeBuilder.validator(detailedRecipeValidator).build()
 
   val basicRecipeValidator =
@@ -91,12 +91,12 @@ internal class RecipeRepositoryImpl(
     }
 
   /** This store is for api methods that only return basic recipe details */
-  private val basicRecipeStore: Store<RecipeKey, RecipeResponse> =
+  private val basicRecipeStore: Store<RecipesKey, RecipeResponse> =
     storeBuilder.validator(basicRecipeValidator).build()
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> {
-    val key = RecipeKey.Query(query.trim())
+    val key = RecipesKey.Query(query.trim())
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh ->
@@ -114,7 +114,7 @@ internal class RecipeRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>> {
-    val key = RecipeKey.ByCategory(category)
+    val key = RecipesKey.ByCategory(category)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
@@ -129,7 +129,7 @@ internal class RecipeRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> {
-    val key = RecipeKey.ByArea(area)
+    val key = RecipesKey.ByArea(area)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
@@ -144,7 +144,7 @@ internal class RecipeRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>> {
-    val key = RecipeKey.ById(id)
+    val key = RecipesKey.ById(id)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh ->
@@ -162,7 +162,7 @@ internal class RecipeRepositoryImpl(
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> {
     return detailedRecipeStore
-      .stream(StoreReadRequest.cached(RecipeKey.Favorites, false))
+      .stream(StoreReadRequest.cached(RecipesKey.Favorites, false))
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -192,38 +192,38 @@ internal class RecipeRepositoryImpl(
     }
   }
 
-  private fun createFetcher(): Fetcher<RecipeKey, List<RecipeDto>> {
+  private fun createFetcher(): Fetcher<RecipesKey, List<RecipeDto>> {
     return Fetcher.of { key ->
       when (key) {
-        is RecipeKey.Query -> recipeApi.searchRecipe(key.query)?.meals.orEmpty()
-        is RecipeKey.ById -> recipeApi.getRecipe(key.id)?.meals.orEmpty()
-        is RecipeKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
-        is RecipeKey.ByArea -> recipeApi.getByArea(key.area)?.meals.orEmpty()
-        RecipeKey.Favorites -> emptyList() // No api to support this as favorites are store locally
+        is RecipesKey.Query -> recipeApi.searchRecipe(key.query)?.meals.orEmpty()
+        is RecipesKey.ById -> recipeApi.getRecipe(key.id)?.meals.orEmpty()
+        is RecipesKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
+        is RecipesKey.ByArea -> recipeApi.getByArea(key.area)?.meals.orEmpty()
+        RecipesKey.Favorites -> emptyList() // No api to support this as favorites are store locally
       }
     }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  private fun createSourceOfTruth(): SourceOfTruth<RecipeKey, List<RecipeDto>, RecipeResponse> {
+  private fun createSourceOfTruth(): SourceOfTruth<RecipesKey, List<RecipeDto>, RecipeResponse> {
     return SourceOfTruth.of(
-      reader = { key: RecipeKey ->
+      reader = { key: RecipesKey ->
         when (key) {
-          is RecipeKey.Query -> recipeDao.queryByName(key.query)
+          is RecipesKey.Query -> recipeDao.queryByName(key.query)
 
-          is RecipeKey.ById -> {
+          is RecipesKey.ById -> {
             recipeDao.getById(key.id).map { listOfNotNull(it) }
           }
 
-          is RecipeKey.ByCategory -> recipeDao.getByCategory(key.category)
-          is RecipeKey.ByArea -> recipeDao.getByArea(key.area)
-          is RecipeKey.Favorites -> recipeDao.getFavorites()
+          is RecipesKey.ByCategory -> recipeDao.getByCategory(key.category)
+          is RecipesKey.ByArea -> recipeDao.getByArea(key.area)
+          is RecipesKey.Favorites -> recipeDao.getFavorites()
         }.map {
           RecipeResponse(
             it.toModel(),
             query =
               when (key) {
-                is RecipeKey.Query -> key.query
+                is RecipesKey.Query -> key.query
                 else -> null
               },
           )
@@ -232,12 +232,12 @@ internal class RecipeRepositoryImpl(
       writer = { key, dtos ->
         val area =
           when (key) {
-            is RecipeKey.ByArea -> key.area
+            is RecipesKey.ByArea -> key.area
             else -> null
           }
         val category =
           when (key) {
-            is RecipeKey.ByCategory -> key.category
+            is RecipesKey.ByCategory -> key.category
             else -> null
           }
 
