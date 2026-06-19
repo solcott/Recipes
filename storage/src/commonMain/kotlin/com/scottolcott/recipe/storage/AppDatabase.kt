@@ -1,10 +1,10 @@
 package com.scottolcott.recipe.storage
 
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
-import androidx.room3.TypeConverters
 import androidx.sqlite.SQLiteDriver
 import com.scottolcott.recipe.storage.dao.CategoryDao
 import com.scottolcott.recipe.storage.dao.RecipeDao
@@ -19,7 +19,7 @@ import kotlin.coroutines.CoroutineContext
     [RecipeEntity::class, RecipeDetailEntity::class, CategoryEntity::class, FavoriteEntity::class],
   version = 1,
 )
-@TypeConverters(RoomTypeConverters::class)
+@ColumnTypeConverters(RoomTypeConverters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
   abstract fun recipeDao(): RecipeDao

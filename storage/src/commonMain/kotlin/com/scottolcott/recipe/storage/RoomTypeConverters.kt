@@ -1,16 +1,16 @@
 package com.scottolcott.recipe.storage
 
-import androidx.room3.TypeConverter
+import androidx.room3.ColumnTypeConverter
 import kotlin.time.Instant
 
 class RoomTypeConverters {
 
-  @TypeConverter
+  @ColumnTypeConverter
   fun instantToString(instant: Instant): String {
     return instant.toString()
   }
 
-  @TypeConverter
+  @ColumnTypeConverter
   fun stringToInstant(value: String): Instant {
     return Instant.parse(value)
   }
