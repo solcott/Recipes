@@ -45,8 +45,7 @@ kotlin {
       }
     }
     commonJvmMain { dependencies { implementation(libs.ktor.client.okhttp) } }
-    val nonJvmMain by getting { dependencies { implementation(libs.kermit.ktor) } }
-
+    getByName("nonJvmMain") { dependencies { implementation(libs.kermit.ktor) } }
     iosMain { dependencies { implementation(libs.ktor.client.darwin) } }
     jsMain { dependencies {} }
     wasmJsMain { dependencies {} }
