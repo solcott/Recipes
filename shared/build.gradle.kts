@@ -33,6 +33,7 @@ kotlin {
     iosTarget.binaries.framework {
       baseName = "RecipeApp"
       isStatic = true
+      binaryOption("bundleId", "com.scottolcott.recipe.shared")
     }
   }
 
