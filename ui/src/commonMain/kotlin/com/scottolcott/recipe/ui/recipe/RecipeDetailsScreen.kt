@@ -55,10 +55,10 @@ import com.scottolcott.recipe.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsEvent
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsState
-import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeDetails
 import com.scottolcott.recipe.model.RecipeId
+import com.scottolcott.recipe.model.RecipeIngredient
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.an_error_occurred
@@ -327,15 +327,15 @@ private fun RecipeDetailsPreview() {
       dateModified = null,
       ingredients =
         listOf(
-          Ingredient("soy sauce", "3/4 cup"),
-          Ingredient("water", "1/2 cup"),
-          Ingredient("brown sugar", "1/4 cup"),
-          Ingredient("ground ginger", "1/2 teaspoon"),
-          Ingredient("minced garlic", "1/2 teaspoon"),
-          Ingredient("cornstarch", "4 Tablespoons"),
-          Ingredient("chicken breasts", "2"),
-          Ingredient("stir-fry vegetables", "1 (12 oz.)"),
-          Ingredient("brown rice", "3 cups"),
+          RecipeIngredient("soy sauce", "3/4 cup"),
+          RecipeIngredient("water", "1/2 cup"),
+          RecipeIngredient("brown sugar", "1/4 cup"),
+          RecipeIngredient("ground ginger", "1/2 teaspoon"),
+          RecipeIngredient("minced garlic", "1/2 teaspoon"),
+          RecipeIngredient("cornstarch", "4 Tablespoons"),
+          RecipeIngredient("chicken breasts", "2"),
+          RecipeIngredient("stir-fry vegetables", "1 (12 oz.)"),
+          RecipeIngredient("brown rice", "3 cups"),
         ),
       lastFetched = Clock.System.now(),
     )

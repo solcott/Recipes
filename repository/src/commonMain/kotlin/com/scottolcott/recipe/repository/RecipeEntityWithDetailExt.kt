@@ -1,8 +1,8 @@
 package com.scottolcott.recipe.repository
 
-import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeDetails
+import com.scottolcott.recipe.model.RecipeIngredient
 import com.scottolcott.recipe.storage.entity.RecipeDetailEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
 
@@ -52,7 +52,7 @@ internal fun RecipeEntityWithDetail.toModel(): Recipe {
   )
 }
 
-private fun RecipeDetailEntity?.toIngredients(): List<Ingredient> {
+private fun RecipeDetailEntity?.toIngredients(): List<RecipeIngredient> {
   return if (this == null) {
     emptyList()
   } else {
@@ -81,7 +81,7 @@ private fun RecipeDetailEntity?.toIngredients(): List<Ingredient> {
       .mapNotNull { (ingredientName, measureAmount) ->
         // if ingredient name is null or empt filter it out
         if (!ingredientName.isNullOrBlank()) {
-          Ingredient(
+          RecipeIngredient(
             ingredient = ingredientName,
             // This assumes measurement can be null as long as the name isn't
             measure = measureAmount.orEmpty(),
