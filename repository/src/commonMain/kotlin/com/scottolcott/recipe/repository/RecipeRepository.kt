@@ -9,7 +9,6 @@ import com.scottolcott.recipe.network.api.RecipeApi
 import com.scottolcott.recipe.network.dto.RecipeDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
-import com.scottolcott.recipe.storage.datastore.SearchSearchSuggestionsDataStore
 import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.swapType
 import dev.zacsweers.metro.AppScope
@@ -47,10 +46,6 @@ interface RecipeRepository {
   suspend fun addFavorite(id: RecipeId)
 
   suspend fun removeFavorite(id: RecipeId)
-
-  suspend fun addSearchSuggestion(suggestion: String)
-
-  fun getSearchSuggestionsAsFlow(query: String): Flow<List<String>>
 }
 
 @SingleIn(AppScope::class)
@@ -59,7 +54,7 @@ interface RecipeRepository {
 internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
-  private val suggestionsDataStore: SearchSearchSuggestionsDataStore,
+  private val searchSuggestionsRepository: SearchSuggestionsRepository,
   private val fetchHistoryDataStore: RecipeFetchHistoryDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
@@ -102,7 +97,7 @@ internal class RecipeRepositoryImpl(
       .flatMapLatest { refresh ->
         detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
       }
-      .onStart { addSearchSuggestion(query) }
+      .onStart { searchSuggestionsRepository.addSearchSuggestion(query) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -178,18 +173,6 @@ internal class RecipeRepositoryImpl(
 
   override suspend fun removeFavorite(id: RecipeId) {
     recipeDao.deleteFavorite(id)
-  }
-
-  override suspend fun addSearchSuggestion(suggestion: String) {
-    suggestionsDataStore.add(suggestion.trim())
-  }
-
-  override fun getSearchSuggestionsAsFlow(query: String): Flow<List<String>> {
-    return suggestionsDataStore.suggestions.map { searchSuggestions ->
-      searchSuggestions.suggestions
-        .filter { suggestion -> suggestion.startsWith(query.trim()) }
-        .sortedWith(String.CASE_INSENSITIVE_ORDER)
-    }
   }
 
   private fun createFetcher(): Fetcher<RecipesKey, List<RecipeDto>> {

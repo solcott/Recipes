@@ -11,7 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import com.scottolcott.recipe.repository.RecipeRepository
+import com.scottolcott.recipe.repository.SearchSuggestionsRepository
 import com.slack.circuit.retained.produceRetainedState
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 
 class SearchPresenter(
   private val navigator: Navigator,
-  private val recipeRepository: RecipeRepository,
+  private val searchSuggestionsRepository: SearchSuggestionsRepository,
 ) : Presenter<SearchState> {
   @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
   @Composable
@@ -38,7 +38,9 @@ class SearchPresenter(
       produceRetainedState(emptyList()) {
         snapshotFlow { searchText.text }
           .debounce(300.milliseconds)
-          .transformLatest { emitAll(recipeRepository.getSearchSuggestionsAsFlow(it.toString())) }
+          .transformLatest {
+            emitAll(searchSuggestionsRepository.getSearchSuggestionsAsFlow(it.toString()))
+          }
           .collect { value = it }
       }
     val eventSink: (SearchEvent) -> Unit = remember {
@@ -50,7 +52,6 @@ class SearchPresenter(
           }
           is SearchEvent.PerformSearch -> {
             scope.launch {
-              recipeRepository.addSearchSuggestion(event.query)
               navigator.goTo(RecipesScreen.BySearch(event.query))
               searchText.clearText()
               searchActive = false

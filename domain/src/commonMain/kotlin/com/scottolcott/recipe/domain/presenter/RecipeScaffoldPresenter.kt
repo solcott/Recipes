@@ -5,7 +5,7 @@ package com.scottolcott.recipe.domain.presenter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
-import com.scottolcott.recipe.repository.RecipeRepository
+import com.scottolcott.recipe.repository.SearchSuggestionsRepository
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
@@ -25,7 +25,7 @@ import io.github.solcott.kmp.parcelize.Parcelize
 @AssistedInject
 class RecipeScaffoldPresenter(
   @Assisted private val navigator: Navigator,
-  private val recipeRepository: RecipeRepository,
+  private val searchSuggestionsRepository: SearchSuggestionsRepository,
 ) : Presenter<RecipeScaffoldState> {
   @Composable
   override fun present(): RecipeScaffoldState {
@@ -37,10 +37,11 @@ class RecipeScaffoldPresenter(
       }
     }
     val navStack = rememberSaveableNavStack(initialScreens)
+    // TODO look into sub circuit for this
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
     // Have to create inline instead of injecting due to needing access to the childNavigator
     val searchPresenter =
-      remember(childNavigator) { SearchPresenter(childNavigator, recipeRepository) }
+      remember(childNavigator) { SearchPresenter(childNavigator, searchSuggestionsRepository) }
     val searchState = searchPresenter.present()
 
     val eventSink: (RecipeScaffoldEvent) -> Unit = remember {
