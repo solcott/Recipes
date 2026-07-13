@@ -2,7 +2,10 @@ package com.scottolcott.recipe.storage
 
 import com.scottolcott.recipe.serialization.StorageJson
 import com.scottolcott.recipe.storage.dao.CategoryDao
+import com.scottolcott.recipe.storage.dao.IngredientDao
 import com.scottolcott.recipe.storage.dao.RecipeDao
+import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistoryDataStore
+import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.SearchSearchSuggestionsDataStore
 import dev.zacsweers.metro.AppScope
@@ -36,6 +39,9 @@ interface StorageProviders {
   fun provideCategoryDao(appDatabase: AppDatabase): CategoryDao = appDatabase.categoryDao()
 
   @Provides
+  fun provideIngredientsDao(appDatabase: AppDatabase): IngredientDao = appDatabase.ingredientDao()
+
+  @Provides
   @SingleIn(AppScope::class)
   fun provideSuggestionsDataStore(
     storageFactory: StorageFactory
@@ -48,4 +54,18 @@ interface StorageProviders {
     storageFactory: StorageFactory
   ): RecipeFetchHistoryDataStore =
     RecipeFetchHistoryDataStore(storageFactory.createRecipeFetchHistoryDataStoreStorage())
+
+  @Provides
+  @SingleIn(AppScope::class)
+  fun provideCategoriesFetchHistoryDataStore(
+    storageFactory: StorageFactory
+  ): CategoriesFetchHistoryDataStore =
+    CategoriesFetchHistoryDataStore(storageFactory.createCategoriesFetchHistoryDataStoreStorage())
+
+  @Provides
+  @SingleIn(AppScope::class)
+  fun provideIngredientsFetchHistoryDataStore(
+    storageFactory: StorageFactory
+  ): IngredientsFetchHistoryDataStore =
+    IngredientsFetchHistoryDataStore(storageFactory.createIngredientsFetchHistoryDataStoreStorage())
 }
