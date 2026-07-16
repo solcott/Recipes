@@ -13,7 +13,13 @@ interface CategoryDao {
 
   @Query("SELECT * FROM category") fun getCategories(): Flow<List<CategoryEntity>>
 
-  @Query("SELECT * FROM category WHERE name LIKE :query || '%'")
+  @Query(
+    """
+    SELECT * FROM CATEGORY WHERE NAME LIKE :query || '%'
+    UNION ALL
+    SELECT * FROM CATEGORY WHERE NAME LIKE '%' || :query || '%' AND NAME NOT LIKE :query || '%'
+  """
+  )
   fun getCategories(query: String): Flow<List<CategoryEntity>>
 
   @Query("SELECT * FROM category WHERE id = :id") fun getCategory(id: Int): Flow<CategoryEntity>

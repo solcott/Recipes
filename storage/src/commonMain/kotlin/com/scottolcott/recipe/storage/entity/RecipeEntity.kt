@@ -5,6 +5,7 @@ import androidx.room3.Embedded
 import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.ForeignKey.Companion.CASCADE
+import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import androidx.room3.Relation
 import com.scottolcott.recipe.model.RecipeId
@@ -20,7 +21,15 @@ data class RecipeEntityWithDetail(
 )
 
 @OptIn(ExperimentalTime::class)
-@Entity(tableName = "recipe")
+@Entity(
+  tableName = "recipe",
+  indices =
+    [
+      Index(value = ["recipe_name"]),
+      Index(value = ["recipe_category"]),
+      Index(value = ["recipe_area"]),
+    ],
+)
 data class RecipeEntity(
   @PrimaryKey @ColumnInfo(name = "recipe_id") val id: RecipeId,
   @ColumnInfo(name = "recipe_name") val name: String,

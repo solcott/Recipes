@@ -13,8 +13,14 @@ interface IngredientDao {
   @Query("SELECT * FROM INGREDIENT ORDER BY ID")
   fun getAllIngredientsAsFlow(): Flow<List<IngredientEntity>>
 
-  @Query("SELECT * FROM INGREDIENT WHERE NAME LIKE '%' || :name || '%' ORDER BY ID")
-  fun filterByName(name: String): Flow<List<IngredientEntity>>
+  @Query(
+    """
+    SELECT * FROM INGREDIENT WHERE NAME LIKE :query || '%'
+    UNION ALL
+    SELECT * FROM INGREDIENT WHERE NAME LIKE '%' || :query || '%' AND NAME NOT LIKE :query || '%'
+  """
+  )
+  fun filterByName(query: String): Flow<List<IngredientEntity>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(entity: IngredientEntity)
 
