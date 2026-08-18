@@ -8,9 +8,9 @@ plugins {
   alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.metro)
   alias(libs.plugins.dependency.sorter)
-  alias(libs.plugins.ktfmt)
   id("dependency.analysis")
   id("detekt")
+  id("formatting")
 }
 
 android {

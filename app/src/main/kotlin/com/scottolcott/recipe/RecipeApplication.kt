@@ -10,10 +10,11 @@ import dev.zacsweers.metrox.android.MetroApplication
 
 class RecipeApplication : Application(), MetroApplication, SingletonImageLoader.Factory {
 
-    private val appGraph: AndroidAppGraph by lazy { createGraphFactory<AndroidAppGraph.Factory>().create(this) }
-    override val appComponentProviders: MetroAppComponentProviders
-        get() = appGraph
+  private val appGraph: AndroidAppGraph by lazy {
+    createGraphFactory<AndroidAppGraph.Factory>().create(this)
+  }
+  override val appComponentProviders: MetroAppComponentProviders
+    get() = appGraph
 
-    override fun newImageLoader(context: PlatformContext): ImageLoader = appGraph.imageLoader
-
+  override fun newImageLoader(context: PlatformContext): ImageLoader = appGraph.imageLoader
 }

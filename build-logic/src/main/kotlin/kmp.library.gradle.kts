@@ -12,6 +12,7 @@ plugins {
   id("com.ncorti.ktfmt.gradle")
   id("dependency.analysis")
   id("detekt")
+  id("formatting")
 }
 
 kotlin {

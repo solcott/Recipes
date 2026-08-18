@@ -19,18 +19,18 @@ import dev.zacsweers.metrox.android.ActivityKey
 @ActivityKey
 @Inject
 class MainActivity(private val circuit: Circuit) : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        // intent.data is non-null when launched via a deep link (recipes://app/...)
-        val initialScreen = intent.data?.path?.let { urlPathToScreen(it) }
-        setContent {
-            RecipeApp(
-                circuit,
-                modifier = Modifier.fillMaxSize(),
-                onRootPop = { finish() },
-                initialScreen = initialScreen,
-            )
-        }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+    // intent.data is non-null when launched via a deep link (recipes://app/...)
+    val initialScreen = intent.data?.path?.let { urlPathToScreen(it) }
+    setContent {
+      RecipeApp(
+        circuit,
+        modifier = Modifier.fillMaxSize(),
+        onRootPop = { finish() },
+        initialScreen = initialScreen,
+      )
     }
+  }
 }
