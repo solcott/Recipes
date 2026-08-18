@@ -10,7 +10,7 @@ import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
 import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistory
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryJsonSerializer
-import com.scottolcott.recipe.storage.datastore.SearchSuggestions
+import com.scottolcott.recipe.storage.datastore.SearchHistorySuggestions
 import com.scottolcott.recipe.storage.datastore.SuggestionsJsonSerializer
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -38,7 +38,7 @@ actual class StorageFactory(
     )
   }
 
-  actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchSuggestions> {
+  actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchHistorySuggestions> {
     // Note: System.getProperty("java.io.tmpdir") points to the temporary folder on the system,
     // which might be cleaned upon reboot. On macOS, you can instead use the ~/Library/Application
     // Support/[your-app] folder.

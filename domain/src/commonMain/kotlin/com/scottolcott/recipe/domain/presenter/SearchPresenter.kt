@@ -11,6 +11,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import com.scottolcott.recipe.model.CategorySuggestions
+import com.scottolcott.recipe.model.IngredientSuggestions
+import com.scottolcott.recipe.model.SearchSuggestions
 import com.scottolcott.recipe.repository.SearchSuggestionsRepository
 import com.slack.circuit.retained.produceRetainedState
 import com.slack.circuit.runtime.CircuitUiState
@@ -35,7 +38,13 @@ class SearchPresenter(
     var searchActive by rememberSaveable { mutableStateOf(false) }
     val searchText = rememberTextFieldState()
     val suggestions by
-      produceRetainedState(emptyList()) {
+      produceRetainedState(
+        SearchSuggestions(
+          emptyList(),
+          CategorySuggestions(true, false, emptyList()),
+          IngredientSuggestions(true, false, emptyList()),
+        )
+      ) {
         snapshotFlow { searchText.text }
           .debounce(300.milliseconds)
           .transformLatest {
@@ -68,7 +77,7 @@ class SearchPresenter(
 data class SearchState(
   val searchText: TextFieldState,
   val isSearchActive: Boolean,
-  val suggestions: List<String>,
+  val suggestions: SearchSuggestions,
   val eventSink: (SearchEvent) -> Unit,
 ) : CircuitUiState
 

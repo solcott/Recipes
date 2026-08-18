@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Parcelize @JvmInline @Serializable value class CategoryId(val value: String) : Parcelable
 
+@Serializable
 data class Category(
   val id: CategoryId,
   val name: String,

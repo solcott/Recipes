@@ -32,6 +32,8 @@ import org.mobilenativefoundation.store.store5.Validator
 interface CategoryRepository {
 
   fun getCategories(): Flow<StoreReadResponse<List<Category>>>
+
+  fun getCategories(nameFilter: String): Flow<StoreReadResponse<List<Category>>>
 }
 
 @SingleIn(AppScope::class)
@@ -74,7 +76,8 @@ internal class CategoryRepositoryImpl(
   private fun createFetcher(): Fetcher<CategoriesKey, List<CategoryDto>> {
     return Fetcher.of { key ->
       when (key) {
-        CategoriesKey.GetCategories -> categoryApi.getCategories().categories
+        CategoriesKey.GetCategories,
+        is CategoriesKey.FilterByName -> categoryApi.getCategories().categories
       }
     }
   }
@@ -85,13 +88,15 @@ internal class CategoryRepositoryImpl(
       reader = { key: CategoriesKey ->
         when (key) {
           CategoriesKey.GetCategories -> categoryDao.getCategories()
+          is CategoriesKey.FilterByName -> categoryDao.getCategories(key.nameFilter)
         }.map { categories ->
           categories.map { Category(it.id, it.name, it.thumb, it.description, it.lastFetched) }
         }
       },
       writer = { key: CategoriesKey, categories: List<CategoryEntity> ->
         when (key) {
-          CategoriesKey.GetCategories -> {
+          CategoriesKey.GetCategories,
+          is CategoriesKey.FilterByName -> {
             categoryDao.deleteAllCategories()
             val lastFetched = Clock.System.now()
             categoryDao.insertCategories(
@@ -109,10 +114,18 @@ internal class CategoryRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun getCategories(): Flow<StoreReadResponse<List<Category>>> {
-    val key = CategoriesKey.GetCategories
+    return loadCategoriesByKey(CategoriesKey.GetCategories)
+  }
+
+  override fun getCategories(nameFilter: String): Flow<StoreReadResponse<List<Category>>> {
+    return loadCategoriesByKey(CategoriesKey.FilterByName(nameFilter))
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun loadCategoriesByKey(key: CategoriesKey): Flow<StoreReadResponse<List<Category>>> {
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading categories")
+      .logErrors(logger, "Error loading categories by $key")
   }
 }

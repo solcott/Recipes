@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
+import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.model.store.RecipesKey
 import com.scottolcott.recipe.network.api.RecipeApi
 import com.scottolcott.recipe.network.dto.RecipeDto
@@ -97,7 +98,9 @@ internal class RecipeRepositoryImpl(
       .flatMapLatest { refresh ->
         detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
       }
-      .onStart { searchSuggestionsRepository.addSearchSuggestion(query) }
+      .onStart {
+        searchSuggestionsRepository.addSearchSuggestion(SearchSuggestion.QuerySuggestion(query))
+      }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)

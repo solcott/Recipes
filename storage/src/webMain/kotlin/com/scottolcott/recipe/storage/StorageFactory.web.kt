@@ -10,7 +10,7 @@ import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
 import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistory
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryJsonSerializer
-import com.scottolcott.recipe.storage.datastore.SearchSuggestions
+import com.scottolcott.recipe.storage.datastore.SearchHistorySuggestions
 import com.scottolcott.recipe.storage.datastore.SuggestionsJsonSerializer
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -33,7 +33,7 @@ actual class StorageFactory(
     )
   }
 
-  actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchSuggestions> {
+  actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchHistorySuggestions> {
     return WebLocalStorage(suggestionsSerializer, name = "search_suggestions.json")
   }
 

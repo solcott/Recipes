@@ -1,7 +1,9 @@
 package com.scottolcott.recipe.model
 
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Ingredient(
   val id: IngredientId,
   val name: String,
