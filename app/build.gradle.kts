@@ -52,6 +52,13 @@ kotlin {
   dependencies {
     api(projects.config)
     api(projects.core)
+
+    implementation(projects.domain)
+    implementation(projects.network)
+    implementation(projects.repository)
+    implementation(projects.shared)
+    implementation(projects.storage)
+    implementation(projects.ui)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation.layout)
@@ -72,18 +79,12 @@ kotlin {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.metro.android)
-    implementation(projects.domain)
-    implementation(projects.network)
-    implementation(projects.repository)
-    implementation(projects.shared)
-    implementation(projects.storage)
-    implementation(projects.ui)
-
-    releaseImplementation(libs.kermit.core)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.kermit.android.debug)
     debugImplementation(libs.kermit.core.android.debug)
+
+    releaseImplementation(libs.kermit.core)
 
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 

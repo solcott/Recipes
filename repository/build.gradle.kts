@@ -11,14 +11,14 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api(projects.model)
         api(libs.kermit)
         api(libs.kotlinx.coroutines)
         api(libs.store)
-        api(projects.model)
 
-        implementation(libs.kermit.core)
         implementation(projects.network)
         implementation(projects.storage)
+        implementation(libs.kermit.core)
       }
     }
 

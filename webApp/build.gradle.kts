@@ -30,11 +30,11 @@ kotlin {
       api(projects.config)
       api(projects.core)
 
+      implementation(projects.shared)
+      implementation(projects.ui)
       implementation(libs.coil.core)
       implementation(libs.compose.ui)
       implementation(libs.kermit)
-      implementation(projects.shared)
-      implementation(projects.ui)
     }
   }
 }

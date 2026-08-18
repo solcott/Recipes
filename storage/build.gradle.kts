@@ -19,14 +19,14 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api(projects.core)
+        api(projects.model)
         api(libs.androidx.datastore.core)
         api(libs.androidx.room.runtime)
         api(libs.androidx.sqlite)
         api(libs.kotlin.serialization.core)
         api(libs.kotlinx.collections.immutable)
         api(libs.kotlinx.coroutines)
-        api(projects.core)
-        api(projects.model)
 
         implementation(libs.androidx.collection)
         implementation(libs.androidx.datastore.core.okio)
@@ -41,8 +41,8 @@ kotlin {
 
     webMain {
       dependencies {
-        implementation(libs.androidx.sqlite.web)
         implementation(projects.sqliteWasmWorker)
+        implementation(libs.androidx.sqlite.web)
       }
     }
   }

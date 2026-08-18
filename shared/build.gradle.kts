@@ -40,9 +40,6 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        api(libs.circuit.foundation)
-        api(libs.circuit.runtime.presenter)
-        api(libs.kotlinx.coroutines)
         api(projects.config)
         api(projects.core)
         api(projects.domain)
@@ -51,6 +48,9 @@ kotlin {
         api(projects.repository)
         api(projects.storage)
         api(projects.ui)
+        api(libs.circuit.foundation)
+        api(libs.circuit.runtime.presenter)
+        api(libs.kotlinx.coroutines)
 
         implementation(libs.circuit.codegen.annotations)
         implementation(libs.circuit.runtime.ui)
