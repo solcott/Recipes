@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
@@ -16,15 +14,15 @@ import com.slack.circuit.runtime.navigation.NavStack
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
-import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
 import io.github.solcott.kmp.parcelize.Parcelize
 
-@AssistedInject
-class RecipeScaffoldPresenter(
-  @Assisted private val navigator: Navigator,
+@CircuitInject(RecipeScaffoldScreen::class, AppScope::class)
+@Inject
+class RecipeScaffoldPresenter
+internal constructor(
+  private val navigator: Navigator,
   private val searchSuggestionsRepository: SearchSuggestionsRepository,
 ) : Presenter<RecipeScaffoldState> {
   @Composable
@@ -54,12 +52,6 @@ class RecipeScaffoldPresenter(
 
     @Suppress("OPT_IN_USAGE")
     return RecipeScaffoldState(navStack, childNavigator, searchState, eventSink)
-  }
-
-  @CircuitInject(RecipeScaffoldScreen::class, AppScope::class)
-  @AssistedFactory
-  interface Factory {
-    @Suppress("unused") fun create(navigator: Navigator): RecipeScaffoldPresenter
   }
 }
 

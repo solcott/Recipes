@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.presenter.CategoriesState.Error
 import com.scottolcott.recipe.domain.presenter.CategoriesState.Loading
@@ -12,29 +13,28 @@ import com.scottolcott.recipe.domain.presenter.CategoriesState.Success
 import com.scottolcott.recipe.domain.producer.CategoriesProducer
 import com.scottolcott.recipe.model.Category
 import com.slack.circuit.codegen.annotations.CircuitInject
-import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
-import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
 import io.github.solcott.kmp.parcelize.Parcelize
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 
-@AssistedInject
-class CategoriesPresenter(
-  @Assisted private val navigator: Navigator,
+@CircuitInject(CategoriesScreen::class, AppScope::class)
+@Inject
+class CategoriesPresenter
+internal constructor(
+  private val navigator: Navigator,
   private val categoriesProducer: CategoriesProducer,
 ) : Presenter<CategoriesState> {
   @Composable
   override fun present(): CategoriesState {
-    var retryTrigger by rememberRetained { mutableIntStateOf(0) }
+    var retryTrigger by retain { mutableIntStateOf(0) }
     val response = categoriesProducer.produce(retryTrigger)
-    var lastCategories by rememberRetained(retryTrigger) { mutableStateOf<List<Category>?>(null) }
+    var lastCategories by retain(retryTrigger) { mutableStateOf<List<Category>?>(null) }
 
     if (response is StoreReadResponse.Data) {
       lastCategories = response.value
@@ -84,12 +84,6 @@ class CategoriesPresenter(
       is StoreReadResponse.Error.Custom<*> ->
         Error(message = response.toString(), eventSink = errorEventSink)
     }
-  }
-
-  @CircuitInject(CategoriesScreen::class, AppScope::class)
-  @AssistedFactory
-  interface Factory {
-    @Suppress("unused") fun create(navigator: Navigator): CategoriesPresenter
   }
 }
 
