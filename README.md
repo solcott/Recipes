@@ -21,7 +21,7 @@ The project leverages a modern and robust tech stack for multiplatform developme
 - **[Coil 3](https://coil-kt.github.io/coil/)**: Image loading for Kotlin Multiplatform.
 - **[Room 3](https://developer.android.com/training/data-storage/room)**: SQLite object mapping library, now supporting KMP.
 - **[Store 5](https://github.com/MobileNativeFoundation/Store)**: A library for managing data loading and caching.
-- **Data Source**: Uses **[TheMealDB API](https://www.themealdb.com/api.php)** for fetching recipe data.
+- **Data Source**: Uses the **[TheMealDB API](https://www.themealdb.com/documentation)** (v2) for fetching recipe data. A `MEALDB_API_KEY` is required to build — set it as a Gradle property in `~/.gradle/gradle.properties` or as an environment variable.
 
 ## Project Structure
 
