@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.kt) ;; *) exit 0;; esac; [ -f \"$f\" ] || exit 0; jar=$(find \"$HOME/.gradle/caches/modules-2/files-2.1/com.facebook/ktfmt\" -name \"ktfmt-*-with-dependencies.jar\" 2>/dev/null | sort -V | tail -1); [ -n \"$jar\" ] || exit 0; java -jar \"$jar\" --google-style \"$f\"; } >/dev/null 2>&1 || true",
+            "timeout": 30,
+            "statusMessage": "ktfmt"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" 2>/dev/null || exit 0; c=$( { git diff --name-only HEAD -- \"*.kt\" \"*.kts\"; git ls-files --others --exclude-standard -- \"*.kt\" \"*.kts\"; } 2>/dev/null ); [ -n \"$c\" ] || exit 0; n=$(printf \"%s\\n\" \"$c\" | sort -u | wc -l | tr -d \" \"); printf \"{\\\"systemMessage\\\":\\\"%s Kotlin file(s) changed - run /verify (ktfmtFormat, sortDependencies, detektAll, :module:build) before committing.\\\",\\\"suppressOutput\\\":true}\\n\" \"$n\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
