@@ -24,6 +24,9 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api(projects.core)
+        api(projects.domain)
+        api(projects.model)
         api(libs.circuit.codegen.annotations)
         api(libs.circuit.foundation)
         api(libs.circuit.runtime)
@@ -31,12 +34,8 @@ kotlin {
         api(libs.circuit.runtime.ui)
         api(libs.compose.components.resources)
         api(libs.kotlinx.coroutines)
-        api(projects.core)
-        api(projects.domain)
-        api(projects.model)
 
         implementation(libs.circuit.backstack)
-        implementation(libs.circuit.retained)
         implementation(libs.circuit.runtime.navigation)
         implementation(libs.circuit.sharedelements)
         implementation(libs.circuitx.gesture.navigation)
@@ -73,6 +72,8 @@ kotlin {
 
     jvmMain {
       dependencies {
+        api(projects.domain)
+        api(projects.model)
         api(libs.androidx.compose.runtime.desktop)
         api(libs.androidx.window.core)
         api(libs.circuit.codegen.annotations)
@@ -82,8 +83,6 @@ kotlin {
         api(libs.compose.material3.desktop)
         api(libs.compose.ui.desktop)
         api(libs.compose.ui.text.desktop)
-        api(projects.domain)
-        api(projects.model)
 
         implementation(libs.compose.animation.core.desktop)
         implementation(libs.compose.animation.desktop)

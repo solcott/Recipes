@@ -3,6 +3,7 @@ package com.scottolcott.recipe.storage.datastore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioSerializer
+import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.serialization.StorageJson
 import dev.zacsweers.metro.Inject
 import kotlinx.collections.immutable.persistentListOf
@@ -13,29 +14,29 @@ import okio.BufferedSink
 import okio.BufferedSource
 import okio.use
 
-@Serializable data class SearchSuggestions(val suggestions: List<String>)
+@Serializable data class SearchHistorySuggestions(val suggestions: List<SearchSuggestion>)
 
 @Inject
 class SuggestionsJsonSerializer(@param:StorageJson private val json: Json) :
-  OkioSerializer<SearchSuggestions> {
-  override val defaultValue: SearchSuggestions = SearchSuggestions(persistentListOf())
+  OkioSerializer<SearchHistorySuggestions> {
+  override val defaultValue: SearchHistorySuggestions = SearchHistorySuggestions(persistentListOf())
 
-  override suspend fun readFrom(source: BufferedSource): SearchSuggestions {
-    return json.decodeFromString<SearchSuggestions>(source.readUtf8())
+  override suspend fun readFrom(source: BufferedSource): SearchHistorySuggestions {
+    return json.decodeFromString<SearchHistorySuggestions>(source.readUtf8())
   }
 
-  override suspend fun writeTo(t: SearchSuggestions, sink: BufferedSink) {
-    sink.use { it.writeUtf8(json.encodeToString(SearchSuggestions.serializer(), t)) }
+  override suspend fun writeTo(t: SearchHistorySuggestions, sink: BufferedSink) {
+    sink.use { it.writeUtf8(json.encodeToString(SearchHistorySuggestions.serializer(), t)) }
   }
 }
 
-class SearchSearchSuggestionsDataStore(private val storage: Storage<SearchSuggestions>) {
+class SearchSearchSuggestionsDataStore(private val storage: Storage<SearchHistorySuggestions>) {
   private val dataStore = DataStoreFactory.create(storage = storage)
 
-  val suggestions: Flow<SearchSuggestions>
+  val suggestions: Flow<SearchHistorySuggestions>
     get() = dataStore.data
 
-  suspend fun add(suggestion: String) = dataStore.updateData { prev ->
+  suspend fun add(suggestion: SearchSuggestion) = dataStore.updateData { prev ->
     if (!prev.suggestions.contains(suggestion)) {
       prev.copy(suggestions = prev.suggestions.toMutableList().apply { add(suggestion) })
     } else {
@@ -43,7 +44,7 @@ class SearchSearchSuggestionsDataStore(private val storage: Storage<SearchSugges
     }
   }
 
-  suspend fun remove(suggestion: String) = dataStore.updateData { prev ->
+  suspend fun remove(suggestion: SearchSuggestion) = dataStore.updateData { prev ->
     prev.copy(suggestions = prev.suggestions.toMutableList().apply { remove(suggestion) })
   }
 }

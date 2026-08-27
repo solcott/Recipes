@@ -22,19 +22,19 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
-import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
 import io.github.solcott.kmp.parcelize.Parcelize
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 
-@AssistedInject
-class RecipeDetailsPresenter(
-  @Assisted private val screen: RecipeDetailsScreen,
-  @Assisted private val navigator: Navigator,
+@CircuitInject(RecipeDetailsScreen::class, AppScope::class)
+@Inject
+class RecipeDetailsPresenter
+internal constructor(
+  private val screen: RecipeDetailsScreen,
+  private val navigator: Navigator,
   private val recipeRepository: RecipeRepository,
   private val logger: Logger,
 ) : Presenter<RecipeDetailsState> {
@@ -81,13 +81,6 @@ class RecipeDetailsPresenter(
         is RecipeDetailsEvent.AreaClicked -> navigator.goTo(ByArea(event.area))
       }
     }
-  }
-
-  @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
-  @AssistedFactory
-  interface Factory {
-    @Suppress("unused")
-    fun create(screen: RecipeDetailsScreen, navigator: Navigator): RecipeDetailsPresenter
   }
 }
 

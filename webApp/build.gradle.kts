@@ -29,11 +29,11 @@ kotlin {
     commonMain.dependencies {
       api(projects.config)
       api(projects.core)
-      implementation(projects.ui)
-      implementation(projects.shared)
 
-      implementation(libs.compose.ui)
+      implementation(projects.shared)
+      implementation(projects.ui)
       implementation(libs.coil.core)
+      implementation(libs.compose.ui)
       implementation(libs.kermit)
     }
   }

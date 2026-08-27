@@ -20,7 +20,8 @@ plugins {
 subprojects {
   apply<KtfmtPlugin>()
   configure<KtfmtExtension> {
-    googleStyle() }
+    googleStyle()
+  }
 }
 
 tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {

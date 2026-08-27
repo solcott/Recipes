@@ -22,8 +22,8 @@ data class RecipeDetails(
   val imageSource: String? = null,
   val creativeCommonsConfirmed: String? = null,
   val dateModified: String? = null,
-  val ingredients: List<Ingredient> = emptyList(),
+  val ingredients: List<RecipeIngredient> = emptyList(),
   val lastFetched: Instant,
 )
 
-data class Ingredient(val ingredient: String, val measure: String)
+data class RecipeIngredient(val ingredient: String, val measure: String)

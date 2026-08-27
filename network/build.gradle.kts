@@ -24,13 +24,14 @@ kotlin {
     }
     commonMain {
       dependencies {
+        api(projects.core)
+        api(projects.model)
         api(libs.kermit)
         api(libs.kotlin.serialization.core)
         api(libs.ktor.client.core)
         api(libs.metro.runtime)
-        api(projects.core)
-        api(projects.model)
 
+        implementation(projects.config)
         implementation(libs.kermit.core)
         implementation(libs.kotlin.serialization.json)
         implementation(libs.ktor.client.content.negotiation)
@@ -41,12 +42,10 @@ kotlin {
         implementation(libs.ktor.serialization)
         implementation(libs.ktor.serialization.kotlinx.json)
         implementation(libs.ktor.utils)
-        implementation(projects.config)
       }
     }
     commonJvmMain { dependencies { implementation(libs.ktor.client.okhttp) } }
-    val nonJvmMain by getting { dependencies { implementation(libs.kermit.ktor) } }
-
+    getByName("nonJvmMain") { dependencies { implementation(libs.kermit.ktor) } }
     iosMain { dependencies { implementation(libs.ktor.client.darwin) } }
     jsMain { dependencies {} }
     wasmJsMain { dependencies {} }

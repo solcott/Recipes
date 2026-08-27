@@ -15,9 +15,7 @@ plugins {
 buildkonfig {
   packageName = "com.scottolcott.recipe"
   exposeObjectWithName = "SharedBuildConfig"
-  defaultConfigs {
-    buildConfigField(FieldSpec.Type.STRING, "MEALDB_API_KEY", project.mealDbApiKey ?: "")
-  }
+  defaultConfigs { buildConfigField(FieldSpec.Type.STRING, "MEALDB_API_KEY", project.mealDbApiKey) }
 }
 
 compose.resources {
@@ -33,15 +31,13 @@ kotlin {
     iosTarget.binaries.framework {
       baseName = "RecipeApp"
       isStatic = true
+      binaryOption("bundleId", "com.scottolcott.recipe.shared")
     }
   }
 
   sourceSets {
     commonMain {
       dependencies {
-        api(libs.circuit.foundation)
-        api(libs.circuit.runtime.presenter)
-        api(libs.kotlinx.coroutines)
         api(projects.config)
         api(projects.core)
         api(projects.domain)
@@ -50,6 +46,9 @@ kotlin {
         api(projects.repository)
         api(projects.storage)
         api(projects.ui)
+        api(libs.circuit.foundation)
+        api(libs.circuit.runtime.presenter)
+        api(libs.kotlinx.coroutines)
 
         implementation(libs.circuit.codegen.annotations)
         implementation(libs.circuit.runtime.ui)

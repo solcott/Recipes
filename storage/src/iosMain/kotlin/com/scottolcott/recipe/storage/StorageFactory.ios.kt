@@ -4,9 +4,13 @@ import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioStorage
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistory
+import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistoryJsonSerializer
+import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
+import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistory
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryJsonSerializer
-import com.scottolcott.recipe.storage.datastore.SearchSuggestions
+import com.scottolcott.recipe.storage.datastore.SearchHistorySuggestions
 import com.scottolcott.recipe.storage.datastore.SuggestionsJsonSerializer
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -23,6 +27,8 @@ import platform.Foundation.NSUserDomainMask
 actual class StorageFactory(
   private val suggestionsSerializer: SuggestionsJsonSerializer,
   private val historySerializer: RecipeFetchHistoryJsonSerializer,
+  private val categoriesHistorySerializer: CategoriesFetchHistoryJsonSerializer,
+  private val ingredientsHistorySerializer: IngredientsFetchHistoryJsonSerializer,
 ) {
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val dbFilePath = documentDirectory() + "/my_room.db"
@@ -32,7 +38,7 @@ actual class StorageFactory(
     )
   }
 
-  actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchSuggestions> {
+  actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchHistorySuggestions> {
     return OkioStorage(
       fileSystem = FileSystem.SYSTEM,
       serializer = suggestionsSerializer,
@@ -45,6 +51,22 @@ actual class StorageFactory(
       fileSystem = FileSystem.SYSTEM,
       serializer = historySerializer,
       producePath = { (documentDirectory() + "/recipe_fetch_history.json").toPath() },
+    )
+  }
+
+  actual fun createCategoriesFetchHistoryDataStoreStorage(): Storage<CategoriesFetchHistory> {
+    return OkioStorage(
+      fileSystem = FileSystem.SYSTEM,
+      serializer = categoriesHistorySerializer,
+      producePath = { (documentDirectory() + "/categories_fetch_history.json").toPath() },
+    )
+  }
+
+  actual fun createIngredientsFetchHistoryDataStoreStorage(): Storage<IngredientsFetchHistory> {
+    return OkioStorage(
+      fileSystem = FileSystem.SYSTEM,
+      serializer = ingredientsHistorySerializer,
+      producePath = { (documentDirectory() + "/ingredients_fetch_history.json").toPath() },
     )
   }
 

@@ -24,7 +24,6 @@ interface AndroidAppGraph : AppGraph, MetroAppComponentProviders {
   @Provides
   override fun provideRuntimeConfig(): RuntimeConfig {
     return RuntimeConfigImpl()
-
   }
 
   @DependencyGraph.Factory
@@ -32,4 +31,3 @@ interface AndroidAppGraph : AppGraph, MetroAppComponentProviders {
     fun create(@Provides application: Application): AndroidAppGraph
   }
 }
-

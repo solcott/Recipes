@@ -26,7 +26,14 @@ private class FakeCategoryRepository : CategoryRepository {
     flowOf(StoreReadResponse.Initial)
   }
 
+  var getCategoriesByNameHandler: (String) -> Flow<StoreReadResponse<List<Category>>> = {
+    getCategoriesHandler()
+  }
+
   override fun getCategories(): Flow<StoreReadResponse<List<Category>>> = getCategoriesHandler()
+
+  override fun getCategories(nameFilter: String): Flow<StoreReadResponse<List<Category>>> =
+    getCategoriesByNameHandler(nameFilter)
 }
 
 val categoriesPresenterTests by testSuite {

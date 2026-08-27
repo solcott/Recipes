@@ -1,13 +1,20 @@
 ;(function(config) {
+  // Ensure dynamically loaded chunks resolve from the root regardless of URL depth
+  config.output = config.output || {}
+  config.output.publicPath = "/"
+
+  // The remaining configuration is dev-server only. During the production
+  // webpack build (jsBrowserProductionWebpack) config.devServer is undefined,
+  // so bail out before touching it.
+  if (!config.devServer) {
+    return
+  }
+
   // CORS headers required for SharedArrayBuffer (SQLite WASM worker)
   config.devServer.headers = [
       { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
       { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' }
   ]
-
-  // Ensure dynamically loaded chunks resolve from the root regardless of URL depth
-  config.output = config.output || {}
-  config.output.publicPath = "/"
 
   // Serve a modified index.html that injects <base href="/"> for every HTML request.
   //

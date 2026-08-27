@@ -16,6 +16,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api(projects.model)
         api(libs.circuit.codegen.annotations)
         api(libs.circuit.foundation)
         api(libs.circuit.runtime)
@@ -27,11 +28,9 @@ kotlin {
         api(libs.kotlinx.coroutines)
         api(libs.ktor.http) // Used for url encode/decode in ScreenUrlMapper
         api(libs.store)
-        api(projects.model)
 
-        implementation(libs.circuit.retained)
-        implementation(libs.kermit.core)
         implementation(projects.repository)
+        implementation(libs.kermit.core)
       }
     }
 

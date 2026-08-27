@@ -3,7 +3,7 @@ package com.scottolcott.recipe.storage.datastore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioSerializer
-import com.scottolcott.recipe.model.RecipeKey
+import com.scottolcott.recipe.model.store.RecipesKey
 import com.scottolcott.recipe.serialization.StorageJson
 import dev.zacsweers.metro.Inject
 import kotlin.time.Clock
@@ -19,7 +19,7 @@ import okio.BufferedSink
 import okio.BufferedSource
 import okio.use
 
-@Serializable data class RecipeFetchHistory(val lastFetchTimes: Map<RecipeKey, Instant>)
+@Serializable data class RecipeFetchHistory(val lastFetchTimes: Map<RecipesKey, Instant>)
 
 @Inject
 class RecipeFetchHistoryJsonSerializer(@param:StorageJson private val json: Json) :
@@ -46,7 +46,7 @@ class RecipeFetchHistoryDataStore(private val storage: Storage<RecipeFetchHistor
     get() = dataStore.data
 
   suspend fun updateLastFetchTime(
-    key: RecipeKey,
+    key: RecipesKey,
     time: Instant,
     expirationThreshold: Instant? = null,
   ) = dataStore.updateData { prev ->
@@ -60,11 +60,11 @@ class RecipeFetchHistoryDataStore(private val storage: Storage<RecipeFetchHistor
     prev.copy(lastFetchTimes = finalTimes)
   }
 
-  suspend fun getLastFetchTime(key: RecipeKey): Instant? {
+  suspend fun getLastFetchTime(key: RecipesKey): Instant? {
     return history.first().lastFetchTimes[key]
   }
 
-  fun refreshNeeded(key: RecipeKey, cacheExpiration: Duration): Flow<Boolean> {
+  fun refreshNeeded(key: RecipesKey, cacheExpiration: Duration): Flow<Boolean> {
     return history.map { history ->
       val lastFetch = history.lastFetchTimes[key]
       lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()

@@ -1,11 +1,17 @@
 package com.scottolcott.recipe
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.style.ExperimentalFoundationStyleApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.AppBarWithSearch
@@ -33,21 +39,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import coil3.SingletonImageLoader
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.domain.presenter.SearchEvent
+import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.arrow_back_24px
 import com.scottolcott.recipe.ui.arrow_back_ios_24px
 import com.scottolcott.recipe.ui.check_24px
 import com.scottolcott.recipe.ui.chef_hat_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
+import com.scottolcott.recipe.ui.history_24px
 import com.scottolcott.recipe.ui.recipes
 import com.scottolcott.recipe.ui.search
 import com.scottolcott.recipe.ui.search_24px
@@ -66,11 +79,16 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   val appBarWithSearchColors = getAppBarWithSearchColors()
   val keyboardController = LocalSoftwareKeyboardController.current
 
-  val onSearch: (String) -> Unit =
+  val onSearch: (SearchSuggestion) -> Unit =
     remember(state.searchState, keyboardController, searchBarState, scope) {
-      { query: String ->
+      { query: SearchSuggestion ->
         scope.launch {
-          state.searchState.eventSink(SearchEvent.PerformSearch(query))
+          when (query) {
+            is SearchSuggestion.CategorySuggestion -> TODO()
+            is SearchSuggestion.IngredientSuggestion -> TODO()
+            is SearchSuggestion.QuerySuggestion ->
+              state.searchState.eventSink(SearchEvent.PerformSearch(query.query))
+          }
           keyboardController?.hide()
           searchBarState.animateToCollapsed()
         }
@@ -82,7 +100,7 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
       RecipeSearchBarInputField(
         searchText = state.searchState.searchText,
         searchBarState = searchBarState,
-        onSearch = onSearch,
+        onSearch = { onSearch(SearchSuggestion.QuerySuggestion(it)) },
         colors = appBarWithSearchColors,
       )
     }
@@ -184,7 +202,8 @@ private fun NavIcon(backStack: NavStack<out NavStack.Record>, navigator: Navigat
     IconButton(
       {},
       enabled = false,
-      colors = IconButtonDefaults.iconButtonColors(disabledContentColor = LocalContentColor.current),
+      colors =
+        IconButtonDefaults.iconButtonColors(disabledContentColor = LocalContentColor.current),
     ) {
       Icon(painter = painterResource(Res.drawable.chef_hat_24px), contentDescription = null)
     }
@@ -198,7 +217,7 @@ private fun ExpandedSearchBar(
   inputField: @Composable () -> Unit,
   appBarWithSearchColors: AppBarWithSearchColors,
   state: RecipeScaffoldState,
-  onSearch: (String) -> Unit,
+  onSearch: (SearchSuggestion) -> Unit,
 ) {
   val windowSizeClass = LocalWindowSizeClass.current
   if (
@@ -225,23 +244,92 @@ private fun ExpandedSearchBar(
   }
 }
 
+private const val leadingImageAspectRatio = 233f / 145f
+
+@OptIn(ExperimentalFoundationStyleApi::class)
 @Composable
-private fun SearchSuggestionItems(state: RecipeScaffoldState, onSearch: (String) -> Unit) {
-  LazyColumn {
-    items(state.searchState.suggestions) {
+private fun SearchSuggestionItems(
+  state: RecipeScaffoldState,
+  onSearch: (SearchSuggestion) -> Unit,
+) {
+
+  LazyColumn(modifier = Modifier.fillMaxSize()) {
+    items(
+      state.searchState.suggestions.history,
+      key = {
+        when (it) {
+          is SearchSuggestion.CategorySuggestion -> it.category.id
+          is SearchSuggestion.IngredientSuggestion -> it.ingredient.id
+          is SearchSuggestion.QuerySuggestion -> it.query
+        }
+      },
+      contentType = { "history_item" },
+    ) {
+      val text =
+        when (it) {
+          is SearchSuggestion.CategorySuggestion -> it.category.name
+          is SearchSuggestion.IngredientSuggestion -> it.ingredient.name
+          is SearchSuggestion.QuerySuggestion -> it.query
+        }
       ListItem(
-        headlineContent = { Text(it, color = MaterialTheme.colorScheme.onPrimary) },
+        leadingContent = {
+          Image(
+            painter = painterResource(Res.drawable.history_24px),
+            contentDescription = null,
+            modifier = Modifier.width(64.dp).aspectRatio(leadingImageAspectRatio),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
+          )
+        },
+        headlineContent = { Text(text, color = MaterialTheme.colorScheme.onPrimary) },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier =
           Modifier.animateItem()
             .clickable {
-              state.searchState.searchText.setTextAndPlaceCursorAtEnd(it)
+              state.searchState.searchText.setTextAndPlaceCursorAtEnd(text)
               onSearch(it)
             }
             .fillMaxWidth(),
       )
     }
+    items(
+      state.searchState.suggestions.categories.categories,
+      key = { "category_${it.id}" },
+      contentType = { "category_or_ingredient_item" },
+    ) {
+      SuggestedItem(it.name, it.thumb, Modifier.animateItem().fillMaxWidth())
+    }
+
+    items(
+      state.searchState.suggestions.ingredientSuggestions.ingredients,
+      key = { "ingredient_${it.id}" },
+      contentType = { "category_or_ingredient_item" },
+    ) {
+      SuggestedItem(it.name, "${it.thumbnail}/small", Modifier.animateItem())
+    }
   }
+}
+
+@Composable
+fun LazyItemScope.SuggestedItem(text: String, thumbnail: String, modifier: Modifier = Modifier) {
+  ListItem(
+    leadingContent = {
+      AsyncImage(
+        thumbnail,
+        contentDescription = "",
+        modifier = Modifier.width(64.dp).aspectRatio(leadingImageAspectRatio),
+        imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
+      )
+    },
+    headlineContent = { Text(text, color = MaterialTheme.colorScheme.onPrimary) },
+    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    modifier =
+      modifier
+        .animateItem()
+        .clickable {
+          //              onSearch(it)
+        }
+        .fillMaxWidth(),
+  )
 }
 
 @Composable
