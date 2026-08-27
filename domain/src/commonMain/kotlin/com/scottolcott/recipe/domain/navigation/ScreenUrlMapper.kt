@@ -93,4 +93,5 @@ fun urlPathToScreen(rawPathOrUrl: String): Screen? {
  *
  * Provided by [RecipeApp] on every platform; defaults to `null` (no deep link).
  */
+@Suppress("CompositionLocalAllowlist")
 val LocalDeepLinkScreen = staticCompositionLocalOf<Screen?> { null }
