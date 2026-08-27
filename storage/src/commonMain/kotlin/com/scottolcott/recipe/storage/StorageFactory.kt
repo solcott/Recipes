@@ -7,6 +7,9 @@ import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistory
 import com.scottolcott.recipe.storage.datastore.SearchHistorySuggestions
 
+/** Filename of the Room database, identical on every platform. */
+internal const val DATABASE_NAME = "recipe.db"
+
 expect class StorageFactory {
 
   fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase>
