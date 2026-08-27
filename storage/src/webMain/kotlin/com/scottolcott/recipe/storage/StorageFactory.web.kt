@@ -28,7 +28,7 @@ actual class StorageFactory(
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
 
     return Room.databaseBuilder<AppDatabase>(
-      name = "recipe.db",
+      name = DATABASE_NAME,
       factory = { AppDatabaseConstructor.initialize() },
     )
   }

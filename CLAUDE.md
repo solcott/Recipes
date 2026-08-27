@@ -109,6 +109,14 @@ graphs (`AndroidAppGraph`, `DesktopAppGraph`, `IOSAppGraph`, `WebAppGraph`) all 
   free dev key silently caps `filter.php` at one result. The key is interpolated into the URL
   *path*, so `NetworkProviders.redacting()` keeps it out of Ktor's logs — don't remove that wrapper.
   Details and the full endpoint reference: `/themealdb-api`.
+- **Room has no destructive-migration fallback, deliberately.** Changing an entity without bumping
+  `AppDatabase.version` throws "Room cannot verify the data integrity" on first db access; bumping
+  the version without writing a `Migration` throws "A migration from N to M was required but not
+  found." Both are intentional — the crash is the reminder to write the migration. Don't "fix" one
+  by adding `fallbackToDestructiveMigration`; note that it would not even cover the first case,
+  since `checkIdentity` runs in `onOpen`, before any migration path.
+  The db is `recipe.db` on every platform (one `DATABASE_NAME` constant in `StorageFactory.kt`).
+  Per-platform delete commands: `README.md` → *Resetting local data*.
 - `mavenLocal()` is in the repository list because `io.github.solcott:kmp-parcelize` is sometimes
   published locally. If it fails to resolve, that's why.
 - `README.md`'s iOS instructions are stale: the file on disk is `iosApp/iosApp.xcodeproj`, not `.xcworkspace`.

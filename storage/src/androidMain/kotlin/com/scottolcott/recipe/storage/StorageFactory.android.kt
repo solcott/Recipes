@@ -30,7 +30,7 @@ actual class StorageFactory(
 ) {
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val appContext = context.applicationContext
-    val dbFile = appContext.getDatabasePath("recipe.db")
+    val dbFile = appContext.getDatabasePath(DATABASE_NAME)
     return Room.databaseBuilder<AppDatabase>(context = appContext, name = dbFile.absolutePath,
         factory = {
             AppDatabaseConstructor.initialize()

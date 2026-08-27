@@ -31,7 +31,7 @@ actual class StorageFactory(
     // Note: System.getProperty("java.io.tmpdir") points to the temporary folder on the system,
     // which might be cleaned upon reboot. On macOS, you can instead use the ~/Library/Application
     // Support/[your-app] folder.
-    val dbFile = File(System.getProperty("java.io.tmpdir"), "my_room.db")
+    val dbFile = File(System.getProperty("java.io.tmpdir"), DATABASE_NAME)
     return Room.databaseBuilder<AppDatabase>(
       name = dbFile.absolutePath,
       factory = { AppDatabaseConstructor.initialize() },

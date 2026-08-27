@@ -31,7 +31,7 @@ actual class StorageFactory(
   private val ingredientsHistorySerializer: IngredientsFetchHistoryJsonSerializer,
 ) {
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
-    val dbFilePath = documentDirectory() + "/my_room.db"
+    val dbFilePath = documentDirectory() + "/" + DATABASE_NAME
     return Room.databaseBuilder<AppDatabase>(
       name = dbFilePath,
       factory = { AppDatabaseConstructor.initialize() },
