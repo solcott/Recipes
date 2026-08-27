@@ -15,9 +15,7 @@ plugins {
 buildkonfig {
   packageName = "com.scottolcott.recipe"
   exposeObjectWithName = "SharedBuildConfig"
-  defaultConfigs {
-    buildConfigField(FieldSpec.Type.STRING, "MEALDB_API_KEY", project.mealDbApiKey ?: "")
-  }
+  defaultConfigs { buildConfigField(FieldSpec.Type.STRING, "MEALDB_API_KEY", project.mealDbApiKey) }
 }
 
 compose.resources {
