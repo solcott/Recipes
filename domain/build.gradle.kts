@@ -24,9 +24,15 @@ kotlin {
         api(libs.circuit.runtime.presenter)
         api(libs.circuit.runtime.screen)
         api(libs.circuit.runtime.ui)
+        api(libs.circuitx.subcircuit)
+        // SearchState exposes TextFieldState. Circuit brings foundation in transitively but only
+        // at 1.11.1, which loses to nothing in commonMain and downgrades the whole metadata
+        // compilation below the Compose plugin version.
+        api(libs.compose.foundation)
         api(libs.kermit)
         api(libs.kotlinx.coroutines)
-        api(libs.ktor.http) // Used for url encode/decode in ScreenUrlMapper
+        // Used for url encode/decode in ScreenUrlMapper
+        api(libs.ktor.http)
         api(libs.store)
 
         implementation(projects.repository)
@@ -55,13 +61,13 @@ kotlin {
     }
     jvmMain {
       dependencies {
+        api(projects.model)
         api(libs.androidx.compose.runtime.desktop)
         api(libs.circuit.codegen.annotations)
         api(libs.compose.foundation.desktop)
-        api(projects.model)
 
-        implementation(libs.androidx.compose.runtime.saveable.desktop)
         implementation(projects.repository)
+        implementation(libs.androidx.compose.runtime.saveable.desktop)
       }
     }
 

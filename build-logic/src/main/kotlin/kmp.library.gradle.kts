@@ -69,3 +69,13 @@ kotlin {
     }
   }
 }
+
+// Compose UI tests on js are only loadable when the target produces a webpack bundle, which is what
+// supplies the Skiko runtime. Gated on the Compose plugin so non-Compose modules don't build an
+// executable they have no use for. https://youtrack.jetbrains.com/issue/CMP-4906
+plugins.withId("org.jetbrains.compose") {
+  kotlin {
+    js { binaries.executable() }
+    wasmJs { binaries.executable() }
+  }
+}
