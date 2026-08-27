@@ -36,6 +36,10 @@ interface IngredientRepository {
   fun filterIngredientsByName(nameFilter: String): Flow<StoreReadResponse<List<Ingredient>>>
 }
 
+// detekt 2.0.0-alpha.6 false positive: UnusedPrivateProperty misses references made from lambdas
+// in property initializers, i.e. `fetcher` and `sourceOfTruth` below. CategoryRepositoryImpl
+// builds the same objects in member functions instead and is not flagged. Remove on detekt upgrade.
+@Suppress("UnusedPrivateProperty")
 @OptIn(ExperimentalCoroutinesApi::class)
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)

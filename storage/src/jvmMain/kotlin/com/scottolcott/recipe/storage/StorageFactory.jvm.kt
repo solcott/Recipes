@@ -19,6 +19,10 @@ import java.io.File
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 
+// detekt 2.0.0-alpha.6 false positive: its type-resolution pass (detektMainJvm) analyses commonMain
+// and jvmMain as a single module, so every actual below fails to match its expect and the class
+// body stops resolving. Remove on detekt upgrade.
+@Suppress("UnusedPrivateProperty")
 @SingleIn(AppScope::class)
 @Inject
 actual class StorageFactory(
