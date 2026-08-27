@@ -53,7 +53,7 @@ interface NetworkProviders {
       install(ContentNegotiation) { json(json) }
 
       install(Logging) {
-        this.logger = logger
+        this.logger = logger.redacting(runtimeConfig.mealDbApiKey)
         level = if (runtimeConfig.debugBuild) LogLevel.ALL else LogLevel.HEADERS
       }
 
@@ -74,6 +74,18 @@ interface NetworkProviders {
         level = LogLevel.INFO
       }
     }
+  }
+}
+
+/**
+ * Wraps this logger so [secret] never reaches the log. The v2 base URL embeds the API key in its
+ * path, so every request line would otherwise print it — no [LogLevel] short of [LogLevel.NONE]
+ * omits the URL.
+ */
+private fun KtorLogger.redacting(secret: String): KtorLogger {
+  val delegate = this
+  return object : KtorLogger {
+    override fun log(message: String) = delegate.log(message.replace(secret, "***"))
   }
 }
 
