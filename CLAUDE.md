@@ -64,7 +64,11 @@ main session; delegate the execution and the summarizing.
   **No `iosX64`** — Intel Macs can't run the iOS simulator build.
 - Custom source-set groups available: `commonJvm` (jvm+android), `web` (js+wasmJs), `nonWeb`, `nonAndroid`.
 - Typesafe project accessors are enabled: write `projects.domain`, not `project(":domain")`.
-- `@Parcelize` comes from `io.github.solcott.kmp.parcelize` (a multiplatform plugin), **not** kotlin-parcelize.
+- `@Parcelize` comes from `io.github.solcott.kmp.parcelize` (a multiplatform plugin), **not**
+  kotlin-parcelize. It applies only to the `:model` id value classes (`RecipeId`, `CategoryId`,
+  `IngredientId`) — **`Screen`s are not Parcelable**, see *Navigation persistence* below.
+- Any module declaring `Screen`s needs the kotlinx-serialization Gradle plugin
+  (`libs.plugins.kotlinx.serialization`); `:domain` already applies it.
 
 ## Architecture
 
@@ -84,7 +88,8 @@ full pattern when adding a screen.
 
 **Circuit screen file layout** (`domain/.../presenter/XxxPresenter.kt`), in this order:
 presenter class → sealed `XxxState : CircuitUiState` (Loading/Error/Success) → sealed `XxxEvent`
-with nested per-state sub-interfaces → `@Parcelize data object XxxScreen : Screen` last.
+with nested per-state sub-interfaces → the `Screen` last, as
+`@CircuitSerializable(AppScope::class) data object XxxScreen : Screen`.
 `eventSink` properties are annotated `@Redacted` so they stay out of `toString`.
 
 **DI is Metro** (`dev.zacsweers.metro`), compile-time. Each layer exposes an `XxxProviders`
@@ -100,6 +105,19 @@ graphs (`AndroidAppGraph`, `DesktopAppGraph`, `IOSAppGraph`, `WebAppGraph`) all 
   and browser history on web.
 - Two `Json` qualifiers exist, `@NetworkJson` and `@StorageJson`
   (`core/.../serialization/JsonQualifiers.kt`). Pick deliberately.
+
+**Navigation persistence** (Circuit 0.38+): `Screen` and `PopResult` are no longer `Parcelable`, so
+the back stack is persisted with kotlinx-serialization.
+
+- Every **concrete** screen is annotated `@CircuitSerializable(AppScope::class)`
+  (`com.slack.circuit.serialization`) — never the sealed parent. `RecipesScreen` annotates its four
+  cases, not the interface.
+- The annotation is `@MetaSerializable`, so it *implies* `@Serializable`. Don't write both; add
+  `@Serializable(with = ...)` only for a custom serializer.
+- Every property of a screen must itself be serializable. The `:model` id value classes already are.
+- Codegen emits one `CircuitSerializerRegistration` per screen into an `AppScope` multibinding;
+  `domain/.../circuit/CircuitProviders.kt` folds that set into a `SerializableCircuitSaver` and
+  installs it with `Circuit.Builder.setCircuitSaver`. There is nothing to register by hand.
 
 ## Gotchas
 
@@ -117,6 +135,17 @@ graphs (`AndroidAppGraph`, `DesktopAppGraph`, `IOSAppGraph`, `WebAppGraph`) all 
   since `checkIdentity` runs in `onOpen`, before any migration path.
   The db is `recipe.db` on every platform (one `DATABASE_NAME` constant in `StorageFactory.kt`).
   Per-platform delete commands: `README.md` → *Resetting local data*.
+- **The nav stack is `rememberSaveableNavStack`, not `rememberSaveableBackStack`.** `BackStack`
+  stubs `forward()` and `backward()` to `false`, and `NavigatorImpl` delegates straight to them, so
+  switching to it silently turns the browser back/forward buttons on web into no-ops —
+  `ui/src/webMain/.../BrowserHistoryEffect.web.kt` drives navigation through
+  `Navigator.backward()`/`forward()`. Both `RecipeApp.kt` and `RecipeScaffoldPresenter.kt` must stay
+  on `rememberSaveableNavStack`.
+- The circuit saver is installed with the static `setCircuitSaver(saver)` overload rather than the
+  `setCircuitSaver { fallback -> ... }` transform, so an unregistered screen **fails loudly at save
+  time** instead of quietly falling through to the registry-backed saver. That is deliberate.
+  Restoring an unregistered screen can only return null and drop the record, so `CircuitProviders`
+  logs it through `onRestoreError`.
 - `mavenLocal()` is in the repository list because `io.github.solcott:kmp-parcelize` is sometimes
   published locally. If it fails to resolve, that's why.
 - `README.md`'s iOS instructions are stale: the file on disk is `iosApp/iosApp.xcodeproj`, not `.xcworkspace`.

@@ -2,7 +2,7 @@
 
 plugins {
   id("kmp.library")
-  alias(libs.plugins.kotlinx.serialation)
+  alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin { sourceSets { commonMain { dependencies { api(libs.kotlin.serialization.core) } } } }

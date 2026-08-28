@@ -30,13 +30,18 @@ Given a screen name `Xxx` and a description of what it shows:
 1. **`domain/src/commonMain/kotlin/com/scottolcott/recipe/domain/presenter/XxxPresenter.kt`**
    All four declarations in one file, in the required order: presenter class → sealed
    `XxxState : CircuitUiState` (Loading / Error / Success) → sealed `XxxEvent` with nested
-   per-state sub-interfaces → `@Parcelize data object XxxScreen : Screen` last.
+   per-state sub-interfaces → `@CircuitSerializable(AppScope::class) data object XxxScreen : Screen`
+   last (`com.slack.circuit.serialization.CircuitSerializable` — it implies `@Serializable`, so
+   don't add that too; `Screen`s are not `Parcelable`).
    - `@CircuitInject(XxxScreen::class, AppScope::class)` and `@Inject` on the presenter
    - `@Redacted` on every `eventSink` property
    - `retain { }` for retained state, never `rememberSaveable`
    - The `when` over `StoreReadResponse` exhaustive across `Initial`, `Loading`, `NoNewData`,
      `Data`, `Error.Exception`, `Error.Message`, `Error.Custom<*>`
    - A `retryTrigger` counter wired to `XxxEvent.Error.RetryClicked`, as in the example
+   - For a screen with parameters, a sealed interface whose **concrete cases** each carry
+     `@CircuitSerializable(AppScope::class)` — never the sealed parent. Every parameter type must be
+     `@Serializable`; if one isn't, leave a TODO and report it rather than editing `:model`
 
 2. **`domain/.../producer/XxxProducer.kt`** — only if a repository is involved. Thin `@Inject class`
    wrapping the repository flow in `produceRetainedState`, keyed on `retryTrigger`, dropping
@@ -63,7 +68,8 @@ Given a screen name `Xxx` and a description of what it shows:
 - **Never modify an existing presenter or composable** beyond the `ScreenUrlMapper` edit. If the new
   screen requires a change to an existing one (a navigation target, a new event), report it rather
   than making it.
-- Don't write tests. The caller decides whether the screen warrants one.
+- Don't write tests. The caller decides whether the screen warrants one — but do report that the
+  screen needs an entry in `domain/src/commonTest/.../presenter/ScreenSerializationTest.kt`.
 - Don't run Gradle. You have no Bash tool, and verification is the caller's job.
 
 Formatting is handled for you — a `PostToolUse` hook runs ktfmt on every `.kt` file you write, so

@@ -9,7 +9,7 @@ plugins {
   id("kmp.library")
   alias(libs.plugins.androidx.room)
   alias(libs.plugins.ksp)
-  alias(libs.plugins.kotlinx.serialation)
+  alias(libs.plugins.kotlinx.serialization)
   alias(libs.plugins.metro)
 }
 

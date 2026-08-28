@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.repository.SearchSuggestionsRepository
-import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -34,7 +34,7 @@ internal constructor(
         if (deepLinkScreen != null && deepLinkScreen != CategoriesScreen) add(deepLinkScreen)
       }
     }
-    val navStack = rememberSaveableBackStack(initialScreens)
+    val navStack = rememberSaveableNavStack(initialScreens)
     // TODO look into sub circuit for this
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
     // Have to create inline instead of injecting due to needing access to the childNavigator

@@ -9,7 +9,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.redacted)
   alias(libs.plugins.test.balloon)
-  alias(libs.plugins.kotlinx.serialation)
+  alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -45,6 +45,7 @@ kotlin {
     commonTest {
       dependencies {
         implementation(libs.circuit.test)
+        implementation(libs.kotlin.serialization.json)
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.test.balloon.framework.core)

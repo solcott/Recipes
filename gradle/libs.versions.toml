@@ -85,7 +85,6 @@ circuit-sharedelements = { module = "com.slack.circuit:circuit-sharedelements", 
 circuit-test = { module = "com.slack.circuit:circuit-test", version.ref = "circuit" }
 circuitx-android = { module = "com.slack.circuit:circuitx-android", version.ref = "circuit" }
 circuitx-gesture-navigation = { module = "com.slack.circuit:circuitx-gesture-navigation", version.ref = "circuit" }
-
 circuitx-subcircuit = { module = "com.slack.circuit:circuitx-subcircuit", version.ref = "circuit" }
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
@@ -163,7 +162,7 @@ kmp-parcelize = { id = "io.github.solcott.kmp.parcelize", version.ref = "kmp-par
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlinx-serialation = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.27.0" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }

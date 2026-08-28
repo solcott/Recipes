@@ -35,7 +35,6 @@ kotlin {
         api(libs.compose.components.resources)
         api(libs.kotlinx.coroutines)
 
-        implementation(libs.circuit.backstack)
         implementation(libs.circuit.runtime.navigation)
         implementation(libs.circuit.sharedelements)
         implementation(libs.circuitx.gesture.navigation)

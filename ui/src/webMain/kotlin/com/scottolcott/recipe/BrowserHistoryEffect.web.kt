@@ -42,6 +42,13 @@ import org.w3c.dom.events.Event
  * | 0     | > 0    | forward() — existing record  | history.forward |
  * | 0     | < 0    | backward() — existing record | history.back    |
  *
+ * ## Requires a NavStack, not a BackStack
+ *
+ * [Navigator.backward] and [Navigator.forward] delegate to the underlying stack, and `BackStack`
+ * stubs both to `false`. Building this on a `rememberSaveableBackStack` leaves the browser's
+ * back/forward buttons changing only the URL — [navStack] must come from
+ * `rememberSaveableNavStack`.
+ *
  * ## Counter semantics
  * - [BrowserNavState.pendingPopStateIgnore]: incremented before every [org.w3c.dom.History.go] /
  *   [org.w3c.dom.History.back] / [org.w3c.dom.History.forward] call we make so the async `popstate`

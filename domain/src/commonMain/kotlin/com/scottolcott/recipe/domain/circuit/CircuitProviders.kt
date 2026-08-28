@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.scottolcott.recipe.domain.circuit
 
+import co.touchlab.kermit.Logger
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.animation.AnimatedScreenTransform
 import com.slack.circuit.runtime.ExperimentalCircuitApi
@@ -25,10 +26,26 @@ import kotlin.reflect.KClass
 @ContributesTo(AppScope::class)
 interface CircuitProviders {
 
+  /**
+   * Screens are persisted with kotlinx-serialization; [registrations] is the multibound set Circuit
+   * codegen emits for every `@CircuitSerializable` screen.
+   *
+   * Saving an unregistered screen throws, but restoring one only returns null and the nav stack
+   * silently drops that record, so the restore-error callback is wired to the logger to make it
+   * visible.
+   */
   @Provides
   @SingleIn(AppScope::class)
-  fun provideCircuitSaver(registrations: Set<CircuitSerializerRegistration>): CircuitSaver =
-    SerializableCircuitSaver(registrations)
+  fun provideCircuitSaver(
+    registrations: Set<CircuitSerializerRegistration>,
+    logger: Logger,
+  ): CircuitSaver =
+    SerializableCircuitSaver(
+      registrations,
+      onRestoreError = {
+        logger.e(it) { "Failed to restore a Circuit screen; dropping the record" }
+      },
+    )
 
   @Multibinds(allowEmpty = true)
   fun animatedScreenTransforms(): Map<KClass<out Screen>, AnimatedScreenTransform>
