@@ -76,6 +76,8 @@ internal class IngredientRepositoryImpl(
             dao.insert(local)
           }
         }
+        val now = Clock.System.now()
+        fetchHistoryDataStore.updateLastFetchTime(key, now, now.minus(cacheExpiration))
       },
       delete = { key ->
         when (key) {

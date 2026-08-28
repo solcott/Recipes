@@ -97,12 +97,19 @@ internal class CategoryRepositoryImpl(
         when (key) {
           CategoriesKey.GetCategories,
           is CategoriesKey.FilterByName -> {
-            categoryDao.deleteAllCategories()
+            if (key == CategoriesKey.GetCategories) {
+              categoryDao.deleteAllCategories()
+            }
             val lastFetched = Clock.System.now()
             categoryDao.insertCategories(
               categories.map {
                 CategoryEntity(it.id, it.name, it.thumb, it.description, lastFetched)
               }
+            )
+            fetchHistoryDataStore.updateLastFetchTime(
+              key,
+              lastFetched,
+              lastFetched.minus(cacheExpiration),
             )
           }
         }
