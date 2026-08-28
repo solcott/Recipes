@@ -6,8 +6,11 @@ import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.animation.AnimatedScreenTransform
 import com.slack.circuit.runtime.ExperimentalCircuitApi
 import com.slack.circuit.runtime.presenter.Presenter
+import com.slack.circuit.runtime.screen.CircuitSaver
 import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.runtime.ui.Ui
+import com.slack.circuit.serialization.CircuitSerializerRegistration
+import com.slack.circuit.serialization.SerializableCircuitSaver
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
@@ -22,6 +25,11 @@ import kotlin.reflect.KClass
 @ContributesTo(AppScope::class)
 interface CircuitProviders {
 
+  @Provides
+  @SingleIn(AppScope::class)
+  fun provideCircuitSaver(registrations: Set<CircuitSerializerRegistration>): CircuitSaver =
+    SerializableCircuitSaver(registrations)
+
   @Multibinds(allowEmpty = true)
   fun animatedScreenTransforms(): Map<KClass<out Screen>, AnimatedScreenTransform>
 
@@ -33,11 +41,13 @@ interface CircuitProviders {
     animatedScreenTransforms:
       @JvmSuppressWildcards
       Map<KClass<out Screen>, AnimatedScreenTransform>,
+    circuitSaver: CircuitSaver,
   ): Circuit {
     return Circuit.Builder()
       .addPresenterFactories(presenterFactories)
       .addUiFactories(uiFactories)
       .addAnimatedScreenTransforms(animatedScreenTransforms)
+      .setCircuitSaver(circuitSaver)
       .build()
   }
 }

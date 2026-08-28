@@ -17,10 +17,10 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import io.github.solcott.kmp.parcelize.Parcelize
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 @CircuitInject(CategoriesScreen::class, AppScope::class)
@@ -110,4 +110,4 @@ sealed interface CategoriesEvent {
   }
 }
 
-@Parcelize data object CategoriesScreen : Screen
+@CircuitSerializable(AppScope::class) data object CategoriesScreen : Screen

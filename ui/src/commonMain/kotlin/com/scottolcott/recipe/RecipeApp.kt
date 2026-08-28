@@ -12,10 +12,10 @@ import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.ui.theme.RecipeAppTheme
+import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.CircuitContent
-import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.screen.PopResult
@@ -40,7 +40,7 @@ fun RecipeApp(
     ) {
       CircuitCompositionLocals(circuit) {
         val initialBackstack = remember { listOf<Screen>(RecipeScaffoldScreen) }
-        val backStack = rememberSaveableNavStack(initialBackstack)
+        val backStack = rememberSaveableBackStack(initialBackstack)
         val circuitNavigator = rememberCircuitNavigator(backStack, onRootPop)
         val navigator = rememberNavigator(circuitNavigator)
         CircuitContent(RecipeScaffoldScreen, navigator = navigator, modifier = modifier)

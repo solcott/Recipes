@@ -21,10 +21,10 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import io.github.solcott.kmp.parcelize.Parcelize
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.mobilenativefoundation.store.store5.StoreReadResponse
@@ -101,4 +101,4 @@ sealed interface RecipeDetailsEvent : CircuitUiEvent {
   data class AreaClicked(val area: String) : RecipeDetailsEvent
 }
 
-@Parcelize data class RecipeDetailsScreen(val id: RecipeId) : Screen
+@CircuitSerializable(AppScope::class) data class RecipeDetailsScreen(val id: RecipeId) : Screen

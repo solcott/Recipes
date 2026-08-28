@@ -9,6 +9,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.redacted)
   alias(libs.plugins.test.balloon)
+  alias(libs.plugins.kotlinx.serialation)
 }
 
 kotlin {
@@ -24,6 +25,7 @@ kotlin {
         api(libs.circuit.runtime.presenter)
         api(libs.circuit.runtime.screen)
         api(libs.circuit.runtime.ui)
+        api(libs.circuit.serialization)
         api(libs.circuitx.subcircuit)
         // SearchState exposes TextFieldState. Circuit brings foundation in transitively but only
         // at 1.11.1, which loses to nothing in commonMain and downgrades the whole metadata

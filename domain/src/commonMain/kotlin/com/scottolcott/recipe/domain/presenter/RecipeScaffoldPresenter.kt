@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.repository.SearchSuggestionsRepository
+import com.slack.circuit.backstack.rememberSaveableBackStack
 import com.slack.circuit.codegen.annotations.CircuitInject
-import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
@@ -13,10 +13,10 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.navigation.NavStack
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import io.github.solcott.kmp.parcelize.Parcelize
 
 @CircuitInject(RecipeScaffoldScreen::class, AppScope::class)
 @Inject
@@ -34,7 +34,7 @@ internal constructor(
         if (deepLinkScreen != null && deepLinkScreen != CategoriesScreen) add(deepLinkScreen)
       }
     }
-    val navStack = rememberSaveableNavStack(initialScreens)
+    val navStack = rememberSaveableBackStack(initialScreens)
     // TODO look into sub circuit for this
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
     // Have to create inline instead of injecting due to needing access to the childNavigator
@@ -66,4 +66,4 @@ data class RecipeScaffoldState(
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,
 ) : CircuitUiState
 
-@Parcelize data object RecipeScaffoldScreen : Screen
+@CircuitSerializable(AppScope::class) data object RecipeScaffoldScreen : Screen
