@@ -28,8 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -122,12 +124,18 @@ private fun LookaheadScope.RecipeGrid(
   padding: PaddingValues,
   eventSink: (RecipeDetailsEvent) -> Unit,
 ) {
+  // The movable contents are remembered without keys so they keep their identity as the layout
+  // moves them between columns. That means their lambdas capture whatever was in scope when they
+  // were created, so read the changing values through State rather than capturing them directly.
+  val currentRecipe by rememberUpdatedState(recipe)
+  val currentEventSink by rememberUpdatedState(eventSink)
+
   val recipeImage = remember {
     movableContentOf { modifier: Modifier ->
       RecipeImage(
-        recipe,
-        recipe.favorite,
-        onToggleFavorite = { eventSink(RecipeDetailsEvent.ToggleFavorite) },
+        currentRecipe,
+        currentRecipe.favorite,
+        onToggleFavorite = { currentEventSink(RecipeDetailsEvent.ToggleFavorite) },
         modifier = modifier.animateBounds(this@RecipeGrid),
       )
     }
@@ -135,18 +143,18 @@ private fun LookaheadScope.RecipeGrid(
 
   val ingredients = remember {
     movableContentOf { modifier: Modifier ->
-      RecipeIngredients(recipe, modifier.animateBounds(this@RecipeGrid))
+      RecipeIngredients(currentRecipe, modifier.animateBounds(this@RecipeGrid))
     }
   }
 
   val instructions = remember {
     movableContentOf { modifier: Modifier ->
-      RecipeInstructions(recipe, modifier.animateBounds(this@RecipeGrid))
+      RecipeInstructions(currentRecipe, modifier.animateBounds(this@RecipeGrid))
     }
   }
   val metaInfo = remember {
     movableContentOf { modifier: Modifier ->
-      RecipeMetaInfo(recipe, eventSink, modifier.animateBounds(this@RecipeGrid))
+      RecipeMetaInfo(currentRecipe, currentEventSink, modifier.animateBounds(this@RecipeGrid))
     }
   }
 
