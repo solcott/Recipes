@@ -9,6 +9,25 @@ import com.slack.circuit.runtime.screen.Screen
 import io.ktor.http.decodeURLPart
 import io.ktor.http.encodeURLPathPart
 
+private const val DEEP_LINK_SCHEME = "recipes://"
+private const val HOME_PATH = "/home"
+private const val FAVORITES_PATH = "/recipes/favorites"
+
+/**
+ * The routes that carry a single encoded path segment, paired with the [Screen] that segment
+ * builds.
+ *
+ * Order matters only in that a prefix must not shadow a longer one; the current prefixes are all
+ * mutually exclusive.
+ */
+private val PARAMETERIZED_ROUTES: List<Pair<String, (String) -> Screen>> =
+  listOf(
+    "/recipes/category/" to { value -> RecipesScreen.ByCategory(value) },
+    "/recipes/area/" to { value -> RecipesScreen.ByArea(value) },
+    "/recipes/search/" to { value -> RecipesScreen.BySearch(value) },
+    "/recipe/" to { value -> RecipeDetailsScreen(RecipeId(value)) },
+  )
+
 /**
  * Converts a [Screen] to its canonical URL path, or `null` for internal screens (e.g.
  * [RecipeScaffoldScreen]) that have no public URL representation.
@@ -24,11 +43,11 @@ import io.ktor.http.encodeURLPathPart
  */
 fun Screen.toUrlPath(): String? =
   when (this) {
-    is CategoriesScreen -> "/home"
+    is CategoriesScreen -> HOME_PATH
     is RecipesScreen.ByCategory -> "/recipes/category/${category.encodeURLPathPart()}"
     is RecipesScreen.ByArea -> "/recipes/area/${area.encodeURLPathPart()}"
     is RecipesScreen.BySearch -> "/recipes/search/${searchTerm.encodeURLPathPart()}"
-    is RecipesScreen.Favorites -> "/recipes/favorites"
+    is RecipesScreen.Favorites -> FAVORITES_PATH
     is RecipeDetailsScreen -> "/recipe/${id.id.encodeURLPathPart()}"
     else -> null
   }
@@ -42,49 +61,39 @@ fun Screen.toUrlPath(): String? =
  *
  * All platforms share the same parser so the URL scheme is consistent everywhere.
  */
-fun urlPathToScreen(rawPathOrUrl: String): Screen? {
-  // Strip custom scheme + authority to obtain a plain path
-  val path =
-    when {
-      rawPathOrUrl.startsWith("recipes://") -> {
-        val withoutScheme = rawPathOrUrl.removePrefix("recipes://")
-        val slashIndex = withoutScheme.indexOf('/')
-        if (slashIndex >= 0) withoutScheme.substring(slashIndex) else "/"
-      }
-      else -> rawPathOrUrl
-    }
-
-  val normalized = path.trimEnd('/').let { if (it.isEmpty()) "/home" else it }
-
-  return when {
-    normalized == "/home" || normalized == "/" -> CategoriesScreen
-    normalized == "/recipes/favorites" -> RecipesScreen.Favorites
-    normalized.startsWith("/recipes/category/") ->
-      normalized
-        .removePrefix("/recipes/category/")
-        .takeIf { it.isNotBlank() }
-        ?.decodeURLPart()
-        ?.let { RecipesScreen.ByCategory(it) }
-    normalized.startsWith("/recipes/area/") ->
-      normalized
-        .removePrefix("/recipes/area/")
-        .takeIf { it.isNotBlank() }
-        ?.decodeURLPart()
-        ?.let { RecipesScreen.ByArea(it) }
-    normalized.startsWith("/recipes/search/") ->
-      normalized
-        .removePrefix("/recipes/search/")
-        .takeIf { it.isNotBlank() }
-        ?.decodeURLPart()
-        ?.let { RecipesScreen.BySearch(it) }
-    normalized.startsWith("/recipe/") ->
-      normalized
-        .removePrefix("/recipe/")
-        .takeIf { it.isNotBlank() }
-        ?.let { RecipeDetailsScreen(RecipeId(it)) }
-    else -> null
+fun urlPathToScreen(rawPathOrUrl: String): Screen? =
+  when (val normalized = normalizePath(rawPathOrUrl)) {
+    HOME_PATH -> CategoriesScreen
+    FAVORITES_PATH -> RecipesScreen.Favorites
+    else -> parameterizedScreen(normalized)
   }
+
+/**
+ * Strips the custom scheme and authority from [rawPathOrUrl], drops any trailing slash, and maps
+ * the empty path onto [HOME_PATH].
+ */
+private fun normalizePath(rawPathOrUrl: String): String {
+  val path =
+    if (rawPathOrUrl.startsWith(DEEP_LINK_SCHEME)) {
+      val withoutScheme = rawPathOrUrl.removePrefix(DEEP_LINK_SCHEME)
+      val slashIndex = withoutScheme.indexOf('/')
+      if (slashIndex >= 0) withoutScheme.substring(slashIndex) else "/"
+    } else {
+      rawPathOrUrl
+    }
+  return path.trimEnd('/').ifEmpty { HOME_PATH }
 }
+
+/** Matches [path] against [PARAMETERIZED_ROUTES], decoding the trailing segment. */
+private fun parameterizedScreen(path: String): Screen? =
+  PARAMETERIZED_ROUTES.firstNotNullOfOrNull { (prefix, toScreen) ->
+    path
+      .takeIf { it.startsWith(prefix) }
+      ?.removePrefix(prefix)
+      ?.takeIf(String::isNotBlank)
+      ?.decodeURLPart()
+      ?.let(toScreen)
+  }
 
 /**
  * Provides the initial deep-link [Screen] to
@@ -93,4 +102,5 @@ fun urlPathToScreen(rawPathOrUrl: String): Screen? {
  *
  * Provided by [RecipeApp] on every platform; defaults to `null` (no deep link).
  */
+@Suppress("CompositionLocalAllowlist")
 val LocalDeepLinkScreen = staticCompositionLocalOf<Screen?> { null }

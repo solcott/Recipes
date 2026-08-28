@@ -41,7 +41,7 @@ actual class StorageFactory(
       return OkioStorage(
           serializer = suggestionsSerializer,
           fileSystem = FileSystem.SYSTEM,
-          producePath = { context.filesDir.resolve("search_suggestions.json").absolutePath.toPath() },
+          producePath = { context.filesDir.resolve(SEARCH_SUGGESTIONS_FILE).absolutePath.toPath() },
       )
   }
 
@@ -49,7 +49,7 @@ actual class StorageFactory(
       return OkioStorage(
           serializer = historySerializer,
           fileSystem = FileSystem.SYSTEM,
-          producePath = { context.filesDir.resolve("recipe_fetch_history.json").absolutePath.toPath() },
+          producePath = { context.filesDir.resolve(RECIPE_FETCH_HISTORY_FILE).absolutePath.toPath() },
       )
   }
 
@@ -57,7 +57,7 @@ actual class StorageFactory(
     return OkioStorage(
       serializer = categoriesHistorySerializer,
       fileSystem = FileSystem.SYSTEM,
-      producePath = { context.filesDir.resolve("categories_fetch_history.json").absolutePath.toPath() },
+      producePath = { context.filesDir.resolve(CATEGORIES_FETCH_HISTORY_FILE).absolutePath.toPath() },
     )
   }
 
@@ -65,7 +65,7 @@ actual class StorageFactory(
     return OkioStorage(
       serializer = ingredientsHistorySerializer,
       fileSystem = FileSystem.SYSTEM,
-      producePath = { context.filesDir.resolve("ingredients_fetch_history.json").absolutePath.toPath() },
+      producePath = { context.filesDir.resolve(INGREDIENTS_FETCH_HISTORY_FILE).absolutePath.toPath() },
     )
   }
 }

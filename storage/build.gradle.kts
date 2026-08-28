@@ -37,7 +37,13 @@ kotlin {
 
     nonWebMain { dependencies { implementation(libs.androidx.sqlite.bundled) } }
 
-    jvmMain { dependencies { api(projects.model) } }
+    jvmMain {
+      dependencies {
+        api(projects.model)
+
+        implementation(libs.appdirs)
+      }
+    }
 
     webMain {
       dependencies {

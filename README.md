@@ -82,7 +82,7 @@ The database is `recipe.db` on every platform:
 | Platform | How to delete it |
 | --- | --- |
 | **Web** | DevTools → Application → *Clear site data*. To remove only the database: <br>`const root = await navigator.storage.getDirectory();`<br>`await root.removeEntry('recipe.db');`<br>then reload. |
-| **Desktop** | `rm -f "$TMPDIR"recipe.db*` on macOS (`$TMPDIR` already ends in `/`), `rm -f /tmp/recipe.db*` on Linux, `del %TEMP%\recipe.db*` on Windows. |
+| **Desktop** | Delete the whole app data directory: `rm -rf ~/Library/Application\ Support/Recipes` on macOS, `rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/Recipes"` on Linux, `rmdir /s %LOCALAPPDATA%\scottolcott\Recipes` on Windows. |
 | **iOS** | `rm -f "$(xcrun simctl get_app_container booted com.scottolcott.recipe.Recipes data)/Documents/recipe.db"*` — or just delete the app. |
 | **Android** | Clear storage in the app's system settings, or `adb shell pm clear com.scottolcott.recipe`. |
 
@@ -90,8 +90,10 @@ Things that catch people out:
 
 - **Keep the trailing `*`.** The database runs in WAL mode, so `recipe.db-wal` and `recipe.db-shm`
   sit alongside it. Deleting only `recipe.db` leaves a partial database behind.
-- **Desktop stores the database in the system temp directory**, so it also disappears on reboot.
-  That is why this crash sometimes appears to fix itself.
+- **Desktop data persists across reboots.** It lives in the per-user app data directory that
+  `net.harawata:appdirs` resolves — `~/Library/Application Support/Recipes` on macOS,
+  `%LOCALAPPDATA%\scottolcott\Recipes` on Windows, `$XDG_DATA_HOME/Recipes` (default
+  `~/.local/share/Recipes`) on Linux. Deleting it is the only way to reset desktop.
 - **DataStore is stored separately from the database.** On desktop and iOS the fetch-history and
   search-suggestion `.json` files live in the same directory as `recipe.db`; on web they are in
   `localStorage`, a different bucket from OPFS, so the console snippet above does not touch them.
@@ -101,6 +103,10 @@ Things that catch people out:
   restore them from.
 - The database used to be called `my_room.db` on iOS and desktop. If you ran an older build, delete
   that stale file once.
+- Desktop used to keep everything in the system temp directory, where it vanished on reboot — which
+  is why this crash sometimes appeared to fix itself. If you ran an older build, clear the leftovers
+  once: `rm -f "$TMPDIR"recipe.db* "$TMPDIR"*_history.json "$TMPDIR"search_suggestions.json` on
+  macOS, the same under `/tmp` on Linux or `%TEMP%` on Windows.
 
 ## License
 

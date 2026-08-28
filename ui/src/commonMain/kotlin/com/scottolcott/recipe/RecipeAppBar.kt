@@ -244,7 +244,7 @@ private fun ExpandedSearchBar(
   }
 }
 
-private const val leadingImageAspectRatio = 233f / 145f
+private const val LEADING_IMAGE_ASPECT_RATIO = 233f / 145f
 
 @OptIn(ExperimentalFoundationStyleApi::class)
 @Composable
@@ -276,7 +276,7 @@ private fun SearchSuggestionItems(
           Image(
             painter = painterResource(Res.drawable.history_24px),
             contentDescription = null,
-            modifier = Modifier.width(64.dp).aspectRatio(leadingImageAspectRatio),
+            modifier = Modifier.width(64.dp).aspectRatio(LEADING_IMAGE_ASPECT_RATIO),
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
           )
         },
@@ -316,7 +316,7 @@ fun LazyItemScope.SuggestedItem(text: String, thumbnail: String, modifier: Modif
       AsyncImage(
         thumbnail,
         contentDescription = "",
-        modifier = Modifier.width(64.dp).aspectRatio(leadingImageAspectRatio),
+        modifier = Modifier.width(64.dp).aspectRatio(LEADING_IMAGE_ASPECT_RATIO),
         imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
       )
     },
