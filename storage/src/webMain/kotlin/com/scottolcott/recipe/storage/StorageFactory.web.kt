@@ -34,18 +34,18 @@ actual class StorageFactory(
   }
 
   actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchHistorySuggestions> {
-    return WebLocalStorage(suggestionsSerializer, name = "search_suggestions.json")
+    return WebLocalStorage(suggestionsSerializer, name = SEARCH_SUGGESTIONS_FILE)
   }
 
   actual fun createRecipeFetchHistoryDataStoreStorage(): Storage<RecipeFetchHistory> {
-    return WebLocalStorage(historySerializer, name = "recipe_fetch_history.json")
+    return WebLocalStorage(historySerializer, name = RECIPE_FETCH_HISTORY_FILE)
   }
 
   actual fun createCategoriesFetchHistoryDataStoreStorage(): Storage<CategoriesFetchHistory> {
-    return WebLocalStorage(categoriesHistorySerializer, name = "categories_fetch_history.json")
+    return WebLocalStorage(categoriesHistorySerializer, name = CATEGORIES_FETCH_HISTORY_FILE)
   }
 
   actual fun createIngredientsFetchHistoryDataStoreStorage(): Storage<IngredientsFetchHistory> {
-    return WebLocalStorage(ingredientsHistorySerializer, name = "ingredients_fetch_history.json")
+    return WebLocalStorage(ingredientsHistorySerializer, name = INGREDIENTS_FETCH_HISTORY_FILE)
   }
 }
