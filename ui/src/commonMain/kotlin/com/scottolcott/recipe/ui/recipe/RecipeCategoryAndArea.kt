@@ -1,8 +1,8 @@
 package com.scottolcott.recipe.ui.recipe
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
+import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
@@ -20,13 +20,16 @@ import com.scottolcott.recipe.ui.label_24px
 import com.scottolcott.recipe.ui.location_on_24px
 import org.jetbrains.compose.resources.painterResource
 
+@OptIn(ExperimentalFlexBoxApi::class)
 @Composable
 fun RecipeCategoryAndArea(
   recipe: Recipe,
   eventSink: (RecipeDetailsEvent) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+  // FlexBox rather than Row: a Row's min intrinsic width is the sum of both chips, which a narrow
+  // phone can't satisfy. These wrap instead, like RecipeTags.
+  FlexBox(config = { gap(8.dp) }, modifier = modifier) {
     val category = recipe.category.orEmpty()
     if (category.isNotBlank()) {
       AssistChip(

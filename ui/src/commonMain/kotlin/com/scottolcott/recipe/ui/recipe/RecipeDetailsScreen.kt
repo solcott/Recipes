@@ -41,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
@@ -65,10 +66,13 @@ import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.an_error_occurred
 import com.scottolcott.recipe.ui.image_24px
+import com.scottolcott.recipe.ui.image_source
 import com.scottolcott.recipe.ui.link_24px
 import com.scottolcott.recipe.ui.rememberAdaptivePadding
+import com.scottolcott.recipe.ui.source
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
+import io.ktor.http.Url
 import kotlin.time.Clock
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -165,16 +169,19 @@ private fun LookaheadScope.RecipeGrid(
 
 @OptIn(ExperimentalGridApi::class)
 private fun GridConfigurationScope.recipeGridConfig(columns: Int, padding: PaddingValues) {
+  // Every track is MinMax so its base size is the fixed minimum. A bare `fr` track resolves to
+  // `minmax(min-content, <n>fr)`, which lets one unbreakable string (a source URL, a long
+  // ingredient) push the column — and the full-width image in it — wider than the screen.
   when (columns) {
-    1 -> column(1.fr)
+    1 -> column(GridTrackSize.MinMax(0.dp, 1.fr))
     2 -> {
       column(GridTrackSize.MinMax(300.dp, 1.fr))
       column(GridTrackSize.MinMax(200.dp, 3.fr))
     }
     else -> {
-      column(1.fr)
-      column(3.fr)
-      column(7.fr)
+      column(GridTrackSize.MinMax(240.dp, 1.fr))
+      column(GridTrackSize.MinMax(200.dp, 3.fr))
+      column(GridTrackSize.MinMax(200.dp, 7.fr))
     }
   }
   gap(padding.calculateLeftPadding(LayoutDirection.Ltr))
@@ -251,8 +258,10 @@ private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHa
     AssistChip(
       modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
       onClick = { uriHandler.openUri(source) },
-      label = { Text(source) },
-      leadingIcon = { Icon(painterResource(Res.drawable.link_24px), null) },
+      label = { Text(source.sourceLabel(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+      leadingIcon = {
+        Icon(painterResource(Res.drawable.link_24px), stringResource(Res.string.source))
+      },
       colors =
         AssistChipDefaults.assistChipColors(
           labelColor = MaterialTheme.colorScheme.primary,
@@ -266,8 +275,10 @@ private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHa
     AssistChip(
       modifier = Modifier.pointerHoverIcon(PointerIcon.Hand, true),
       onClick = { uriHandler.openUri(imageSource) },
-      label = { Text(imageSource) },
-      leadingIcon = { Icon(painterResource(Res.drawable.image_24px), null) },
+      label = { Text(imageSource.sourceLabel(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+      leadingIcon = {
+        Icon(painterResource(Res.drawable.image_24px), stringResource(Res.string.image_source))
+      },
       colors =
         AssistChipDefaults.assistChipColors(
           labelColor = MaterialTheme.colorScheme.secondary,
@@ -277,6 +288,18 @@ private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHa
     )
   }
 }
+
+/**
+ * The host of this URL, e.g. `delish.com`, falling back to the whole string when it can't be
+ * parsed.
+ *
+ * A raw URL has no line break opportunities, so its min intrinsic width is the entire string. The
+ * grid treats that as a floor for the column it sits in, which pushed the recipe image wider than
+ * the screen on phones.
+ */
+private fun String.sourceLabel(): String =
+  runCatching { Url(this).host.removePrefix("www.") }.getOrNull()?.takeIf { it.isNotBlank() }
+    ?: this
 
 @Composable
 private fun RecipeImage(

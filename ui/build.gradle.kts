@@ -45,6 +45,7 @@ kotlin {
         implementation(libs.compose.material3)
         implementation(libs.compose.material3.adaptive)
         implementation(libs.compose.ui.tooling.preview)
+        implementation(libs.ktor.http)
       }
     }
 
