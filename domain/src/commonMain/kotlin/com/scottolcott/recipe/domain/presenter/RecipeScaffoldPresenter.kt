@@ -13,10 +13,10 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.navigation.NavStack
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import io.github.solcott.kmp.parcelize.Parcelize
 
 @CircuitInject(RecipeScaffoldScreen::class, AppScope::class)
 @Inject
@@ -66,4 +66,4 @@ data class RecipeScaffoldState(
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,
 ) : CircuitUiState
 
-@Parcelize data object RecipeScaffoldScreen : Screen
+@CircuitSerializable(AppScope::class) data object RecipeScaffoldScreen : Screen

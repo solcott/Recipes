@@ -35,7 +35,6 @@ kotlin {
         api(libs.compose.components.resources)
         api(libs.kotlinx.coroutines)
 
-        implementation(libs.circuit.backstack)
         implementation(libs.circuit.runtime.navigation)
         implementation(libs.circuit.sharedelements)
         implementation(libs.circuitx.gesture.navigation)
@@ -46,6 +45,7 @@ kotlin {
         implementation(libs.compose.material3)
         implementation(libs.compose.material3.adaptive)
         implementation(libs.compose.ui.tooling.preview)
+        implementation(libs.ktor.http)
       }
     }
 

@@ -16,10 +16,10 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import io.github.solcott.kmp.parcelize.Parcelize
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 @CircuitInject(RecipesScreen::class, AppScope::class)
@@ -121,13 +121,12 @@ sealed interface RecipesState : CircuitUiState {
   ) : RecipesState
 }
 
-@Parcelize
 sealed interface RecipesScreen : Screen {
-  @Parcelize data class ByCategory(val category: String) : RecipesScreen
+  @CircuitSerializable(AppScope::class) data class ByCategory(val category: String) : RecipesScreen
 
-  @Parcelize data class ByArea(val area: String) : RecipesScreen
+  @CircuitSerializable(AppScope::class) data class ByArea(val area: String) : RecipesScreen
 
-  @Parcelize data class BySearch(val searchTerm: String) : RecipesScreen
+  @CircuitSerializable(AppScope::class) data class BySearch(val searchTerm: String) : RecipesScreen
 
-  @Parcelize data object Favorites : RecipesScreen
+  @CircuitSerializable(AppScope::class) data object Favorites : RecipesScreen
 }
