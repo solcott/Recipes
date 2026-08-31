@@ -20,6 +20,8 @@ import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.screen.PopResult
 import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.subcircuit.LocalSubCircuit
+import com.slack.circuit.subcircuit.SubCircuit
 
 @Composable expect fun rememberNavigator(navigator: Navigator): Navigator
 
@@ -28,6 +30,7 @@ import com.slack.circuit.runtime.screen.Screen
 @Composable
 fun RecipeApp(
   circuit: Circuit,
+  subCircuit: SubCircuit,
   modifier: Modifier = Modifier,
   onRootPop: (result: PopResult?) -> Unit = {},
   windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass,
@@ -39,11 +42,13 @@ fun RecipeApp(
       LocalDeepLinkScreen provides initialScreen,
     ) {
       CircuitCompositionLocals(circuit) {
-        val initialBackstack = remember { listOf<Screen>(RecipeScaffoldScreen) }
-        val backStack = rememberSaveableNavStack(initialBackstack)
-        val circuitNavigator = rememberCircuitNavigator(backStack, onRootPop)
-        val navigator = rememberNavigator(circuitNavigator)
-        CircuitContent(RecipeScaffoldScreen, navigator = navigator, modifier = modifier)
+        CompositionLocalProvider(LocalSubCircuit provides subCircuit) {
+          val initialBackstack = remember { listOf<Screen>(RecipeScaffoldScreen) }
+          val backStack = rememberSaveableNavStack(initialBackstack)
+          val circuitNavigator = rememberCircuitNavigator(backStack, onRootPop)
+          val navigator = rememberNavigator(circuitNavigator)
+          CircuitContent(RecipeScaffoldScreen, navigator = navigator, modifier = modifier)
+        }
       }
     }
   }

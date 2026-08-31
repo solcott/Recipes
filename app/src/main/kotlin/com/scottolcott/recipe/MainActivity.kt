@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.scottolcott.recipe.domain.navigation.urlPathToScreen
 import com.slack.circuit.foundation.Circuit
+import com.slack.circuit.subcircuit.SubCircuit
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -18,7 +19,8 @@ import dev.zacsweers.metrox.android.ActivityKey
 @ContributesIntoMap(AppScope::class, binding = binding<Activity>())
 @ActivityKey
 @Inject
-class MainActivity(private val circuit: Circuit) : ComponentActivity() {
+class MainActivity(private val circuit: Circuit, private val subCircuit: SubCircuit) :
+  ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
@@ -27,6 +29,7 @@ class MainActivity(private val circuit: Circuit) : ComponentActivity() {
     setContent {
       RecipeApp(
         circuit,
+        subCircuit,
         modifier = Modifier.fillMaxSize(),
         onRootPop = { finish() },
         initialScreen = initialScreen,

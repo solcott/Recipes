@@ -22,5 +22,10 @@ fun MainViewController() = MainViewController(deepLinkUrl = null)
 fun MainViewController(deepLinkUrl: String?) = ComposeUIViewController {
   val appGraph = createGraph<IOSAppGraph>()
   val initialScreen = deepLinkUrl?.let { urlPathToScreen(it) }
-  RecipeApp(appGraph.circuit, modifier = Modifier.fillMaxSize(), initialScreen = initialScreen)
+  RecipeApp(
+    circuit = appGraph.circuit,
+    subCircuit = appGraph.subCircuit,
+    modifier = Modifier.fillMaxSize(),
+    initialScreen = initialScreen,
+  )
 }

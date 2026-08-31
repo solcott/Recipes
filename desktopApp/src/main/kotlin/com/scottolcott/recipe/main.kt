@@ -25,6 +25,6 @@ fun main(args: Array<String>) = application {
     state = state,
     alwaysOnTop = false,
   ) {
-    RecipeApp(graph.circuit, initialScreen = initialScreen)
+    RecipeApp(circuit = graph.circuit, subCircuit = graph.subCircuit, initialScreen = initialScreen)
   }
 }
