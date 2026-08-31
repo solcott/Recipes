@@ -1,6 +1,6 @@
 [versions]
 activity = "1.13.0"
-agp = "9.3.2"
+agp = "9.4.0-rc02"
 #noinspection UnusedVersionCatalogEntry
 androidCompileSdk = "37"
 # min sdk required by metro-android due to integration with AppComponentFactory
@@ -37,7 +37,7 @@ ktor = "3.5.2"
 metro = "1.4.2"
 room = "3.0.2"
 sqlite = "2.7.0"
-store = "5.1.0-alpha10"
+store = "5.1.0-alpha11"
 test-balloon = "1.0.0-K2.4.0"
 #noinspection UnusedVersionCatalogEntry
 ws = "8.18.3"
@@ -127,7 +127,7 @@ kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serializat
 kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version = "0.5.0" }
-kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.5.1" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.5.2" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
