@@ -14,6 +14,7 @@ import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.storage.entity.IngredientEntity
 import com.scottolcott.recipe.storage.entity.RecipeDetailEntity
 import com.scottolcott.recipe.storage.entity.RecipeEntity
+import com.scottolcott.recipe.storage.entity.RecipeIngredientEntity
 import kotlin.coroutines.CoroutineContext
 
 @Database(
@@ -21,6 +22,7 @@ import kotlin.coroutines.CoroutineContext
     [
       RecipeEntity::class,
       RecipeDetailEntity::class,
+      RecipeIngredientEntity::class,
       CategoryEntity::class,
       FavoriteEntity::class,
       IngredientEntity::class,
@@ -38,7 +40,6 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 // The Room compiler generates the `actual` implementations.
-@Suppress("KotlinNoActualForExpect")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
   override fun initialize(): AppDatabase
 }

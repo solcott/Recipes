@@ -25,6 +25,8 @@ interface RecipeApi {
 
   suspend fun getByCategory(category: String): RecipeBasicResponseDto?
 
+  suspend fun getByIngredient(ingredients: Collection<String>): RecipeBasicResponseDto?
+
   suspend fun getByArea(area: String): RecipeBasicResponseDto?
 }
 
@@ -46,6 +48,10 @@ internal class RecipeApiImpl(@param:ApiClient val client: HttpClient) : RecipeAp
 
   override suspend fun getByCategory(category: String): RecipeBasicResponseDto? {
     return client.get(FilterResource(c = category)).body()
+  }
+
+  override suspend fun getByIngredient(ingredients: Collection<String>): RecipeBasicResponseDto? {
+    return client.get(FilterResource(i = ingredients.joinToString(","))).body()
   }
 
   override suspend fun getByArea(area: String): RecipeBasicResponseDto? {

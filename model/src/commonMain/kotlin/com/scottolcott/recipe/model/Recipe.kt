@@ -27,3 +27,10 @@ data class RecipeDetails(
 )
 
 data class RecipeIngredient(val ingredient: String, val measure: String)
+
+/**
+ * Canonical form of an ingredient name, used both for the indexed lookup column in storage and for
+ * building [com.scottolcott.recipe.model.store.RecipesKey.ByIngredient]. The two must agree, so
+ * there is exactly one of these.
+ */
+fun String.normalizeIngredient(): String = trim().lowercase()
