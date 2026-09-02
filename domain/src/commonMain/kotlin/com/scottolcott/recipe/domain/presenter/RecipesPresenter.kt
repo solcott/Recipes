@@ -95,7 +95,7 @@ internal constructor(
       is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
       is RecipesScreen.ByArea -> recipesProducer.produceByArea(screen.area, retryTrigger)
       is RecipesScreen.ByIngredient ->
-        recipesProducer.produceByIngredients(screen.ingredient, retryTrigger = retryTrigger)
+        recipesProducer.produceByIngredients(screen.ingredients, retryTrigger)
     }
   }
 }
@@ -132,6 +132,11 @@ sealed interface RecipesScreen : Screen {
 
   @CircuitSerializable(AppScope::class) data object Favorites : RecipesScreen
 
+  /**
+   * Recipes containing *every* one of [ingredients]. A set, not a single name: the filter ANDs the
+   * whole collection, and set equality is order-independent so two routes naming the same
+   * ingredients are the same screen.
+   */
   @CircuitSerializable(AppScope::class)
-  data class ByIngredient(val ingredient: String) : RecipesScreen
+  data class ByIngredient(val ingredients: Set<String>) : RecipesScreen
 }

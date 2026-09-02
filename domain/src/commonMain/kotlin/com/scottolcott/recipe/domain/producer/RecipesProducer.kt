@@ -38,9 +38,12 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
     return recipes
   }
 
+  // A Set, not vararg: the parameter is a produceRetainedState key, and an Array compares by
+  // identity, so a vararg call site would allocate a fresh key on every recomposition and restart
+  // the collection each pass.
   @Composable
   fun produceByIngredients(
-    vararg ingredients: String,
+    ingredients: Set<String>,
     retryTrigger: Int,
   ): StoreReadResponse<List<Recipe>> {
     val recipes by
@@ -49,7 +52,7 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
         ingredients,
         retryTrigger,
       ) {
-        recipeRepository.recipesByIngredients(ingredients.toSet()).collect { value = it }
+        recipeRepository.recipesByIngredients(ingredients).collect { value = it }
       }
     return recipes
   }

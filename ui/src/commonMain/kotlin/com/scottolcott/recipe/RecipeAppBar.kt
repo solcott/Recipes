@@ -41,19 +41,15 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
       SubCircuitContent(
         SearchScreen,
         outerEventSink = {
-          when (it) {
-            is SearchOuterEvent.NavigateToSearchResults -> state.eventSink(
-              RecipeScaffoldEvent.GoTo(
-                RecipesScreen.BySearch(it.query)
-              )
-            )
-
-            is SearchOuterEvent.NavigateToCategoryResults ->
-              state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.ByCategory(it.category.name)))
-            is SearchOuterEvent.NavigateToIngredientResults -> {
-              state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.ByIngredient(it.ingredient.name)))
+          val screen =
+            when (it) {
+              is SearchOuterEvent.NavigateToSearchResults -> RecipesScreen.BySearch(it.query)
+              is SearchOuterEvent.NavigateToCategoryResults ->
+                RecipesScreen.ByCategory(it.category.name)
+              is SearchOuterEvent.NavigateToIngredientResults ->
+                RecipesScreen.ByIngredient(setOf(it.ingredient.name))
             }
-          }
+          state.eventSink(RecipeScaffoldEvent.GoTo(screen))
         },
       )
     } else {
