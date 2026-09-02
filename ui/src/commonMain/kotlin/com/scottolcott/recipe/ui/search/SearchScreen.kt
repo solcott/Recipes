@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -34,14 +33,37 @@ import com.scottolcott.recipe.ui.check_24px
 import com.scottolcott.recipe.ui.search
 import com.scottolcott.recipe.ui.search_24px
 import com.slack.circuit.subcircuit.SubCircuitInject
+import com.slack.circuit.subcircuit.SubUi
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * Registers [SearchScreen] as the sub-circuit's UI.
+ *
+ * Metro also accepts `@SubCircuitInject` straight on a top-level composable, which would make this
+ * class unnecessary — but the `SubUiFactory` it generates for a *function* holds a reference to
+ * that function, and lowering that reference crashes the Kotlin/JS and Kotlin/Wasm back-ends
+ * (`UpgradeCallableReferences`, IndexOutOfBounds). Only the two web targets are affected; JVM,
+ * Android and native compile it happily, so a build that skipped them would look fine.
+ *
+ * A class target is generated without the reference, and it costs nothing: [SearchScreen] stays a
+ * plain composable with the default `modifier` the project's conventions ask for, and stays
+ * previewable, which an override of `Content` would not be.
+ */
+@SubCircuitInject(SearchScreen::class, AppScope::class)
+@Inject
+class SearchScreenSubUi : SubUi<SearchState> {
+  @Composable
+  override fun Content(state: SearchState, modifier: Modifier) {
+    SearchScreen(state, modifier)
+  }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@SubCircuitInject(SearchScreen::class, AppScope::class)
 fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
   val scope = rememberCoroutineScope()
   val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
