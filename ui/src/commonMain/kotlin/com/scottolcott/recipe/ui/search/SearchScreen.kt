@@ -38,7 +38,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -80,21 +79,23 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
   val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
   val appBarWithSearchColors = getAppBarWithSearchColors()
   val keyboardController = LocalSoftwareKeyboardController.current
-  val onSearch: (SearchSuggestion) -> Unit by
-    rememberUpdatedState({ suggestion: SearchSuggestion ->
-      scope.launch {
-        when (suggestion) {
-          is SearchSuggestion.CategorySuggestion ->
-            state.eventSink(SearchEvent.CategoryItemClicked(suggestion.category))
-          is SearchSuggestion.IngredientSuggestion ->
-            state.eventSink(SearchEvent.IngredientItemClicked(suggestion.ingredient))
-          is SearchSuggestion.QuerySuggestion ->
-            state.eventSink(SearchEvent.PerformSearch(suggestion.query))
+  val onSearch: (SearchSuggestion) -> Unit =
+    remember(state, keyboardController, searchBarState, scope) {
+      { suggestion: SearchSuggestion ->
+        scope.launch {
+          when (suggestion) {
+            is SearchSuggestion.CategorySuggestion ->
+              state.eventSink(SearchEvent.CategoryItemClicked(suggestion.category))
+            is SearchSuggestion.IngredientSuggestion ->
+              state.eventSink(SearchEvent.IngredientItemClicked(suggestion.ingredient))
+            is SearchSuggestion.QuerySuggestion ->
+              state.eventSink(SearchEvent.PerformSearch(suggestion.query))
+          }
+          keyboardController?.hide()
+          searchBarState.animateToCollapsed()
         }
-        keyboardController?.hide()
-        searchBarState.animateToCollapsed()
       }
-    })
+    }
 
   val inputField =
     @Composable {
@@ -218,7 +219,7 @@ private fun SearchSuggestionItems(
       SuggestedItem(
         it.name,
         it.thumb,
-        onClick = { state.eventSink(SearchEvent.CategoryItemClicked(it)) },
+        onClick = { onSearch(SearchSuggestion.CategorySuggestion(it)) },
         Modifier.animateItem().fillMaxWidth(),
       )
     }
@@ -240,7 +241,7 @@ private fun SearchSuggestionItems(
       SuggestedItem(
         it.name,
         "${it.thumbnail}/small",
-        onClick = { state.eventSink(SearchEvent.IngredientItemClicked(it)) },
+        onClick = { onSearch(SearchSuggestion.IngredientSuggestion(it)) },
         Modifier.animateItem(),
       )
     }
@@ -372,7 +373,8 @@ private fun rememberIsPinned(state: LazyListState, headerIndex: Int): Boolean {
         // first item resting at scroll position zero.
         self != null &&
           self.offset <= info.viewportStartOffset &&
-          state.firstVisibleItemIndex + state.firstVisibleItemScrollOffset > headerIndex
+          (state.firstVisibleItemIndex > headerIndex ||
+            (state.firstVisibleItemIndex == headerIndex && state.firstVisibleItemScrollOffset > 0))
       }
     }
   return pinned
