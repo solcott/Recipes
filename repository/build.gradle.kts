@@ -9,6 +9,7 @@ plugins {
 }
 
 kotlin {
+  android { withHostTest { isReturnDefaultValues = true } }
   sourceSets {
     commonMain {
       dependencies {
