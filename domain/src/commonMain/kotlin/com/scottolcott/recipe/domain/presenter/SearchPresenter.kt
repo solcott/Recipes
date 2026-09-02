@@ -67,14 +67,29 @@ class SearchPresenter(private val searchSuggestionsRepository: SearchSuggestions
           is SearchEvent.PerformSearch -> {
             scope.launch {
               outerEventSink(NavigateToSearchResults(event.query))
+              searchSuggestionsRepository.addSearchSuggestion(
+                SearchSuggestion.QuerySuggestion(event.query)
+              )
               searchText.clearText()
             }
           }
 
-          is SearchEvent.CategoryItemClicked ->
+          is SearchEvent.CategoryItemClicked -> {
             outerEventSink(NavigateToCategoryResults(event.category))
-          is SearchEvent.IngredientItemClicked ->
+            scope.launch {
+              searchSuggestionsRepository.addSearchSuggestion(
+                SearchSuggestion.CategorySuggestion(event.category)
+              )
+            }
+          }
+          is SearchEvent.IngredientItemClicked -> {
             outerEventSink(NavigateToIngredientResults(event.ingredient))
+            scope.launch {
+              searchSuggestionsRepository.addSearchSuggestion(
+                SearchSuggestion.IngredientSuggestion(event.ingredient)
+              )
+            }
+          }
 
           is SearchEvent.RemoveSearchSuggestion -> {
             scope.launch { searchSuggestionsRepository.removeSearchSuggestion(event.suggestion) }

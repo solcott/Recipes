@@ -4,7 +4,6 @@ import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
-import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.model.store.RecipesKey
 import com.scottolcott.recipe.network.api.RecipeApi
 import com.scottolcott.recipe.network.dto.RecipeDto
@@ -24,7 +23,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import org.mobilenativefoundation.store.store5.Fetcher
 import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
@@ -58,7 +56,6 @@ interface RecipeRepository {
 internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
-  private val searchSuggestionsRepository: SearchSuggestionsRepository,
   private val fetchHistoryDataStore: RecipeFetchHistoryDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
@@ -100,9 +97,6 @@ internal class RecipeRepositoryImpl(
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh ->
         detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
-      }
-      .onStart {
-        searchSuggestionsRepository.addSearchSuggestion(SearchSuggestion.QuerySuggestion(query))
       }
       .map {
         when (it) {
