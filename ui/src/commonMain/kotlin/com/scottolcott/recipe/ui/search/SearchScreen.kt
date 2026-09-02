@@ -40,28 +40,6 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * Registers [SearchScreen] as the sub-circuit's UI.
- *
- * Metro also accepts `@SubCircuitInject` straight on a top-level composable, which would make this
- * class unnecessary — but the `SubUiFactory` it generates for a *function* holds a reference to
- * that function, and lowering that reference crashes the Kotlin/JS and Kotlin/Wasm back-ends
- * (`UpgradeCallableReferences`, IndexOutOfBounds). Only the two web targets are affected; JVM,
- * Android and native compile it happily, so a build that skipped them would look fine.
- *
- * A class target is generated without the reference, and it costs nothing: [SearchScreen] stays a
- * plain composable with the default `modifier` the project's conventions ask for, and stays
- * previewable, which an override of `Content` would not be.
- */
-@SubCircuitInject(SearchScreen::class, AppScope::class)
-@Inject
-class SearchScreenSubUi : SubUi<SearchState> {
-  @Composable
-  override fun Content(state: SearchState, modifier: Modifier) {
-    SearchScreen(state, modifier)
-  }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
@@ -102,7 +80,14 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
     colors = appBarWithSearchColors,
     modifier = modifier,
   )
-  ExpandedSearchBar(searchBarState, inputField, appBarWithSearchColors, state, onSearch)
+  ExpandedSearchBar(
+    searchBarState,
+    inputField,
+    appBarWithSearchColors,
+    state,
+    onSearch,
+    { state.eventSink(SearchEvent.RemoveSearchSuggestion(it)) },
+  )
 }
 
 @Composable
@@ -113,6 +98,7 @@ private fun ExpandedSearchBar(
   appBarWithSearchColors: AppBarWithSearchColors,
   state: SearchState,
   onSearch: (SearchSuggestion) -> Unit,
+  onRemoveSuggestionClick: (SearchSuggestion) -> Unit,
 ) {
   val windowSizeClass = LocalWindowSizeClass.current
   if (
@@ -126,7 +112,7 @@ private fun ExpandedSearchBar(
       inputField = inputField,
       colors = appBarWithSearchColors.searchBarColors,
     ) {
-      SearchSuggestionItems(state, onSearch)
+      SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
     }
   } else {
     ExpandedFullScreenSearchBar(
@@ -134,7 +120,7 @@ private fun ExpandedSearchBar(
       inputField = inputField,
       colors = appBarWithSearchColors.searchBarColors,
     ) {
-      SearchSuggestionItems(state, onSearch)
+      SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
     }
   }
 }
@@ -208,4 +194,26 @@ private fun RecipeSearchBarInputField(
       }
     },
   )
+}
+
+/**
+ * Registers [SearchScreen] as the sub-circuit's UI.
+ *
+ * Metro also accepts `@SubCircuitInject` straight on a top-level composable, which would make this
+ * class unnecessary — but the `SubUiFactory` it generates for a *function* holds a reference to
+ * that function, and lowering that reference crashes the Kotlin/JS and Kotlin/Wasm back-ends
+ * (`UpgradeCallableReferences`, IndexOutOfBounds). Only the two web targets are affected; JVM,
+ * Android and native compile it happily, so a build that skipped them would look fine.
+ *
+ * A class target is generated without the reference, and it costs nothing: [SearchScreen] stays a
+ * plain composable with the default `modifier` the project's conventions ask for, and stays
+ * previewable, which an override of `Content` would not be.
+ */
+@SubCircuitInject(SearchScreen::class, AppScope::class)
+@Inject
+class SearchScreenSubUi : SubUi<SearchState> {
+  @Composable
+  override fun Content(state: SearchState, modifier: Modifier) {
+    SearchScreen(state, modifier)
+  }
 }

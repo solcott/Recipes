@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.style.ExperimentalFoundationStyleApi
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ import com.scottolcott.recipe.domain.presenter.SearchState
 import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.categories
+import com.scottolcott.recipe.ui.delete_24px
 import com.scottolcott.recipe.ui.history_24px
 import com.scottolcott.recipe.ui.ingredients
 import com.scottolcott.recipe.ui.recent
@@ -48,10 +51,14 @@ import org.jetbrains.compose.resources.stringResource
 private const val LEADING_IMAGE_ASPECT_RATIO = 233f / 145f
 
 @Composable
-internal fun SearchSuggestionItems(state: SearchState, onSearch: (SearchSuggestion) -> Unit) {
+internal fun SearchSuggestionItems(
+  state: SearchState,
+  onSearch: (SearchSuggestion) -> Unit,
+  onRemoveSuggestionClick: (SearchSuggestion) -> Unit,
+) {
   val listState = rememberLazyListState()
   LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
-    historySection(state, listState, onSearch)
+    historySection(state, listState, onSearch, onRemoveSuggestionClick)
     categorySection(state, listState, onSearch)
     ingredientSection(state, listState, onSearch)
   }
@@ -72,6 +79,7 @@ private fun LazyListScope.historySection(
   state: SearchState,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
+  onRemoveSuggestionClick: (SearchSuggestion) -> Unit,
 ) {
   if (state.suggestions.history.isEmpty()) return
   sectionHeader("recents_header", Res.string.recent, listState)
@@ -104,6 +112,11 @@ private fun LazyListScope.historySection(
         )
       },
       headlineContent = { Text(text, color = MaterialTheme.colorScheme.onPrimary) },
+      trailingContent = {
+        IconButton(onClick = { onRemoveSuggestionClick(it) }) {
+          Icon(painterResource(Res.drawable.delete_24px), "Delete")
+        }
+      },
       colors = ListItemDefaults.colors(containerColor = Color.Transparent),
       modifier =
         Modifier.animateItem()

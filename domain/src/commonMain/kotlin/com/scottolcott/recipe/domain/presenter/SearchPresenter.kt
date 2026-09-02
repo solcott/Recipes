@@ -8,10 +8,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
+import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToCategoryResults
+import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToIngredientResults
+import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToSearchResults
 import com.scottolcott.recipe.model.Category
 import com.scottolcott.recipe.model.CategorySuggestions
 import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.IngredientSuggestions
+import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.model.SearchSuggestions
 import com.scottolcott.recipe.repository.SearchSuggestionsRepository
 import com.slack.circuit.retained.produceRetainedState
@@ -62,15 +66,19 @@ class SearchPresenter(private val searchSuggestionsRepository: SearchSuggestions
         when (event) {
           is SearchEvent.PerformSearch -> {
             scope.launch {
-              outerEventSink(SearchOuterEvent.NavigateToSearchResults(event.query))
+              outerEventSink(NavigateToSearchResults(event.query))
               searchText.clearText()
             }
           }
 
           is SearchEvent.CategoryItemClicked ->
-            outerEventSink(SearchOuterEvent.NavigateToCategoryResults(event.category))
+            outerEventSink(NavigateToCategoryResults(event.category))
           is SearchEvent.IngredientItemClicked ->
-            outerEventSink(SearchOuterEvent.NavigateToIngredientResults(event.ingredient))
+            outerEventSink(NavigateToIngredientResults(event.ingredient))
+
+          is SearchEvent.RemoveSearchSuggestion -> {
+            scope.launch { searchSuggestionsRepository.removeSearchSuggestion(event.suggestion) }
+          }
         }
       }
     }
@@ -90,6 +98,8 @@ sealed interface SearchEvent : SubCircuitUiEvent {
   data class CategoryItemClicked(val category: Category) : SearchEvent
 
   data class IngredientItemClicked(val ingredient: Ingredient) : SearchEvent
+
+  data class RemoveSearchSuggestion(val suggestion: SearchSuggestion) : SearchEvent
 }
 
 sealed interface SearchOuterEvent : SubCircuitOuterEvent {
