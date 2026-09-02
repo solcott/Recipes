@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
-import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.*
 import com.scottolcott.recipe.model.Category
 import com.scottolcott.recipe.model.CategorySuggestions
 import com.scottolcott.recipe.model.Ingredient
@@ -24,6 +23,7 @@ import com.slack.circuit.subcircuit.SubPresenter
 import com.slack.circuit.subcircuit.SubScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.redacted.annotations.Redacted
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -62,15 +62,15 @@ class SearchPresenter(private val searchSuggestionsRepository: SearchSuggestions
         when (event) {
           is SearchEvent.PerformSearch -> {
             scope.launch {
-              outerEventSink(NavigateToSearchResults(event.query))
+              outerEventSink(SearchOuterEvent.NavigateToSearchResults(event.query))
               searchText.clearText()
             }
           }
 
           is SearchEvent.CategoryItemClicked ->
-            outerEventSink(NavigateToCategoryResults(event.category))
+            outerEventSink(SearchOuterEvent.NavigateToCategoryResults(event.category))
           is SearchEvent.IngredientItemClicked ->
-            outerEventSink(NavigateToIngredientResults(event.ingredient))
+            outerEventSink(SearchOuterEvent.NavigateToIngredientResults(event.ingredient))
         }
       }
     }
@@ -78,12 +78,10 @@ class SearchPresenter(private val searchSuggestionsRepository: SearchSuggestions
   }
 }
 
-data object SearchScreen : SubScreen<SearchOuterEvent> {}
-
 data class SearchState(
   val searchText: TextFieldState,
   val suggestions: SearchSuggestions,
-  val eventSink: (SearchEvent) -> Unit,
+  @Redacted val eventSink: (SearchEvent) -> Unit,
 ) : SubCircuitUiState
 
 sealed interface SearchEvent : SubCircuitUiEvent {
@@ -101,3 +99,5 @@ sealed interface SearchOuterEvent : SubCircuitOuterEvent {
 
   data class NavigateToIngredientResults(val ingredient: Ingredient) : SearchOuterEvent
 }
+
+data object SearchScreen : SubScreen<SearchOuterEvent>
