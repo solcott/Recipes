@@ -16,6 +16,8 @@ private val roundTripScreens: List<Pair<Screen, String>> =
     RecipesScreen.ByCategory("Seafood") to "/recipes/category/Seafood",
     RecipesScreen.ByArea("British") to "/recipes/area/British",
     RecipesScreen.BySearch("chicken") to "/recipes/search/chicken",
+    RecipesScreen.ByIngredient(setOf("chicken")) to "/recipes/ingredient/chicken",
+    RecipesScreen.ByIngredient(setOf("rice", "chicken")) to "/recipes/ingredient/chicken,rice",
     RecipesScreen.Favorites to "/recipes/favorites",
     RecipeDetailsScreen(RecipeId("52772")) to "/recipe/52772",
   )
@@ -58,6 +60,31 @@ val screenUrlMapperTests by testSuite {
   test("blank segments are unrecognised") {
     assertNull(urlPathToScreen("/recipes/category/"))
     assertNull(urlPathToScreen("/recipe/"))
+    assertNull(urlPathToScreen("/recipes/ingredient/"))
+    assertNull(urlPathToScreen("/recipes/ingredient/,,"))
+  }
+
+  test("ingredient order does not affect the url") {
+    assertEquals(
+      RecipesScreen.ByIngredient(setOf("chicken", "rice")).toUrlPath(),
+      RecipesScreen.ByIngredient(setOf("rice", "chicken")).toUrlPath(),
+    )
+  }
+
+  // encodeURLPathPart leaves ',' alone because it is a legal path character, which would let a name
+  // containing one split into two on the way back. The ingredient segment encodes more
+  // aggressively.
+  test("an ingredient containing the separator survives the round trip") {
+    val screen = RecipesScreen.ByIngredient(setOf("salt, coarse", "chicken breast"))
+    assertEquals("/recipes/ingredient/chicken%20breast,salt%2C%20coarse", screen.toUrlPath())
+    assertEquals(screen, urlPathToScreen(screen.toUrlPath()!!))
+  }
+
+  test("duplicate ingredients collapse") {
+    assertEquals(
+      RecipesScreen.ByIngredient(setOf("chicken")),
+      urlPathToScreen("/recipes/ingredient/chicken,chicken"),
+    )
   }
 
   test("unknown paths are unrecognised") {

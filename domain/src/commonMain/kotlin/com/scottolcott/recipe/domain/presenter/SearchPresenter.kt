@@ -5,20 +5,29 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToCategoryResults
+import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToIngredientResults
+import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToSearchResults
+import com.scottolcott.recipe.model.Category
 import com.scottolcott.recipe.model.CategorySuggestions
+import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.IngredientSuggestions
+import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.model.SearchSuggestions
 import com.scottolcott.recipe.repository.SearchSuggestionsRepository
 import com.slack.circuit.retained.produceRetainedState
-import com.slack.circuit.runtime.CircuitUiState
-import com.slack.circuit.runtime.Navigator
-import com.slack.circuit.runtime.presenter.Presenter
+import com.slack.circuit.subcircuit.SubCircuitInject
+import com.slack.circuit.subcircuit.SubCircuitOuterEvent
+import com.slack.circuit.subcircuit.SubCircuitUiEvent
+import com.slack.circuit.subcircuit.SubCircuitUiState
+import com.slack.circuit.subcircuit.SubPresenter
+import com.slack.circuit.subcircuit.SubScreen
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.redacted.annotations.Redacted
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -27,15 +36,15 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 
-class SearchPresenter(
-  private val navigator: Navigator,
-  private val searchSuggestionsRepository: SearchSuggestionsRepository,
-) : Presenter<SearchState> {
+@SubCircuitInject(SearchScreen::class, AppScope::class)
+@Inject
+class SearchPresenter(private val searchSuggestionsRepository: SearchSuggestionsRepository) :
+  SubPresenter<SearchOuterEvent, SearchState> {
   @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
   @Composable
-  override fun present(): SearchState {
+  override fun present(outerEventSink: (SearchOuterEvent) -> Unit): SearchState {
     val scope = rememberCoroutineScope()
-    var searchActive by rememberSaveable { mutableStateOf(false) }
+
     val searchText = rememberTextFieldState()
     val suggestions by
       produceRetainedState(
@@ -55,36 +64,65 @@ class SearchPresenter(
     val eventSink: (SearchEvent) -> Unit = remember {
       { event ->
         when (event) {
-          SearchEvent.ExitSearch -> {
-            searchActive = false
-            searchText.clearText()
-          }
           is SearchEvent.PerformSearch -> {
             scope.launch {
-              navigator.goTo(RecipesScreen.BySearch(event.query))
+              outerEventSink(NavigateToSearchResults(event.query))
+              searchSuggestionsRepository.addSearchSuggestion(
+                SearchSuggestion.QuerySuggestion(event.query)
+              )
               searchText.clearText()
-              searchActive = false
             }
           }
-          SearchEvent.SearchButtonClicked -> searchActive = true
+
+          is SearchEvent.CategoryItemClicked -> {
+            outerEventSink(NavigateToCategoryResults(event.category))
+            scope.launch {
+              searchSuggestionsRepository.addSearchSuggestion(
+                SearchSuggestion.CategorySuggestion(event.category)
+              )
+            }
+          }
+          is SearchEvent.IngredientItemClicked -> {
+            outerEventSink(NavigateToIngredientResults(event.ingredient))
+            scope.launch {
+              searchSuggestionsRepository.addSearchSuggestion(
+                SearchSuggestion.IngredientSuggestion(event.ingredient)
+              )
+            }
+          }
+
+          is SearchEvent.RemoveSearchSuggestion -> {
+            scope.launch { searchSuggestionsRepository.removeSearchSuggestion(event.suggestion) }
+          }
         }
       }
     }
-    return SearchState(searchText, searchActive, suggestions, eventSink)
+    return SearchState(searchText, suggestions, eventSink)
   }
 }
 
 data class SearchState(
   val searchText: TextFieldState,
-  val isSearchActive: Boolean,
   val suggestions: SearchSuggestions,
-  val eventSink: (SearchEvent) -> Unit,
-) : CircuitUiState
+  @Redacted val eventSink: (SearchEvent) -> Unit,
+) : SubCircuitUiState
 
-sealed interface SearchEvent {
-  data object SearchButtonClicked : SearchEvent
-
+sealed interface SearchEvent : SubCircuitUiEvent {
   data class PerformSearch(val query: String) : SearchEvent
 
-  data object ExitSearch : SearchEvent
+  data class CategoryItemClicked(val category: Category) : SearchEvent
+
+  data class IngredientItemClicked(val ingredient: Ingredient) : SearchEvent
+
+  data class RemoveSearchSuggestion(val suggestion: SearchSuggestion) : SearchEvent
 }
+
+sealed interface SearchOuterEvent : SubCircuitOuterEvent {
+  data class NavigateToSearchResults(val query: String) : SearchOuterEvent
+
+  data class NavigateToCategoryResults(val category: Category) : SearchOuterEvent
+
+  data class NavigateToIngredientResults(val ingredient: Ingredient) : SearchOuterEvent
+}
+
+data object SearchScreen : SubScreen<SearchOuterEvent>

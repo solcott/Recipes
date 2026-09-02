@@ -18,6 +18,7 @@ fun main() {
   ComposeViewport {
     RecipeApp(
       circuit = graph.circuit,
+      subCircuit = graph.subCircuit,
       modifier = Modifier.fillMaxSize(),
       initialScreen = initialScreen,
     )

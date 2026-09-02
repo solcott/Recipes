@@ -5,9 +5,11 @@ import dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi
 plugins {
   id("kmp.library")
   alias(libs.plugins.metro)
+  alias(libs.plugins.test.balloon)
 }
 
 kotlin {
+  android { withHostTest { isReturnDefaultValues = true } }
   sourceSets {
     commonMain {
       dependencies {
@@ -19,6 +21,14 @@ kotlin {
         implementation(projects.network)
         implementation(projects.storage)
         implementation(libs.kermit.core)
+      }
+    }
+
+    commonTest {
+      dependencies {
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.test.balloon.framework.core)
       }
     }
 

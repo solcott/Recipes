@@ -19,6 +19,8 @@ interface SearchSuggestionsRepository {
 
   suspend fun addSearchSuggestion(suggestion: SearchSuggestion)
 
+  suspend fun removeSearchSuggestion(suggestion: SearchSuggestion)
+
   fun getSearchSuggestionsAsFlow(query: String): Flow<SearchSuggestions>
 }
 
@@ -32,6 +34,10 @@ internal class SearchSuggestionsRepositoryImpl(
 ) : SearchSuggestionsRepository {
   override suspend fun addSearchSuggestion(suggestion: SearchSuggestion) {
     suggestionsDataStore.add(suggestion)
+  }
+
+  override suspend fun removeSearchSuggestion(suggestion: SearchSuggestion) {
+    suggestionsDataStore.remove(suggestion)
   }
 
   override fun getSearchSuggestionsAsFlow(query: String): Flow<SearchSuggestions> {

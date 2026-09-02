@@ -30,6 +30,7 @@ private val screenSerializers = SerializersModule {
     subclass(RecipesScreen.ByArea::class, RecipesScreen.ByArea.serializer())
     subclass(RecipesScreen.ByCategory::class, RecipesScreen.ByCategory.serializer())
     subclass(RecipesScreen.BySearch::class, RecipesScreen.BySearch.serializer())
+    subclass(RecipesScreen.ByIngredient::class, RecipesScreen.ByIngredient.serializer())
     subclass(RecipesScreen.Favorites::class, RecipesScreen.Favorites.serializer())
   }
 }
@@ -43,6 +44,7 @@ private val roundTripScreens: List<Screen> =
     RecipesScreen.ByCategory("Seafood"),
     RecipesScreen.ByArea("British"),
     RecipesScreen.BySearch("chicken soup"),
+    RecipesScreen.ByIngredient(setOf("chicken", "rice")),
     RecipesScreen.Favorites,
     RecipeDetailsScreen(RecipeId("52772")),
   )

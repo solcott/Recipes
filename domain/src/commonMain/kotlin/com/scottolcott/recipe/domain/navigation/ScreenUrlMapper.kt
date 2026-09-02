@@ -8,38 +8,69 @@ import com.scottolcott.recipe.model.RecipeId
 import com.slack.circuit.runtime.screen.Screen
 import io.ktor.http.decodeURLPart
 import io.ktor.http.encodeURLPathPart
+import io.ktor.http.encodeURLQueryComponent
 
 private const val DEEP_LINK_SCHEME = "recipes://"
 private const val HOME_PATH = "/home"
 private const val FAVORITES_PATH = "/recipes/favorites"
 
+/** Separates the ingredient names packed into a single `/recipes/ingredient/` segment. */
+private const val INGREDIENT_SEPARATOR = ","
+
 /**
- * The routes that carry a single encoded path segment, paired with the [Screen] that segment
- * builds.
+ * The routes that carry a trailing path segment, paired with the [Screen] that segment builds, or
+ * `null` when the segment does not yield a usable screen.
+ *
+ * Each builder receives the segment still encoded and decodes it itself, so the multi-value
+ * ingredient route can split before decoding rather than after.
  *
  * Order matters only in that a prefix must not shadow a longer one; the current prefixes are all
  * mutually exclusive.
  */
-private val PARAMETERIZED_ROUTES: List<Pair<String, (String) -> Screen>> =
+private val PARAMETERIZED_ROUTES: List<Pair<String, (String) -> Screen?>> =
   listOf(
-    "/recipes/category/" to { value -> RecipesScreen.ByCategory(value) },
-    "/recipes/area/" to { value -> RecipesScreen.ByArea(value) },
-    "/recipes/search/" to { value -> RecipesScreen.BySearch(value) },
-    "/recipe/" to { value -> RecipeDetailsScreen(RecipeId(value)) },
+    "/recipes/category/" to { raw -> RecipesScreen.ByCategory(raw.decodeURLPart()) },
+    "/recipes/area/" to { raw -> RecipesScreen.ByArea(raw.decodeURLPart()) },
+    "/recipes/search/" to { raw -> RecipesScreen.BySearch(raw.decodeURLPart()) },
+    "/recipes/ingredient/" to { raw -> raw.toIngredientNames()?.let(RecipesScreen::ByIngredient) },
+    "/recipe/" to { raw -> RecipeDetailsScreen(RecipeId(raw.decodeURLPart())) },
   )
+
+/**
+ * Splits an encoded `/recipes/ingredient/` segment into its names, or `null` if none survive.
+ *
+ * The split happens before decoding: [encodeIngredient] percent-encodes every character outside
+ * `[A-Za-z0-9]`, so a bare [INGREDIENT_SEPARATOR] in the segment can only be a separator and never
+ * part of a name.
+ */
+private fun String.toIngredientNames(): Set<String>? =
+  split(INGREDIENT_SEPARATOR)
+    .map { it.decodeURLPart() }
+    .filter(String::isNotBlank)
+    .toSet()
+    .takeIf(Set<String>::isNotEmpty)
+
+/**
+ * Encodes one ingredient name for the packed segment.
+ *
+ * Deliberately not `encodeURLPathPart`, which leaves `,` untouched — it is a valid path character —
+ * and would let a name containing a comma split into two on the way back.
+ */
+private fun String.encodeIngredient(): String = encodeURLQueryComponent(encodeFull = true)
 
 /**
  * Converts a [Screen] to its canonical URL path, or `null` for internal screens (e.g.
  * [RecipeScaffoldScreen]) that have no public URL representation.
  *
- * | Screen                         | Path                     |
- * |--------------------------------|--------------------------|
- * | CategoriesScreen               | /home                    |
- * | RecipesScreen.ByCategory(name) | /recipes/category/{name} |
- * | RecipesScreen.ByArea(name)     | /recipes/area/{name}     |
- * | RecipesScreen.BySearch(term)   | /recipes/search/{term}   |
- * | RecipesScreen.Favorites        | /recipes/favorites       |
- * | RecipeDetailsScreen(id)        | /recipe/{id}             |
+ * | Screen                          | Path                        |
+ * |---------------------------------|-----------------------------|
+ * | CategoriesScreen                | /home                       |
+ * | RecipesScreen.ByCategory(name)  | /recipes/category/{name}    |
+ * | RecipesScreen.ByArea(name)      | /recipes/area/{name}        |
+ * | RecipesScreen.BySearch(term)    | /recipes/search/{term}      |
+ * | RecipesScreen.ByIngredient(set) | /recipes/ingredient/{a},{b} |
+ * | RecipesScreen.Favorites         | /recipes/favorites          |
+ * | RecipeDetailsScreen(id)         | /recipe/{id}                |
  */
 fun Screen.toUrlPath(): String? =
   when (this) {
@@ -47,6 +78,13 @@ fun Screen.toUrlPath(): String? =
     is RecipesScreen.ByCategory -> "/recipes/category/${category.encodeURLPathPart()}"
     is RecipesScreen.ByArea -> "/recipes/area/${area.encodeURLPathPart()}"
     is RecipesScreen.BySearch -> "/recipes/search/${searchTerm.encodeURLPathPart()}"
+    // Sorted so a set has exactly one URL, matching the canonical form RecipesKey.ByIngredient.of
+    // builds for the cache key.
+    is RecipesScreen.ByIngredient ->
+      ingredients
+        .sorted()
+        .joinToString(INGREDIENT_SEPARATOR) { it.encodeIngredient() }
+        .let { "/recipes/ingredient/$it" }
     is RecipesScreen.Favorites -> FAVORITES_PATH
     is RecipeDetailsScreen -> "/recipe/${id.id.encodeURLPathPart()}"
     else -> null
@@ -91,7 +129,6 @@ private fun parameterizedScreen(path: String): Screen? =
       .takeIf { it.startsWith(prefix) }
       ?.removePrefix(prefix)
       ?.takeIf(String::isNotBlank)
-      ?.decodeURLPart()
       ?.let(toScreen)
   }
 

@@ -12,6 +12,9 @@ import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.runtime.ui.Ui
 import com.slack.circuit.serialization.CircuitSerializerRegistration
 import com.slack.circuit.serialization.SerializableCircuitSaver
+import com.slack.circuit.subcircuit.SubCircuit
+import com.slack.circuit.subcircuit.SubPresenterFactory
+import com.slack.circuit.subcircuit.SubUiFactory
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
@@ -67,4 +70,19 @@ interface CircuitProviders {
       .setCircuitSaver(circuitSaver)
       .build()
   }
+
+  @Multibinds(allowEmpty = true) fun subPresenterFactories(): Set<SubPresenterFactory>
+
+  @Multibinds(allowEmpty = true) fun subUiFactories(): Set<SubUiFactory>
+
+  @Provides
+  @SingleIn(AppScope::class)
+  fun provideSubCircuit(
+    presenterFactories: Set<SubPresenterFactory>,
+    uiFactories: Set<SubUiFactory>,
+  ): SubCircuit =
+    SubCircuit.builder()
+      .addPresenterFactories(presenterFactories)
+      .addUiFactories(uiFactories)
+      .build()
 }

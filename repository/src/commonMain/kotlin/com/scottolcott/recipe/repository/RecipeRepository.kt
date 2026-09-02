@@ -4,10 +4,10 @@ import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
-import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.model.store.RecipesKey
 import com.scottolcott.recipe.network.api.RecipeApi
 import com.scottolcott.recipe.network.dto.RecipeDto
+import com.scottolcott.recipe.network.dto.RecipeFullDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
 import com.scottolcott.recipe.storage.entity.FavoriteEntity
@@ -23,7 +23,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import org.mobilenativefoundation.store.store5.Fetcher
 import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
@@ -37,6 +36,8 @@ interface RecipeRepository {
   fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>>
 
   fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>>
+
+  fun recipesByIngredients(ingredients: Set<String>): Flow<StoreReadResponse<List<Recipe>>>
 
   fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>>
 
@@ -55,7 +56,6 @@ interface RecipeRepository {
 internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
-  private val searchSuggestionsRepository: SearchSuggestionsRepository,
   private val fetchHistoryDataStore: RecipeFetchHistoryDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
@@ -98,9 +98,6 @@ internal class RecipeRepositoryImpl(
       .flatMapLatest { refresh ->
         detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
       }
-      .onStart {
-        searchSuggestionsRepository.addSearchSuggestion(SearchSuggestion.QuerySuggestion(query))
-      }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -123,6 +120,27 @@ internal class RecipeRepositoryImpl(
         }
       }
       .logErrors(logger, "Error loading recipes by category $category")
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  override fun recipesByIngredients(
+    ingredients: Set<String>
+  ): Flow<StoreReadResponse<List<Recipe>>> {
+    val key = RecipesKey.ByIngredient.of(ingredients)
+    // The detailed store, not the basic one: the fetcher below hydrates every filter hit into a
+    // full recipe, so expired details should force a refetch.
+    return fetchHistoryDataStore
+      .refreshNeeded(key, cacheExpiration)
+      .flatMapLatest { refresh ->
+        detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
+      }
+      .map {
+        when (it) {
+          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
+          else -> it.swapType()
+        }
+      }
+      .logErrors(logger, "Error loading recipes by ingredients $ingredients")
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -178,6 +196,40 @@ internal class RecipeRepositoryImpl(
     recipeDao.deleteFavorite(id)
   }
 
+  /**
+   * `filter.php` only returns summaries, so an ingredient filter is a two-step call: filter for
+   * candidate ids, then look each one up for the real ingredient list. That hydration is what
+   * populates the `recipe_ingredient` index, which in turn is what makes later filters — including
+   * combinations never sent to the API — answerable from the database alone.
+   *
+   * Ids whose details are already cached and still fresh are skipped, so a filter overlapping
+   * recipes already seen costs far fewer requests than the first one did.
+   *
+   * A lookup that fails is logged and dropped rather than failing the whole filter — the client
+   * sets `expectSuccess`, so one bad id would otherwise sink the other 39. Every lookup failing
+   * still throws: an empty return is written back as a successful fetch and would suppress the
+   * retry for a full [cacheExpiration].
+   */
+  private suspend fun fetchByIngredients(key: RecipesKey.ByIngredient): List<RecipeFullDto> {
+    val queried = key.ingredients.take(MAX_FILTER_INGREDIENTS)
+    val summaries = recipeApi.getByIngredient(queried)?.meals.orEmpty()
+    val ids = summaries.take(MAX_HYDRATED_RESULTS).map { it.id }
+    if (ids.isEmpty()) return emptyList()
+
+    val alreadyFresh =
+      recipeDao.idsWithFreshDetail(ids, Clock.System.now().minus(cacheExpiration)).toSet()
+    val stale = ids.filterNot { it in alreadyFresh }
+
+    return stale.mapConcurrentlyCatching(
+      concurrency = HYDRATION_CONCURRENCY,
+      onFailure = { id, error ->
+        logger.w(error) { "Skipping recipe $id: hydration lookup failed" }
+      },
+    ) { id ->
+      recipeApi.getRecipe(id)?.meals?.firstOrNull()
+    }
+  }
+
   private fun createFetcher(): Fetcher<RecipesKey, List<RecipeDto>> {
     return Fetcher.of { key ->
       when (key) {
@@ -186,6 +238,7 @@ internal class RecipeRepositoryImpl(
         is RecipesKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
         is RecipesKey.ByArea -> recipeApi.getByArea(key.area)?.meals.orEmpty()
         RecipesKey.Favorites -> emptyList() // No api to support this as favorites are store locally
+        is RecipesKey.ByIngredient -> fetchByIngredients(key)
       }
     }
   }
@@ -204,6 +257,8 @@ internal class RecipeRepositoryImpl(
           is RecipesKey.ByCategory -> recipeDao.getByCategory(key.category)
           is RecipesKey.ByArea -> recipeDao.getByArea(key.area)
           is RecipesKey.Favorites -> recipeDao.getFavorites()
+          is RecipesKey.ByIngredient ->
+            recipeDao.getByIngredients(key.ingredients, key.ingredients.size)
         }.map {
           RecipeResponse(
             it.toModel(),
@@ -234,5 +289,17 @@ internal class RecipeRepositoryImpl(
     )
   }
 }
+
+/** `filter.php?i=` accepts at most four comma-separated ingredients on v2. */
+private const val MAX_FILTER_INGREDIENTS = 4
+
+/**
+ * Cap on lookups per fetch, so a broad filter doesn't fan out into a request per result. The
+ * `HAVING` clause in [com.scottolcott.recipe.storage.dao.RecipeDao.getByIngredients] still narrows
+ * correctly; it just sees fewer candidates on the first pass.
+ */
+private const val MAX_HYDRATED_RESULTS = 40
+
+private const val HYDRATION_CONCURRENCY = 4
 
 data class RecipeResponse(val recipes: List<Recipe>, val query: String?, val id: RecipeId? = null)

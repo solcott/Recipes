@@ -107,17 +107,8 @@ graphs (`AndroidAppGraph`, `DesktopAppGraph`, `IOSAppGraph`, `WebAppGraph`) all 
   (`core/.../serialization/JsonQualifiers.kt`). Pick deliberately.
 
 **Navigation persistence** (Circuit 0.38+): `Screen` and `PopResult` are no longer `Parcelable`, so
-the back stack is persisted with kotlinx-serialization.
-
-- Every **concrete** screen is annotated `@CircuitSerializable(AppScope::class)`
-  (`com.slack.circuit.serialization`) — never the sealed parent. `RecipesScreen` annotates its four
-  cases, not the interface.
-- The annotation is `@MetaSerializable`, so it *implies* `@Serializable`. Don't write both; add
-  `@Serializable(with = ...)` only for a custom serializer.
-- Every property of a screen must itself be serializable. The `:model` id value classes already are.
-- Codegen emits one `CircuitSerializerRegistration` per screen into an `AppScope` multibinding;
-  `domain/.../circuit/CircuitProviders.kt` folds that set into a `SerializableCircuitSaver` and
-  installs it with `Circuit.Builder.setCircuitSaver`. There is nothing to register by hand.
+the back stack is persisted with kotlinx-serialization. See `/circuit-screen` for the
+`@CircuitSerializable` rules and the saver wiring.
 
 ## Gotchas
 

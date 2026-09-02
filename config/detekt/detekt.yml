@@ -6,7 +6,7 @@ config:
 
 processors:
   active: true
-  exclude:
+  exclude: []
   # - 'KtFileCountProcessor'
   # - 'PackageCountProcessor'
   # - 'ClassCountProcessor'
@@ -118,6 +118,8 @@ complexity:
     ignoreDefaultParameters: false
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
+    ignoreAnnotated:
+      - 'Composable'
   MethodOverloading:
     active: false
     allowedOverloads: 6
