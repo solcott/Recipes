@@ -39,6 +39,22 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
   }
 
   @Composable
+  fun produceByIngredients(
+    vararg ingredients: String,
+    retryTrigger: Int,
+  ): StoreReadResponse<List<Recipe>> {
+    val recipes by
+      produceRetainedState<StoreReadResponse<List<Recipe>>>(
+        StoreReadResponse.Initial,
+        ingredients,
+        retryTrigger,
+      ) {
+        recipeRepository.recipesByIngredients(ingredients.toSet()).collect { value = it }
+      }
+    return recipes
+  }
+
+  @Composable
   fun produceByArea(area: String, retryTrigger: Int): StoreReadResponse<List<Recipe>> {
     val recipes by
       produceRetainedState<StoreReadResponse<List<Recipe>>>(

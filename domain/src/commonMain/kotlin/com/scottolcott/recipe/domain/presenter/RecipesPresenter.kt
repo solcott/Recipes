@@ -94,6 +94,8 @@ internal constructor(
         recipesProducer.produceBySearchTerm(screen.searchTerm, retryTrigger)
       is RecipesScreen.Favorites -> recipesProducer.produceByFavorites(retryTrigger)
       is RecipesScreen.ByArea -> recipesProducer.produceByArea(screen.area, retryTrigger)
+      is RecipesScreen.ByIngredient ->
+        recipesProducer.produceByIngredients(screen.ingredient, retryTrigger = retryTrigger)
     }
   }
 }
@@ -129,4 +131,7 @@ sealed interface RecipesScreen : Screen {
   @CircuitSerializable(AppScope::class) data class BySearch(val searchTerm: String) : RecipesScreen
 
   @CircuitSerializable(AppScope::class) data object Favorites : RecipesScreen
+
+  @CircuitSerializable(AppScope::class)
+  data class ByIngredient(val ingredient: String) : RecipesScreen
 }

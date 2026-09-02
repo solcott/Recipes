@@ -1,9 +1,12 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
-import com.scottolcott.recipe.repository.SearchSuggestionsRepository
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
@@ -20,11 +23,8 @@ import dev.zacsweers.redacted.annotations.Redacted
 
 @CircuitInject(RecipeScaffoldScreen::class, AppScope::class)
 @Inject
-class RecipeScaffoldPresenter
-internal constructor(
-  private val navigator: Navigator,
-  private val searchSuggestionsRepository: SearchSuggestionsRepository,
-) : Presenter<RecipeScaffoldState> {
+class RecipeScaffoldPresenter internal constructor(private val navigator: Navigator) :
+  Presenter<RecipeScaffoldState> {
   @Composable
   override fun present(): RecipeScaffoldState {
     val deepLinkScreen = LocalDeepLinkScreen.current
@@ -35,34 +35,40 @@ internal constructor(
       }
     }
     val navStack = rememberSaveableNavStack(initialScreens)
-    // TODO look into sub circuit for this
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
-    // Have to create inline instead of injecting due to needing access to the childNavigator
-    val searchPresenter =
-      remember(childNavigator) { SearchPresenter(childNavigator, searchSuggestionsRepository) }
-    val searchState = searchPresenter.present()
+
+    var searchActive by rememberSaveable { mutableStateOf(false) }
 
     val eventSink: (RecipeScaffoldEvent) -> Unit = remember {
       { event ->
         when (event) {
-          is RecipeScaffoldEvent.GoTo -> childNavigator.goTo(event.screen)
+          is RecipeScaffoldEvent.GoTo -> {
+            childNavigator.goTo(event.screen)
+            searchActive = false
+          }
+          RecipeScaffoldEvent.ExitSearch -> searchActive = false
+          RecipeScaffoldEvent.SearchClicked -> searchActive = true
         }
       }
     }
 
     @Suppress("OPT_IN_USAGE")
-    return RecipeScaffoldState(navStack, childNavigator, searchState, eventSink)
+    return RecipeScaffoldState(navStack, childNavigator, searchActive, eventSink)
   }
 }
 
 sealed interface RecipeScaffoldEvent : CircuitUiEvent {
   data class GoTo(val screen: Screen) : RecipeScaffoldEvent
+
+  data object ExitSearch : RecipeScaffoldEvent
+
+  data object SearchClicked : RecipeScaffoldEvent
 }
 
 data class RecipeScaffoldState(
   val navStack: NavStack<out NavStack.Record>,
   val navigator: Navigator,
-  val searchState: SearchState,
+  val isSearchActive: Boolean,
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,
 ) : CircuitUiState
 

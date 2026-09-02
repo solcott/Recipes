@@ -71,11 +71,9 @@ interface CircuitProviders {
       .build()
   }
 
-  @Multibinds(allowEmpty = true)
-  fun subPresenterFactories(): Set<SubPresenterFactory>
+  @Multibinds(allowEmpty = true) fun subPresenterFactories(): Set<SubPresenterFactory>
 
-  @Multibinds(allowEmpty = true)
-  fun subUiFactories(): Set<SubUiFactory>
+  @Multibinds(allowEmpty = true) fun subUiFactories(): Set<SubUiFactory>
 
   @Provides
   @SingleIn(AppScope::class)

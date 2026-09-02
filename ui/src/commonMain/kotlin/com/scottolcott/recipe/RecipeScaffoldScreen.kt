@@ -27,7 +27,6 @@ import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
-import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.chef_hat_24px
 import com.scottolcott.recipe.ui.favorite_24px
@@ -62,7 +61,7 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
     Scaffold(
       modifier = Modifier.weight(1f),
       topBar = {
-        if (!showNavRail || state.searchState.isSearchActive) {
+        if (!showNavRail || state.isSearchActive) {
           RecipeAppBar(state, modifier = Modifier.fillMaxWidth())
         }
       },
@@ -77,13 +76,13 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
             modifier = Modifier.fillMaxSize().padding(paddingValues),
           )
         }
-        if (state.searchState.isSearchActive) {
+        if (state.isSearchActive) {
           Box(
             Modifier.fillMaxSize()
               .clickable(
                 interactionSource = null,
                 indication = null,
-                onClick = { state.searchState.eventSink(SearchEvent.ExitSearch) },
+                onClick = { state.eventSink(RecipeScaffoldEvent.ExitSearch) },
               )
           )
         }
@@ -124,8 +123,8 @@ private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier 
       modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
     )
     NavigationRailItem(
-      selected = state.searchState.isSearchActive,
-      onClick = { state.searchState.eventSink(SearchEvent.SearchButtonClicked) },
+      selected = state.isSearchActive,
+      onClick = { state.eventSink(RecipeScaffoldEvent.SearchClicked) },
       icon = {
         Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
       },
