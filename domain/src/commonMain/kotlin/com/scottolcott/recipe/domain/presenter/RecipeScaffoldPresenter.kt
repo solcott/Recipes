@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -37,20 +37,21 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
     val navStack = rememberSaveableNavStack(initialScreens)
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
 
-    var searchActive by rememberSaveable { mutableStateOf(false) }
+    var searchActive by retain { mutableStateOf(false) }
 
-    val eventSink: (RecipeScaffoldEvent) -> Unit = remember {
-      { event ->
-        when (event) {
-          is RecipeScaffoldEvent.GoTo -> {
-            childNavigator.goTo(event.screen)
-            searchActive = false
+    val eventSink: (RecipeScaffoldEvent) -> Unit =
+      remember(childNavigator) {
+        { event ->
+          when (event) {
+            is RecipeScaffoldEvent.GoTo -> {
+              childNavigator.goTo(event.screen)
+              searchActive = false
+            }
+            RecipeScaffoldEvent.ExitSearch -> searchActive = false
+            RecipeScaffoldEvent.SearchClicked -> searchActive = true
           }
-          RecipeScaffoldEvent.ExitSearch -> searchActive = false
-          RecipeScaffoldEvent.SearchClicked -> searchActive = true
         }
       }
-    }
 
     @Suppress("OPT_IN_USAGE")
     return RecipeScaffoldState(navStack, childNavigator, searchActive, eventSink)
