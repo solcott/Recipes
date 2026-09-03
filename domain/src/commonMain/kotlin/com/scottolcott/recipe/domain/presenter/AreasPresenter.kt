@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package com.scottolcott.recipe.domain.presenter
 
 import com.slack.circuit.serialization.CircuitSerializable
