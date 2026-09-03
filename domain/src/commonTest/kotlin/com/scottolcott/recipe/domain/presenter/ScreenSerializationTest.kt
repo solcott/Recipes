@@ -24,7 +24,10 @@ import kotlinx.serialization.modules.subclass
  */
 private val screenSerializers = SerializersModule {
   polymorphic(CircuitSaveable::class) {
+    subclass(HomeScreen::class, HomeScreen.serializer())
     subclass(CategoriesScreen::class, CategoriesScreen.serializer())
+    subclass(AreasScreen::class, AreasScreen.serializer())
+    subclass(IngredientsScreen::class, IngredientsScreen.serializer())
     subclass(RecipeDetailsScreen::class, RecipeDetailsScreen.serializer())
     subclass(RecipeScaffoldScreen::class, RecipeScaffoldScreen.serializer())
     subclass(RecipesScreen.ByArea::class, RecipesScreen.ByArea.serializer())
@@ -39,7 +42,10 @@ private val json = Json { serializersModule = screenSerializers }
 
 private val roundTripScreens: List<Screen> =
   listOf(
+    HomeScreen,
     CategoriesScreen,
+    AreasScreen,
+    IngredientsScreen,
     RecipeScaffoldScreen,
     RecipesScreen.ByCategory("Seafood"),
     RecipesScreen.ByArea("British"),

@@ -12,6 +12,7 @@
     <string name="instructions">Instructions</string>
     <string name="tags">Tags</string>
     <string name="category">Category: %1$s</string>
+    <string name="areas">Areas</string>
     <string name="area">Area: %1$s</string>
     <string name="source">Source</string>
     <string name="image_source">Image Source</string>

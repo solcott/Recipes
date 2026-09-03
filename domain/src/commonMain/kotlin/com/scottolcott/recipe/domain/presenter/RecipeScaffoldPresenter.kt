@@ -30,8 +30,8 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
     val deepLinkScreen = LocalDeepLinkScreen.current
     val initialScreens = remember {
       buildList {
-        add(CategoriesScreen)
-        if (deepLinkScreen != null && deepLinkScreen != CategoriesScreen) add(deepLinkScreen)
+        add(HomeScreen)
+        if (deepLinkScreen != null && deepLinkScreen != HomeScreen) add(deepLinkScreen)
       }
     }
     val navStack = rememberSaveableNavStack(initialScreens)

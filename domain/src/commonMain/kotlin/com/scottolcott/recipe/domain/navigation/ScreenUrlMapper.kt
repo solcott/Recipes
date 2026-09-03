@@ -1,7 +1,7 @@
 package com.scottolcott.recipe.domain.navigation
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.scottolcott.recipe.domain.presenter.CategoriesScreen
+import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.model.RecipeId
@@ -74,7 +74,7 @@ private fun String.encodeIngredient(): String = encodeURLQueryComponent(encodeFu
  */
 fun Screen.toUrlPath(): String? =
   when (this) {
-    is CategoriesScreen -> HOME_PATH
+    is HomeScreen -> HOME_PATH
     is RecipesScreen.ByCategory -> "/recipes/category/${category.encodeURLPathPart()}"
     is RecipesScreen.ByArea -> "/recipes/area/${area.encodeURLPathPart()}"
     is RecipesScreen.BySearch -> "/recipes/search/${searchTerm.encodeURLPathPart()}"
@@ -101,7 +101,7 @@ fun Screen.toUrlPath(): String? =
  */
 fun urlPathToScreen(rawPathOrUrl: String): Screen? =
   when (val normalized = normalizePath(rawPathOrUrl)) {
-    HOME_PATH -> CategoriesScreen
+    HOME_PATH -> HomeScreen
     FAVORITES_PATH -> RecipesScreen.Favorites
     else -> parameterizedScreen(normalized)
   }

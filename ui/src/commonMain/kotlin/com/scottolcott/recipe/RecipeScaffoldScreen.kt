@@ -22,7 +22,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import com.scottolcott.recipe.domain.presenter.CategoriesScreen
+import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
@@ -95,8 +95,8 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
 private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   NavigationRail(modifier = modifier.fillMaxHeight()) {
     NavigationRailItem(
-      selected = state.navStack.currentRecord?.screen == CategoriesScreen,
-      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(CategoriesScreen)) },
+      selected = state.navStack.currentRecord?.screen == HomeScreen,
+      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(HomeScreen)) },
       icon = {
         Icon(painter = painterResource(Res.drawable.chef_hat_24px), contentDescription = null)
       },
