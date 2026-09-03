@@ -64,4 +64,16 @@ val screenSerializationTests by testSuite {
       assertEquals(screen, json.decodeFromString(serializer, encoded))
     }
   }
+
+  // HomePresenter persists the selected tab through HomeTabScreen.serializer() -- the closed sealed
+  // serializer -- not through the CircuitSaveable module above. Adding @Polymorphic to
+  // HomeTabScreen would switch this to open polymorphism, which nothing registers a module for,
+  // so cover it separately.
+  for (tab in listOf(CategoriesScreen, IngredientsScreen, AreasScreen)) {
+    test("${tab::class.simpleName} round trips as a HomeTabScreen") {
+      val serializer = HomeTabScreen.serializer()
+      val encoded = Json.encodeToString(serializer, tab)
+      assertEquals(tab, Json.decodeFromString(serializer, encoded))
+    }
+  }
 }
