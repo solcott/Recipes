@@ -95,8 +95,8 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
 private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   NavigationRail(modifier = modifier.fillMaxHeight()) {
     NavigationRailItem(
-      selected = state.navStack.currentRecord?.screen == HomeScreen,
-      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(HomeScreen)) },
+      selected = state.navStack.currentRecord?.screen is HomeScreen,
+      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(HomeScreen())) },
       icon = {
         Icon(painter = painterResource(Res.drawable.chef_hat_24px), contentDescription = null)
       },

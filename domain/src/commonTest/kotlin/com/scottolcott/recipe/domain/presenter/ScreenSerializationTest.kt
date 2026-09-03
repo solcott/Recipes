@@ -42,7 +42,8 @@ private val json = Json { serializersModule = screenSerializers }
 
 private val roundTripScreens: List<Screen> =
   listOf(
-    HomeScreen,
+    HomeScreen(),
+    HomeScreen(AreasScreen),
     CategoriesScreen,
     AreasScreen,
     IngredientsScreen,
@@ -57,7 +58,7 @@ private val roundTripScreens: List<Screen> =
 
 val screenSerializationTests by testSuite {
   for (screen in roundTripScreens) {
-    test("${screen::class.simpleName} round trips") {
+    test("$screen round trips") {
       val serializer = PolymorphicSerializer(CircuitSaveable::class)
       val encoded = json.encodeToString(serializer, screen)
       assertEquals(screen, json.decodeFromString(serializer, encoded))

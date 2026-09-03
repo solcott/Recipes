@@ -1,6 +1,9 @@
 package com.scottolcott.recipe.domain.navigation
 
+import com.scottolcott.recipe.domain.presenter.AreasScreen
+import com.scottolcott.recipe.domain.presenter.CategoriesScreen
 import com.scottolcott.recipe.domain.presenter.HomeScreen
+import com.scottolcott.recipe.domain.presenter.IngredientsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
@@ -12,7 +15,9 @@ import kotlin.test.assertNull
 
 private val roundTripScreens: List<Pair<Screen, String>> =
   listOf(
-    HomeScreen to "/home",
+    HomeScreen(CategoriesScreen) to "/home/categories",
+    HomeScreen(IngredientsScreen) to "/home/ingredients",
+    HomeScreen(AreasScreen) to "/home/areas",
     RecipesScreen.ByCategory("Seafood") to "/recipes/category/Seafood",
     RecipesScreen.ByArea("British") to "/recipes/area/British",
     RecipesScreen.BySearch("chicken") to "/recipes/search/chicken",
@@ -39,12 +44,12 @@ val screenUrlMapperTests by testSuite {
   }
 
   test("deep link without a path is home") {
-    assertEquals(HomeScreen, urlPathToScreen("recipes://app"))
+    assertEquals(HomeScreen(), urlPathToScreen("recipes://app"))
   }
 
   test("empty and root paths are home") {
-    assertEquals(HomeScreen, urlPathToScreen(""))
-    assertEquals(HomeScreen, urlPathToScreen("/"))
+    assertEquals(HomeScreen(), urlPathToScreen(""))
+    assertEquals(HomeScreen(), urlPathToScreen("/"))
   }
 
   test("trailing slashes are ignored") {

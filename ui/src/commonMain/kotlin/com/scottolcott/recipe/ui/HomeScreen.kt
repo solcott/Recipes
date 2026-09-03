@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import com.scottolcott.recipe.BrowserTabUrlEffect
 import com.scottolcott.recipe.domain.presenter.AreasScreen
 import com.scottolcott.recipe.domain.presenter.CategoriesScreen
 import com.scottolcott.recipe.domain.presenter.HomeEvent
@@ -32,6 +33,8 @@ fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
   // rememberPagerState reads initialPage only when it first builds the state; only the pageCount
   // lambda is read on later compositions.
   val pagerState = rememberPagerState(state.selectedIndex) { state.tabScreens.size }
+  BrowserTabUrlEffect(state.selectedTabScreen)
+
   // Tap a tab -> animate pager
   LaunchedEffect(state.selectedTabScreen) {
     if (pagerState.currentPage != state.selectedIndex) {

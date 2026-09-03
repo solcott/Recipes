@@ -22,22 +22,25 @@ import kotlinx.serialization.Serializable
  * The tabs shown by [HomeScreen], in display order.
  *
  * A compile-time constant, so it needs neither `remember` nor `retain`. The order is the pager's
- * page order.
+ * page order; `ScreenUrlMapper` separately pairs each entry with its URL segment.
  */
 private val HOME_TABS: List<HomeTabScreen> =
   listOf(CategoriesScreen, IngredientsScreen, AreasScreen)
 
 @CircuitInject(HomeScreen::class, AppScope::class)
 @Inject
-class HomePresenter internal constructor(private val navigator: Navigator) : Presenter<HomeState> {
+class HomePresenter
+internal constructor(private val screen: HomeScreen, private val navigator: Navigator) :
+  Presenter<HomeState> {
   @Composable
   override fun present(): HomeState {
     // Deliberately rememberSerializable rather than the retain{} this repo uses elsewhere: the
     // selected tab is cheap to persist and worth keeping across process death, so reopening the
-    // app lands on the tab the user left.
+    // app lands on the tab the user left. [screen.tab] only supplies the value for a first,
+    // unrestored composition, which is what makes a /home/{tab} deep link open on that tab.
     var selectedTab: HomeTabScreen by
       rememberSerializable(stateSerializer = HomeTabScreen.serializer()) {
-        mutableStateOf(CategoriesScreen)
+        mutableStateOf(screen.tab)
       }
     // indexOf returns -1 for a tab that is no longer in HOME_TABS, which a persisted selection can
     // outlive; fall back to the first tab rather than feeding -1 to the tab row and pager.
@@ -68,9 +71,11 @@ sealed interface HomeEvent : CircuitUiEvent {
  * A tab hosted by [HomeScreen].
  *
  * `@Serializable` on the sealed interface generates a closed serializer over the three tab objects,
- * which is what persists the selection. Deliberately *not* `@Polymorphic`: that would force open
- * polymorphism and require a `SerializersModule` registration nothing provides.
+ * which is what persists the selection and what encodes [HomeScreen.tab]. Deliberately *not*
+ * `@Polymorphic`: that would force open polymorphism at the [HomeScreen.tab] use site and require a
+ * `SerializersModule` registration nothing provides.
  */
 @Serializable sealed interface HomeTabScreen : Screen
 
-@CircuitSerializable(AppScope::class) data object HomeScreen : Screen
+@CircuitSerializable(AppScope::class)
+data class HomeScreen(val tab: HomeTabScreen = CategoriesScreen) : Screen

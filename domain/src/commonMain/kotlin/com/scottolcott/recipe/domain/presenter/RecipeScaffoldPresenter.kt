@@ -30,8 +30,10 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
     val deepLinkScreen = LocalDeepLinkScreen.current
     val initialScreens = remember {
       buildList {
-        add(HomeScreen)
-        if (deepLinkScreen != null && deepLinkScreen != HomeScreen) add(deepLinkScreen)
+        // A deep link to a home tab selects that tab on the root record rather than stacking a
+        // second screen on top of it.
+        add(deepLinkScreen as? HomeScreen ?: HomeScreen())
+        if (deepLinkScreen != null && deepLinkScreen !is HomeScreen) add(deepLinkScreen)
       }
     }
     val navStack = rememberSaveableNavStack(initialScreens)
