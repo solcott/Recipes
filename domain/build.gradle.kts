@@ -40,8 +40,8 @@ kotlin {
 
         implementation(projects.core)
         implementation(projects.repository)
-        implementation(libs.kermit.core)
         implementation(libs.androidx.window.core)
+        implementation(libs.kermit.core)
       }
     }
 
