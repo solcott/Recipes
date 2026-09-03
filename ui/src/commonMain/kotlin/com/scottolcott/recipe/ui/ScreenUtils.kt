@@ -10,7 +10,7 @@ import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_L
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXTRA_LARGE_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_LARGE_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
-import com.scottolcott.recipe.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 
 @Composable
 fun rememberAdaptivePadding(): PaddingValues {
@@ -24,7 +24,6 @@ fun rememberAdaptivePadding(): PaddingValues {
 
     val isMediumHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
     val isExpandedHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_EXPANDED_LOWER_BOUND)
-
     val horizontal =
       when {
         isExtraLargeWidth -> 48.dp
@@ -36,6 +35,8 @@ fun rememberAdaptivePadding(): PaddingValues {
 
     val vertical =
       when {
+        // If not at lease medium with then most likely a phone
+        !isMediumWidth -> 16.dp
         isExpandedHeight -> 32.dp
         isMediumHeight -> 24.dp
         else -> 16.dp

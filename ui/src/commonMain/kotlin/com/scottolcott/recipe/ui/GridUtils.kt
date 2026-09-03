@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
-import com.scottolcott.recipe.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 
 @Composable
 fun rememberAdaptiveGridCells(

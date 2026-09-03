@@ -15,7 +15,6 @@ import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.window.core.layout.WindowSizeClass
-import com.scottolcott.recipe.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.domain.presenter.SearchScreen
 import com.scottolcott.recipe.domain.presenter.SearchState
@@ -44,11 +43,11 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
   val scope = rememberCoroutineScope()
-  val searchBarState = rememberSearchBarState(initialValue = SearchBarValue.Collapsed)
+
   val appBarWithSearchColors = getAppBarWithSearchColors()
   val keyboardController = LocalSoftwareKeyboardController.current
   val onSearch: (SearchSuggestion) -> Unit =
-    remember(state, keyboardController, searchBarState, scope) {
+    remember(state, keyboardController, state.searchBarState, scope) {
       { suggestion: SearchSuggestion ->
         scope.launch {
           when (suggestion) {
@@ -60,28 +59,27 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
               state.eventSink(SearchEvent.PerformSearch(suggestion.query))
           }
           keyboardController?.hide()
-          searchBarState.animateToCollapsed()
+          state.searchBarState.animateToCollapsed()
         }
       }
     }
-
   val inputField =
     @Composable {
       RecipeSearchBarInputField(
         searchText = state.searchText,
-        searchBarState = searchBarState,
+        searchBarState = state.searchBarState,
         onSearch = { onSearch(SearchSuggestion.QuerySuggestion(it)) },
         colors = appBarWithSearchColors,
       )
     }
   AppBarWithSearch(
-    searchBarState,
+    state.searchBarState,
     inputField,
     colors = appBarWithSearchColors,
     modifier = modifier,
   )
   ExpandedSearchBar(
-    searchBarState,
+    state.searchBarState,
     inputField,
     appBarWithSearchColors,
     state,

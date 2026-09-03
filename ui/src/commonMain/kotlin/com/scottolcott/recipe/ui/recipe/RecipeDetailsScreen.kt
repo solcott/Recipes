@@ -54,7 +54,7 @@ import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOW
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
-import com.scottolcott.recipe.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsEvent
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsState
