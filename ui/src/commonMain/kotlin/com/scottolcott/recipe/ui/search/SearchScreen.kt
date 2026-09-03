@@ -111,6 +111,7 @@ private fun ExpandedSearchBar(
       state = searchBarState,
       inputField = inputField,
       colors = appBarWithSearchColors.searchBarColors,
+      properties = dockedSearchBarPopupProperties(),
     ) {
       SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
     }
