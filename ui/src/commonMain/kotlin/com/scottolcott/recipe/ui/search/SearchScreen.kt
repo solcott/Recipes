@@ -19,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
@@ -116,10 +118,41 @@ private fun ExpandedSearchBar(
     ExpandedFullScreenSearchBar(
       state = searchBarState,
       inputField = inputField,
+      modifier = Modifier.boundedToWindow(),
       colors = appBarWithSearchColors.searchBarColors,
     ) {
       SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
     }
+  }
+}
+
+/**
+ * Replaces unbounded measure constraints with the window size.
+ *
+ * On iOS the expanded search bar lives in a `ComposeSceneLayer`, and the layer measures its content
+ * with infinite constraints whenever its `ComposeScene.size` is null. Material3's
+ * `FullScreenSearchBarLayout` feeds `constraints.maxWidth`/`maxHeight` straight into
+ * `Constraints.fixed(...)`, which throws on infinity. Rotating the device is one way to get the
+ * layer into that state, because `ComposeSceneMediator.prepareAndGetSizeTransitionAnimation`
+ * latches its "layout transition animating" flag before its early return and then never clears it,
+ * permanently suppressing the update that would set the scene size.
+ *
+ * Every other platform measures the dialog with bounded constraints already, so this is a
+ * pass-through there.
+ */
+@Composable
+private fun Modifier.boundedToWindow(): Modifier {
+  val containerSize = LocalWindowInfo.current.containerSize
+  return layout { measurable, constraints ->
+    val placeable =
+      measurable.measure(
+        constraints.copy(
+          maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth else containerSize.width,
+          maxHeight =
+            if (constraints.hasBoundedHeight) constraints.maxHeight else containerSize.height,
+        )
+      )
+    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
   }
 }
 
