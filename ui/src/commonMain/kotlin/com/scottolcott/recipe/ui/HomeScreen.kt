@@ -12,7 +12,6 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -30,8 +29,9 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(HomeScreen::class, AppScope::class)
 fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
-  val initialPageIndex = remember(state.tabScreens) { state.selectedIndex }
-  val pagerState = rememberPagerState(initialPageIndex, pageCount = { state.tabScreens.count() })
+  // rememberPagerState reads initialPage only when it first builds the state; only the pageCount
+  // lambda is read on later compositions.
+  val pagerState = rememberPagerState(state.selectedIndex) { state.tabScreens.size }
   // Tap a tab -> animate pager
   LaunchedEffect(state.selectedTabScreen) {
     if (pagerState.currentPage != state.selectedIndex) {
@@ -39,9 +39,11 @@ fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
     }
   }
 
-  // Swipe pager -> update presenter's selected index
+  // Swipe pager -> update presenter's selected index. settledPage rather than currentPage: the
+  // latter tracks the nearest page mid-scroll, so animating across two tabs would report the tab
+  // it passes through and flicker the indicator.
   LaunchedEffect(pagerState) {
-    snapshotFlow { pagerState.currentPage }
+    snapshotFlow { pagerState.settledPage }
       .collect { page -> state.eventSink(HomeEvent.TabSelected(state.tabScreens[page])) }
   }
   Column(modifier = modifier.fillMaxSize()) {
