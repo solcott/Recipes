@@ -22,9 +22,10 @@ import kotlinx.serialization.Serializable
  * The tabs shown by [HomeScreen], in display order.
  *
  * A compile-time constant, so it needs neither `remember` nor `retain`. The order is the pager's
- * page order; `ScreenUrlMapper` separately pairs each entry with its URL segment.
+ * page order. `ScreenUrlMapper` reads this same list to map both directions of `/home/{tab}`, so a
+ * tab cannot end up in the pager but missing from the URL mapping.
  */
-private val HOME_TABS: List<HomeTabScreen> =
+internal val HOME_TABS: List<HomeTabScreen> =
   listOf(CategoriesScreen, IngredientsScreen, AreasScreen)
 
 @CircuitInject(HomeScreen::class, AppScope::class)
@@ -74,8 +75,16 @@ sealed interface HomeEvent : CircuitUiEvent {
  * which is what persists the selection and what encodes [HomeScreen.tab]. Deliberately *not*
  * `@Polymorphic`: that would force open polymorphism at the [HomeScreen.tab] use site and require a
  * `SerializersModule` registration nothing provides.
+ *
+ * [urlSegment] lives here rather than in a lookup table beside the mapper so that adding a tab
+ * cannot leave it addressable in one direction only. It is a plain `val` on each `data object`,
+ * which does not affect the serialized form.
  */
-@Serializable sealed interface HomeTabScreen : Screen
+@Serializable
+sealed interface HomeTabScreen : Screen {
+  /** This tab's segment in `/home/{tab}`. Lowercase ASCII, so it needs no URL encoding. */
+  val urlSegment: String
+}
 
 @CircuitSerializable(AppScope::class)
 data class HomeScreen(val tab: HomeTabScreen = CategoriesScreen) : Screen

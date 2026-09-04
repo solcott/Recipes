@@ -109,4 +109,7 @@ sealed interface CategoriesEvent {
   }
 }
 
-@CircuitSerializable(AppScope::class) data object CategoriesScreen : HomeTabScreen
+@CircuitSerializable(AppScope::class)
+data object CategoriesScreen : HomeTabScreen {
+  override val urlSegment: String = "categories"
+}
