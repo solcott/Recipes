@@ -12,6 +12,17 @@ import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_LARGE_LOWE
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 
+/**
+ * Whether the window is too short to spend vertical space freely -- a landscape phone, or a squat
+ * desktop window.
+ *
+ * The single definition of that case, so the layouts that react to it stay in agreement: it picks
+ * the horizontal recipe card and the wider grid cell that card needs.
+ */
+@Composable
+fun isShortWindow(): Boolean =
+  !LocalWindowSizeClass.current.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
+
 @Composable
 fun rememberAdaptivePadding(): PaddingValues {
   val windowSizeClass = LocalWindowSizeClass.current
@@ -24,12 +35,16 @@ fun rememberAdaptivePadding(): PaddingValues {
 
     val isMediumHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
     val isExpandedHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_EXPANDED_LOWER_BOUND)
+    // Every branch differs from the one below it, or the tier is dead code -- expanded and medium
+    // both returned 24dp until this ramp replaced them. The steps are small at the low end on
+    // purpose: padding is subtracted from the width the grid measures itself against, so a big
+    // step here can cost a column at the very width that just gained the room for one.
     val horizontal =
       when {
         isExtraLargeWidth -> 48.dp
         isLargeWidth -> 32.dp
         isExpandedWidth -> 24.dp
-        isMediumWidth -> 24.dp
+        isMediumWidth -> 20.dp
         else -> 16.dp
       }
 

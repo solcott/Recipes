@@ -36,6 +36,7 @@ import com.scottolcott.recipe.domain.presenter.CategoriesState
 import com.scottolcott.recipe.model.Category
 import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
+import com.scottolcott.recipe.ui.isShortWindow
 import com.scottolcott.recipe.ui.no_categories_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
 import com.scottolcott.recipe.ui.rememberAdaptivePadding
@@ -47,10 +48,15 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(CategoriesScreen::class, AppScope::class)
 fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
-  val cells = rememberAdaptiveGridCells(minWidthMediumCompact = 225.dp)
+  val cells = rememberAdaptiveGridCells(targetWidth = 165.dp, shortWindowTargetWidth = 200.dp)
   val padding = rememberAdaptivePadding()
+  // A short window is starved of vertical space even when it is wide -- a landscape phone -- so the
+  // larger label is held back for windows that are both wide and tall.
+  val roomyLabel =
+    LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND) &&
+      !isShortWindow()
   val labelTextStyle =
-    if (LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)) {
+    if (roomyLabel) {
       MaterialTheme.typography.titleLargeEmphasized
     } else {
       MaterialTheme.typography.titleMediumEmphasized
