@@ -18,6 +18,7 @@ kotlin {
     commonMain {
       dependencies {
         api(projects.model)
+        api(libs.androidx.window.core)
         api(libs.circuit.codegen.annotations)
         api(libs.circuit.foundation)
         api(libs.circuit.runtime)
@@ -40,7 +41,6 @@ kotlin {
 
         implementation(projects.core)
         implementation(projects.repository)
-        implementation(libs.androidx.window.core)
         implementation(libs.kermit.core)
       }
     }
