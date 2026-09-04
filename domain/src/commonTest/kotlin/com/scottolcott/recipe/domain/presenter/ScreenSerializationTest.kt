@@ -24,7 +24,10 @@ import kotlinx.serialization.modules.subclass
  */
 private val screenSerializers = SerializersModule {
   polymorphic(CircuitSaveable::class) {
+    subclass(HomeScreen::class, HomeScreen.serializer())
     subclass(CategoriesScreen::class, CategoriesScreen.serializer())
+    subclass(AreasScreen::class, AreasScreen.serializer())
+    subclass(IngredientsScreen::class, IngredientsScreen.serializer())
     subclass(RecipeDetailsScreen::class, RecipeDetailsScreen.serializer())
     subclass(RecipeScaffoldScreen::class, RecipeScaffoldScreen.serializer())
     subclass(RecipesScreen.ByArea::class, RecipesScreen.ByArea.serializer())
@@ -39,7 +42,11 @@ private val json = Json { serializersModule = screenSerializers }
 
 private val roundTripScreens: List<Screen> =
   listOf(
+    HomeScreen(),
+    HomeScreen(AreasScreen),
     CategoriesScreen,
+    AreasScreen,
+    IngredientsScreen,
     RecipeScaffoldScreen,
     RecipesScreen.ByCategory("Seafood"),
     RecipesScreen.ByArea("British"),
@@ -51,10 +58,22 @@ private val roundTripScreens: List<Screen> =
 
 val screenSerializationTests by testSuite {
   for (screen in roundTripScreens) {
-    test("${screen::class.simpleName} round trips") {
+    test("$screen round trips") {
       val serializer = PolymorphicSerializer(CircuitSaveable::class)
       val encoded = json.encodeToString(serializer, screen)
       assertEquals(screen, json.decodeFromString(serializer, encoded))
+    }
+  }
+
+  // HomePresenter persists the selected tab through HomeTabScreen.serializer() -- the closed sealed
+  // serializer -- not through the CircuitSaveable module above. Adding @Polymorphic to
+  // HomeTabScreen would switch this to open polymorphism, which nothing registers a module for,
+  // so cover it separately.
+  for (tab in listOf(CategoriesScreen, IngredientsScreen, AreasScreen)) {
+    test("${tab::class.simpleName} round trips as a HomeTabScreen") {
+      val serializer = HomeTabScreen.serializer()
+      val encoded = Json.encodeToString(serializer, tab)
+      assertEquals(tab, Json.decodeFromString(serializer, encoded))
     }
   }
 }

@@ -5,10 +5,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.ui.theme.RecipeAppTheme
@@ -53,7 +53,3 @@ fun RecipeApp(
     }
   }
 }
-
-@Suppress("CompositionLocalAllowlist")
-val LocalWindowSizeClass =
-  compositionLocalOf<WindowSizeClass> { error("No WindowSizeClass provided") }

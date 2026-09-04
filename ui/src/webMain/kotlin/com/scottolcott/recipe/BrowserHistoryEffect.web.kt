@@ -6,6 +6,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import com.scottolcott.recipe.domain.navigation.toUrlPath
+import com.scottolcott.recipe.domain.presenter.HomeScreen
+import com.scottolcott.recipe.domain.presenter.HomeTabScreen
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.navigation.NavStack
 import kotlinx.browser.window
@@ -138,6 +140,13 @@ actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigat
     window.addEventListener("popstate", handler)
     onDispose { window.removeEventListener("popstate", handler) }
   }
+}
+
+@Composable
+actual fun BrowserTabUrlEffect(tab: HomeTabScreen) {
+  // replaceState rather than pushState: switching tabs should not add a history entry, and the
+  // depth is read back out of history.state so this shares no mutable state with BrowserNavState.
+  LaunchedEffect(tab) { HomeScreen(tab).toUrlPath()?.let { replaceDepth(historyDepth(), it) } }
 }
 
 /** Depth of the currently active record: 0 = root, 1 = one level in, etc. */

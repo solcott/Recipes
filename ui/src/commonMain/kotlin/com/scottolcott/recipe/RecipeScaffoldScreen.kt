@@ -21,8 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
-import com.scottolcott.recipe.domain.presenter.CategoriesScreen
+import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
@@ -33,8 +32,6 @@ import com.scottolcott.recipe.ui.favorite_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.favorites
 import com.scottolcott.recipe.ui.recipes
-import com.scottolcott.recipe.ui.search
-import com.scottolcott.recipe.ui.search_24px
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
@@ -49,34 +46,29 @@ import org.jetbrains.compose.resources.stringResource
 @Suppress("unused")
 fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   BrowserHistoryEffect(navStack = state.navStack, navigator = state.navigator)
-  val windowSizeClass = LocalWindowSizeClass.current
-  val showNavRail =
-    windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) &&
-      !isIos()
-
   Row(modifier.fillMaxSize()) {
-    if (showNavRail) {
+    if (state.showNavRail) {
       RecipeNavigationRail(state)
     }
     Scaffold(
       modifier = Modifier.weight(1f),
       topBar = {
-        if (!showNavRail || state.isSearchActive) {
+        if (!state.showNavRail || state.searchVisible) {
           RecipeAppBar(state, modifier = Modifier.fillMaxWidth())
         }
       },
       contentWindowInsets = WindowInsets(0.dp),
     ) { paddingValues ->
-      Box(Modifier.fillMaxSize()) {
+      Box(Modifier.fillMaxSize().padding(paddingValues)) {
         SharedElementTransitionLayout {
           NavigableCircuitContent(
             navigator = state.navigator,
             navStack = state.navStack,
             decoratorFactory = remember(state.navigator) { GestureNavigationDecorationFactory() },
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
           )
         }
-        if (state.isSearchActive) {
+        if (state.searchVisible) {
           Box(
             Modifier.fillMaxSize()
               .clickable(
@@ -93,10 +85,10 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
 
 @Composable
 private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
-  NavigationRail(modifier = modifier.fillMaxHeight()) {
+  NavigationRail(modifier = modifier.fillMaxHeight(), header = {}) {
     NavigationRailItem(
-      selected = state.navStack.currentRecord?.screen == CategoriesScreen,
-      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(CategoriesScreen)) },
+      selected = state.navStack.currentRecord?.screen is HomeScreen,
+      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(HomeScreen())) },
       icon = {
         Icon(painter = painterResource(Res.drawable.chef_hat_24px), contentDescription = null)
       },
@@ -120,15 +112,6 @@ private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier 
         )
       },
       label = { Text(stringResource(Res.string.favorites)) },
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-    )
-    NavigationRailItem(
-      selected = state.isSearchActive,
-      onClick = { state.eventSink(RecipeScaffoldEvent.SearchClicked) },
-      icon = {
-        Icon(painter = painterResource(Res.drawable.search_24px), contentDescription = null)
-      },
-      label = { Text(stringResource(Res.string.search)) },
       modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
     )
   }

@@ -25,5 +25,7 @@ local.properties
 
 # XCode
 *.xcuserstate
+# Per-user scheme and window state; Xcode rewrites these on every open.
+xcuserdata/
 
 .DS_Store

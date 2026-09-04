@@ -29,7 +29,7 @@ import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LO
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
-import com.scottolcott.recipe.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.RecipesEvent
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.domain.presenter.RecipesState

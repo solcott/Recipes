@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewWrapperProvider
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import com.scottolcott.recipe.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.ui.theme.RecipeAppTheme
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource

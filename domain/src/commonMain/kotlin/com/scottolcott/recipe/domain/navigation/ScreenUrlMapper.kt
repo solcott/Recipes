@@ -1,7 +1,8 @@
 package com.scottolcott.recipe.domain.navigation
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.scottolcott.recipe.domain.presenter.CategoriesScreen
+import com.scottolcott.recipe.domain.presenter.HOME_TABS
+import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.model.RecipeId
@@ -29,6 +30,9 @@ private const val INGREDIENT_SEPARATOR = ","
  */
 private val PARAMETERIZED_ROUTES: List<Pair<String, (String) -> Screen?>> =
   listOf(
+    // Compared without decoding: every tab segment is a lowercase ASCII literal, so the encoded
+    // and decoded forms are identical and an unknown segment must miss either way.
+    "$HOME_PATH/" to { raw -> HOME_TABS.firstOrNull { it.urlSegment == raw }?.let(::HomeScreen) },
     "/recipes/category/" to { raw -> RecipesScreen.ByCategory(raw.decodeURLPart()) },
     "/recipes/area/" to { raw -> RecipesScreen.ByArea(raw.decodeURLPart()) },
     "/recipes/search/" to { raw -> RecipesScreen.BySearch(raw.decodeURLPart()) },
@@ -64,7 +68,7 @@ private fun String.encodeIngredient(): String = encodeURLQueryComponent(encodeFu
  *
  * | Screen                          | Path                        |
  * |---------------------------------|-----------------------------|
- * | CategoriesScreen                | /home                       |
+ * | HomeScreen(tab)                 | /home/{tab}                 |
  * | RecipesScreen.ByCategory(name)  | /recipes/category/{name}    |
  * | RecipesScreen.ByArea(name)      | /recipes/area/{name}        |
  * | RecipesScreen.BySearch(term)    | /recipes/search/{term}      |
@@ -74,7 +78,7 @@ private fun String.encodeIngredient(): String = encodeURLQueryComponent(encodeFu
  */
 fun Screen.toUrlPath(): String? =
   when (this) {
-    is CategoriesScreen -> HOME_PATH
+    is HomeScreen -> "$HOME_PATH/${tab.urlSegment}"
     is RecipesScreen.ByCategory -> "/recipes/category/${category.encodeURLPathPart()}"
     is RecipesScreen.ByArea -> "/recipes/area/${area.encodeURLPathPart()}"
     is RecipesScreen.BySearch -> "/recipes/search/${searchTerm.encodeURLPathPart()}"
@@ -101,7 +105,7 @@ fun Screen.toUrlPath(): String? =
  */
 fun urlPathToScreen(rawPathOrUrl: String): Screen? =
   when (val normalized = normalizePath(rawPathOrUrl)) {
-    HOME_PATH -> CategoriesScreen
+    HOME_PATH -> HomeScreen()
     FAVORITES_PATH -> RecipesScreen.Favorites
     else -> parameterizedScreen(normalized)
   }

@@ -42,7 +42,7 @@ val categoriesPresenterTests by testSuite {
   }
 
   val environmentFixture = testFixture {
-    val navigator = FakeNavigator(CategoriesScreen)
+    val navigator = FakeNavigator(HomeScreen())
     val repository = FakeCategoryRepository()
     val presenter = CategoriesPresenter(navigator, CategoriesProducer(repository))
     CategoriesTestEnvironment(navigator, repository, presenter)

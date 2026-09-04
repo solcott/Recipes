@@ -2,18 +2,22 @@ package com.scottolcott.recipe
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.unit.dp
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
@@ -36,20 +40,30 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
-  AnimatedContent(state.isSearchActive) { isActive ->
+  AnimatedContent(state.searchVisible) { isActive ->
     if (isActive) {
+      val initialSearchBarValue = remember {
+        if (state.showNavRail) SearchBarValue.Collapsed else SearchBarValue.Expanded
+      }
       SubCircuitContent(
-        SearchScreen,
+        SearchScreen(initialSearchBarValue = initialSearchBarValue),
+        modifier = modifier.padding(vertical = if (state.showNavRail) 8.dp else 4.dp),
         outerEventSink = {
-          val screen =
-            when (it) {
-              is SearchOuterEvent.NavigateToSearchResults -> RecipesScreen.BySearch(it.query)
-              is SearchOuterEvent.NavigateToCategoryResults ->
-                RecipesScreen.ByCategory(it.category.name)
-              is SearchOuterEvent.NavigateToIngredientResults ->
-                RecipesScreen.ByIngredient(setOf(it.ingredient.name))
+          when (it) {
+            is SearchOuterEvent.NavigateToSearchResults -> {
+              state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.BySearch(it.query)))
             }
-          state.eventSink(RecipeScaffoldEvent.GoTo(screen))
+            is SearchOuterEvent.NavigateToCategoryResults -> {
+              state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.ByCategory(it.category.name)))
+            }
+            is SearchOuterEvent.NavigateToIngredientResults -> {
+              state.eventSink(
+                RecipeScaffoldEvent.GoTo(RecipesScreen.ByIngredient(setOf(it.ingredient.name)))
+              )
+            }
+            is SearchOuterEvent.SearchBarStateChanged ->
+              state.eventSink(RecipeScaffoldEvent.SearchBarStateChanged(it.searchBarValue))
+          }
         },
       )
     } else {

@@ -16,7 +16,6 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
-import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -110,4 +109,7 @@ sealed interface CategoriesEvent {
   }
 }
 
-@CircuitSerializable(AppScope::class) data object CategoriesScreen : Screen
+@CircuitSerializable(AppScope::class)
+data object CategoriesScreen : HomeTabScreen {
+  override val urlSegment: String = "categories"
+}

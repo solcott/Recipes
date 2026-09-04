@@ -1,12 +1,17 @@
 package com.scottolcott.recipe.domain.presenter
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
+import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
+import com.scottolcott.recipe.isIos
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
@@ -25,19 +30,33 @@ import dev.zacsweers.redacted.annotations.Redacted
 @Inject
 class RecipeScaffoldPresenter internal constructor(private val navigator: Navigator) :
   Presenter<RecipeScaffoldState> {
+  @OptIn(ExperimentalMaterial3Api::class)
   @Composable
   override fun present(): RecipeScaffoldState {
     val deepLinkScreen = LocalDeepLinkScreen.current
     val initialScreens = remember {
       buildList {
-        add(CategoriesScreen)
-        if (deepLinkScreen != null && deepLinkScreen != CategoriesScreen) add(deepLinkScreen)
+        // A deep link to a home tab selects that tab on the root record rather than stacking a
+        // second screen on top of it.
+        add(deepLinkScreen as? HomeScreen ?: HomeScreen())
+        if (deepLinkScreen != null && deepLinkScreen !is HomeScreen) add(deepLinkScreen)
       }
     }
     val navStack = rememberSaveableNavStack(initialScreens)
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
 
-    var searchActive by retain { mutableStateOf(false) }
+    val windowSizeClass = LocalWindowSizeClass.current
+    val showNavRail =
+      windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) &&
+        windowSizeClass.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) &&
+        !isIos()
+
+    var searchBarValue by retain { mutableStateOf(SearchBarValue.Collapsed) }
+    // Whether the user asked for search on a layout that does not show it permanently. Derived
+    // rather than stored so a change to any input -- including a resize across the nav rail
+    // breakpoint -- is reflected during composition, with no apply-phase write to snapshot state.
+    var searchRequested by retain { mutableStateOf(false) }
+    val searchVisible = showNavRail || searchBarValue == SearchBarValue.Expanded || searchRequested
 
     val eventSink: (RecipeScaffoldEvent) -> Unit =
       remember(childNavigator) {
@@ -45,16 +64,23 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
           when (event) {
             is RecipeScaffoldEvent.GoTo -> {
               childNavigator.goTo(event.screen)
-              searchActive = false
+              searchRequested = false
             }
-            RecipeScaffoldEvent.ExitSearch -> searchActive = false
-            RecipeScaffoldEvent.SearchClicked -> searchActive = true
+            RecipeScaffoldEvent.ExitSearch -> searchRequested = false
+            RecipeScaffoldEvent.SearchClicked -> searchRequested = true
+            is RecipeScaffoldEvent.SearchBarStateChanged -> {
+              searchBarValue = event.searchBarValue
+              // Collapsing the bar is how the user leaves search, so it has to clear the request
+              // too. Without this the derivation would hold searchVisible true after the bar
+              // closes and strand a collapsed search bar where the top app bar belongs.
+              if (event.searchBarValue == SearchBarValue.Collapsed) searchRequested = false
+            }
           }
         }
       }
 
     @Suppress("OPT_IN_USAGE")
-    return RecipeScaffoldState(navStack, childNavigator, searchActive, eventSink)
+    return RecipeScaffoldState(navStack, childNavigator, searchVisible, showNavRail, eventSink)
   }
 }
 
@@ -64,12 +90,17 @@ sealed interface RecipeScaffoldEvent : CircuitUiEvent {
   data object ExitSearch : RecipeScaffoldEvent
 
   data object SearchClicked : RecipeScaffoldEvent
+
+  data class SearchBarStateChanged
+  @OptIn(ExperimentalMaterial3Api::class)
+  constructor(val searchBarValue: SearchBarValue) : RecipeScaffoldEvent
 }
 
 data class RecipeScaffoldState(
   val navStack: NavStack<out NavStack.Record>,
   val navigator: Navigator,
-  val isSearchActive: Boolean,
+  val searchVisible: Boolean,
+  val showNavRail: Boolean,
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,
 ) : CircuitUiState
 

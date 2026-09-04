@@ -18,6 +18,7 @@ kotlin {
     commonMain {
       dependencies {
         api(projects.model)
+        api(libs.androidx.window.core)
         api(libs.circuit.codegen.annotations)
         api(libs.circuit.foundation)
         api(libs.circuit.runtime)
@@ -31,12 +32,14 @@ kotlin {
         // at 1.11.1, which loses to nothing in commonMain and downgrades the whole metadata
         // compilation below the Compose plugin version.
         api(libs.compose.foundation)
+        api(libs.compose.material3)
         api(libs.kermit)
         api(libs.kotlinx.coroutines)
         // Used for url encode/decode in ScreenUrlMapper
         api(libs.ktor.http)
         api(libs.store)
 
+        implementation(projects.core)
         implementation(projects.repository)
         implementation(libs.kermit.core)
       }
