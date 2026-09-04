@@ -99,10 +99,18 @@ graphs (`AndroidAppGraph`, `DesktopAppGraph`, `IOSAppGraph`, `WebAppGraph`) all 
 `shared/.../AppGraph.kt`. **There is no runtime container to register into — wire via annotations.**
 
 - State survives recomposition/config change via `androidx.compose.runtime.retain.retain { }`,
-  **not** `rememberSaveable`.
+  **not** `rememberSaveable`. One sanctioned exception: `HomePresenter` persists the selected tab
+  with `rememberSerializable`, because that selection is cheap to store and worth surviving process
+  death so the app reopens on the tab the user left. Don't "fix" it to `retain { }`.
 - A new screen must also be added to `domain/.../navigation/ScreenUrlMapper.kt` — both the
   `Screen.toUrlPath()` and `urlPathToScreen()` directions. It backs `recipes://app/...` deep links
-  and browser history on web.
+  and browser history on web. Home tabs are the exception to writing anything there by hand: each
+  `HomeTabScreen` carries its own `urlSegment` and the mapper reads `HOME_TABS`, so adding a tab to
+  that one list makes it addressable in both directions.
+- **`:domain` depends on Material3 (`api`), deliberately.** `SearchState` holds a `SearchBarState`
+  and `RecipeScaffoldState`/`SearchScreen` carry a `SearchBarValue`, so that the presenter — not the
+  composable — owns whether the search bar is expanded. This is the *only* sanctioned place for
+  Material3 widget state in `:domain`; other widget state belongs in `:ui`.
 - Two `Json` qualifiers exist, `@NetworkJson` and `@StorageJson`
   (`core/.../serialization/JsonQualifiers.kt`). Pick deliberately.
 
