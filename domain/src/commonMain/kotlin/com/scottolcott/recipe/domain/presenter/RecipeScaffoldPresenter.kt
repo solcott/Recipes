@@ -3,7 +3,6 @@ package com.scottolcott.recipe.domain.presenter
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,10 +52,11 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
         !isIos()
 
     var searchBarValue by retain { mutableStateOf(SearchBarValue.Collapsed) }
-    var searchVisible by retain { mutableStateOf(false) }
-    SideEffect(showNavRail, searchBarValue) {
-      searchVisible = showNavRail || searchBarValue == SearchBarValue.Expanded
-    }
+    // Whether the user asked for search on a layout that does not show it permanently. Derived
+    // rather than stored so a change to any input -- including a resize across the nav rail
+    // breakpoint -- is reflected during composition, with no apply-phase write to snapshot state.
+    var searchRequested by retain { mutableStateOf(false) }
+    val searchVisible = showNavRail || searchBarValue == SearchBarValue.Expanded || searchRequested
 
     val eventSink: (RecipeScaffoldEvent) -> Unit =
       remember(childNavigator) {
@@ -64,11 +64,17 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
           when (event) {
             is RecipeScaffoldEvent.GoTo -> {
               childNavigator.goTo(event.screen)
-              searchVisible = showNavRail
+              searchRequested = false
             }
-            RecipeScaffoldEvent.ExitSearch -> searchVisible = showNavRail
-            RecipeScaffoldEvent.SearchClicked -> searchVisible = true
-            is RecipeScaffoldEvent.SearchBarStateChanged -> searchBarValue = event.searchBarValue
+            RecipeScaffoldEvent.ExitSearch -> searchRequested = false
+            RecipeScaffoldEvent.SearchClicked -> searchRequested = true
+            is RecipeScaffoldEvent.SearchBarStateChanged -> {
+              searchBarValue = event.searchBarValue
+              // Collapsing the bar is how the user leaves search, so it has to clear the request
+              // too. Without this the derivation would hold searchVisible true after the bar
+              // closes and strand a collapsed search bar where the top app bar belongs.
+              if (event.searchBarValue == SearchBarValue.Collapsed) searchRequested = false
+            }
           }
         }
       }
