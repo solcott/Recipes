@@ -35,7 +35,9 @@ fun rememberAdaptivePadding(): PaddingValues {
 
     val vertical =
       when {
-        // If not at least medium width then most likely a phone
+        // If not at least medium width then most likely a phone. Deliberately first, so it
+        // shadows both height branches: a tall phone should keep phone padding rather than pick
+        // up the roomier spacing meant for a tall window on a larger screen.
         !isMediumWidth -> 16.dp
         isExpandedHeight -> 32.dp
         isMediumHeight -> 24.dp
