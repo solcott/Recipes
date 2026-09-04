@@ -57,39 +57,43 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
       !isShortWindow()
   val labelTextStyle =
     if (roomyLabel) {
-      MaterialTheme.typography.titleLargeEmphasized
-    } else {
       MaterialTheme.typography.titleMediumEmphasized
+    } else {
+      MaterialTheme.typography.titleSmallEmphasized
     }
-  when (state) {
-    is CategoriesState.Error ->
-      Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        ErrorDisplay(onRetryClick = { state.eventSink(CategoriesEvent.Error.RetryClicked) })
-      }
-    CategoriesState.Loading ->
-      Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-      }
-    is CategoriesState.Success -> {
-      if (state.categories.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Text(stringResource(Res.string.no_categories_found))
+  Box(modifier, contentAlignment = Alignment.TopCenter) {
+    when (state) {
+      is CategoriesState.Error ->
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          ErrorDisplay(onRetryClick = { state.eventSink(CategoriesEvent.Error.RetryClicked) })
         }
-      } else {
-        LazyVerticalGrid(
-          cells,
-          modifier = modifier.fillMaxSize(),
-          verticalArrangement = Arrangement.spacedBy(12.dp),
-          horizontalArrangement = Arrangement.spacedBy(12.dp),
-          contentPadding = padding,
-        ) {
-          items(state.categories, key = { it.id }, contentType = { "category_item" }) {
-            CategoryItem(
-              it,
-              labelTextStyle = labelTextStyle,
-              { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
-              Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-            )
+
+      CategoriesState.Loading ->
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          CircularProgressIndicator()
+        }
+
+      is CategoriesState.Success -> {
+        if (state.categories.isEmpty()) {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(stringResource(Res.string.no_categories_found))
+          }
+        } else {
+          LazyVerticalGrid(
+            cells,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = padding,
+          ) {
+            items(state.categories, key = { it.id }, contentType = { "category_item" }) {
+              CategoryItem(
+                it,
+                labelTextStyle = labelTextStyle,
+                { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
+                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+              )
+            }
           }
         }
       }
@@ -120,6 +124,7 @@ fun CategoryItem(
       category.name,
       Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
       style = labelTextStyle,
+      maxLines = 1,
     )
   }
 }

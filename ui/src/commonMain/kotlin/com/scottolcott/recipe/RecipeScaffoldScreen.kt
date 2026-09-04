@@ -1,7 +1,9 @@
 package com.scottolcott.recipe
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
@@ -47,16 +50,16 @@ import org.jetbrains.compose.resources.stringResource
 fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   BrowserHistoryEffect(navStack = state.navStack, navigator = state.navigator)
   Row(modifier.fillMaxSize()) {
-    if (state.showNavRail) {
+    AnimatedVisibility(
+      state.showNavRail,
+      enter = expandHorizontally(),
+      exit = shrinkHorizontally(),
+    ) {
       RecipeNavigationRail(state)
     }
     Scaffold(
       modifier = Modifier.weight(1f),
-      topBar = {
-        if (!state.showNavRail || state.searchVisible) {
-          RecipeAppBar(state, modifier = Modifier.fillMaxWidth())
-        }
-      },
+      topBar = { RecipeAppBar(state, modifier = Modifier.fillMaxWidth()) },
       contentWindowInsets = WindowInsets(0.dp),
     ) { paddingValues ->
       Box(Modifier.fillMaxSize().padding(paddingValues)) {
@@ -68,16 +71,6 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
             modifier = Modifier.fillMaxSize(),
           )
         }
-        if (state.searchVisible) {
-          Box(
-            Modifier.fillMaxSize()
-              .clickable(
-                interactionSource = null,
-                indication = null,
-                onClick = { state.eventSink(RecipeScaffoldEvent.ExitSearch) },
-              )
-          )
-        }
       }
     }
   }
@@ -85,7 +78,11 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
 
 @Composable
 private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
-  NavigationRail(modifier = modifier.fillMaxHeight(), header = {}) {
+  NavigationRail(
+    modifier = modifier.fillMaxHeight(),
+    header = {},
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+  ) {
     NavigationRailItem(
       selected = state.navStack.currentRecord?.screen is HomeScreen,
       onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(HomeScreen())) },

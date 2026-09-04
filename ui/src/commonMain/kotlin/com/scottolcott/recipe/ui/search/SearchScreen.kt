@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.ui.search
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
@@ -23,6 +24,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.SearchEvent
@@ -78,7 +80,7 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
     state.searchBarState,
     inputField,
     colors = appBarWithSearchColors,
-    modifier = modifier,
+    modifier = modifier.padding(horizontal = 16.dp),
   )
   ExpandedSearchBar(
     state.searchBarState,
