@@ -34,6 +34,7 @@ import com.scottolcott.recipe.ui.chef_hat_24px
 import com.scottolcott.recipe.ui.favorite_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.favorites
+import com.scottolcott.recipe.ui.maxContentWidth
 import com.scottolcott.recipe.ui.recipes
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.NavigableCircuitContent
@@ -68,7 +69,7 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
             navigator = state.navigator,
             navStack = state.navStack,
             decoratorFactory = remember(state.navigator) { GestureNavigationDecorationFactory() },
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxHeight().maxContentWidth(),
           )
         }
       }
