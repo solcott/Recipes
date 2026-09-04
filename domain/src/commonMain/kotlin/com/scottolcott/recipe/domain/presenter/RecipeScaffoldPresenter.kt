@@ -47,7 +47,7 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
 
     val windowSizeClass = LocalWindowSizeClass.current
     val showNavRail =
-      windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) &&
+      windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) &&
         windowSizeClass.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) &&
         !isIos()
 
