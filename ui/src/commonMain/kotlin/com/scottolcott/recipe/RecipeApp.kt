@@ -35,11 +35,13 @@ fun RecipeApp(
   onRootPop: (result: PopResult?) -> Unit = {},
   windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass,
   initialScreen: Screen? = null,
+  backShortcutHost: BackShortcutHost? = null,
 ) {
   RecipeAppTheme {
     CompositionLocalProvider(
       LocalWindowSizeClass provides windowSizeClass,
       LocalDeepLinkScreen provides initialScreen,
+      LocalBackShortcutHost provides backShortcutHost,
     ) {
       CircuitCompositionLocals(circuit) {
         CompositionLocalProvider(LocalSubCircuit provides subCircuit) {

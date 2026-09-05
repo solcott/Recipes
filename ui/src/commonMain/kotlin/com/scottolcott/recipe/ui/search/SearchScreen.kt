@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -30,6 +31,7 @@ import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.domain.presenter.SearchScreen
 import com.scottolcott.recipe.domain.presenter.SearchState
+import com.scottolcott.recipe.isEscapeShortcut
 import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.check_24px
@@ -74,6 +76,20 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
         searchBarState = state.searchBarState,
         onSearch = { onSearch(SearchSuggestion.QuerySuggestion(it)) },
         colors = appBarWithSearchColors,
+        // Escape is handled here rather than at the desktop window because the expanded bar is a
+        // ComposeSceneLayer of its own: keys typed into it never reach the main window's handler.
+        // The field holds focus while the bar is open, so a preview handler on it always sees them.
+        onEscape = {
+          if (state.searchBarState.currentValue == SearchBarValue.Expanded) {
+            scope.launch {
+              keyboardController?.hide()
+              state.searchBarState.animateToCollapsed()
+            }
+            true
+          } else {
+            false
+          }
+        },
       )
     }
   AppBarWithSearch(
@@ -203,10 +219,11 @@ private fun RecipeSearchBarInputField(
   searchBarState: SearchBarState,
   onSearch: (String) -> Unit,
   colors: AppBarWithSearchColors,
+  onEscape: () -> Boolean,
   modifier: Modifier = Modifier,
 ) {
   SearchBarDefaults.InputField(
-    modifier = modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth().onPreviewKeyEvent { isEscapeShortcut(it) && onEscape() },
     textFieldState = searchText,
     searchBarState = searchBarState,
     colors = colors.searchBarColors.inputFieldColors,

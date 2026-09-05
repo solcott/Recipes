@@ -19,6 +19,7 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -50,6 +51,7 @@ import org.jetbrains.compose.resources.stringResource
 @Suppress("unused")
 fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   BrowserHistoryEffect(navStack = state.navStack, navigator = state.navigator)
+  BackShortcutEffect(state)
   Row(modifier.fillMaxSize()) {
     AnimatedVisibility(
       state.showNavRail,
@@ -112,5 +114,23 @@ private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier 
       label = { Text(stringResource(Res.string.favorites)) },
       modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
     )
+  }
+}
+
+/**
+ * Hands the window's keyboard shortcuts something to pop.
+ *
+ * A no-op wherever no [BackShortcutHost] was supplied, which is every platform but desktop.
+ */
+@Composable
+private fun BackShortcutEffect(state: RecipeScaffoldState) {
+  val host = LocalBackShortcutHost.current ?: return
+  DisposableEffect(host, state) {
+    host.onBack = {
+      // Reports whether it moved, so at the root the key falls through unconsumed rather than
+      // being swallowed.
+      state.canGoBack.also { if (it) state.eventSink(RecipeScaffoldEvent.Back) }
+    }
+    onDispose { host.onBack = null }
   }
 }

@@ -871,6 +871,9 @@ Compose:
     active: true
     allowedCompositionLocals:
       - LocalWindowSizeClass
+      # Desktop's keyboard back has to be handled at the window, and RecipeScaffoldScreen is built
+      # by Circuit from its Screen, so there is no parameter list to thread the host down through.
+      - LocalBackShortcutHost
   CompositionLocalNaming:
     active: true
   ContentEmitterReturningValues:

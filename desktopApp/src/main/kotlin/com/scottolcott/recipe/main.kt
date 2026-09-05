@@ -1,5 +1,6 @@
 package com.scottolcott.recipe
 
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -19,12 +20,22 @@ fun main(args: Array<String>) = application {
   val initialScreen = args.firstOrNull()?.let { urlPathToScreen(it) }
   val state =
     rememberWindowState(size = DpSize(1024.dp, 768.dp), placement = WindowPlacement.Floating)
+  // Desktop has no system back at all -- no predictive back, no swipe, no browser history -- so the
+  // keyboard shortcuts are handled here, at the window, where they fire regardless of what holds
+  // focus. Returning false leaves the key for whatever would have received it.
+  val backShortcutHost = remember { BackShortcutHost() }
   Window(
     title = "Recipes",
     onCloseRequest = ::exitApplication,
     state = state,
     alwaysOnTop = false,
+    onKeyEvent = { event -> isBackShortcut(event) && backShortcutHost.requestBack() },
   ) {
-    RecipeApp(circuit = graph.circuit, subCircuit = graph.subCircuit, initialScreen = initialScreen)
+    RecipeApp(
+      circuit = graph.circuit,
+      subCircuit = graph.subCircuit,
+      initialScreen = initialScreen,
+      backShortcutHost = backShortcutHost,
+    )
   }
 }
