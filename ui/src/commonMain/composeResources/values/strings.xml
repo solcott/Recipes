@@ -17,4 +17,6 @@
     <string name="source">Source</string>
     <string name="image_source">Image Source</string>
     <string name="ingredient_with_measure">%1$s %2$s</string>
+    <string name="ingredient">Ingredient: %1$s</string>
+    <string name="search_results">Results for \"%1$s\"</string>
 </resources>
