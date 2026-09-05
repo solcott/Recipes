@@ -141,7 +141,7 @@ private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Mod
 @Composable
 private fun FavoritesAction(state: RecipeScaffoldState) {
   IconButton(
-    onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) },
+    onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(RecipesScreen.Favorites)) },
     modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
   ) {
     Icon(

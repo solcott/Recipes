@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
@@ -81,28 +82,31 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
 
 @Composable
 private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
+  // Selection follows the section the current screen sits under, not the current record itself, so
+  // a recipe opened from Favorites keeps Favorites lit rather than clearing the rail entirely.
+  val favoritesSelected = state.selectedDestination == RecipesScreen.Favorites
   NavigationRail(
     modifier = modifier.fillMaxHeight(),
     header = {},
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
     NavigationRailItem(
-      selected = state.navStack.currentRecord?.screen is HomeScreen,
-      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(HomeScreen())) },
+      selected = state.selectedDestination is HomeScreen,
+      onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(HomeScreen())) },
       icon = {
         Icon(painter = painterResource(Res.drawable.chef_hat_24px), contentDescription = null)
       },
       label = { Text(stringResource(Res.string.recipes)) },
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).align(Alignment.Start),
     )
     NavigationRailItem(
-      selected = state.navStack.currentRecord?.screen == RecipesScreen.Favorites,
-      onClick = { state.eventSink(RecipeScaffoldEvent.GoTo(RecipesScreen.Favorites)) },
+      selected = favoritesSelected,
+      onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(RecipesScreen.Favorites)) },
       icon = {
         Icon(
           painter =
             painterResource(
-              if (state.navStack.currentRecord?.screen == RecipesScreen.Favorites) {
+              if (favoritesSelected) {
                 Res.drawable.favorite_24px_filled
               } else {
                 Res.drawable.favorite_24px
@@ -112,7 +116,7 @@ private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier 
         )
       },
       label = { Text(stringResource(Res.string.favorites)) },
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).align(Alignment.Start),
     )
   }
 }
