@@ -34,15 +34,20 @@ import org.w3c.dom.events.Event
  *
  * ## Navigation type detection
  *
- * The [snapshotFlow] observes BOTH [NavStack.size] and [NavStack.currentDepth] together. Comparing
- * their deltas lets us distinguish all four navigation types:
+ * The [snapshotFlow] observes [NavStack.size], [NavStack.currentDepth] and the root screen
+ * together. Comparing them lets us distinguish every navigation type:
  *
- * | sizeΔ | depthΔ | type                         | browser action  |
- * |-------|--------|------------------------------|-----------------|
- * | > 0   | > 0    | push (goTo)                  | pushState       |
- * | < 0   | < 0    | pop (truncates fwd history)  | history.go(δ)   |
- * | 0     | > 0    | forward() — existing record  | history.forward |
- * | 0     | < 0    | backward() — existing record | history.back    |
+ * | root    | sizeΔ | depthΔ | type                         | browser action   |
+ * |---------|-------|--------|------------------------------|------------------|
+ * | changed | any   | any    | root swap (rail section)     | rewind + replace |
+ * | same    | > 0   | > 0    | push (goTo)                  | pushState        |
+ * | same    | < 0   | < 0    | pop (truncates fwd history)  | history.go(δ)    |
+ * | same    | 0     | > 0    | forward() — existing record  | history.forward  |
+ * | same    | 0     | < 0    | backward() — existing record | history.back     |
+ *
+ * The root has to be watched in its own right: `RecipeScaffoldPresenter` swaps it when the
+ * navigation rail changes section, and `[Home] → [Favorites]` moves neither the size nor the depth,
+ * so the deltas alone would classify it as no navigation at all.
  *
  * ## Requires a NavStack, not a BackStack
  *
@@ -59,6 +64,8 @@ import org.w3c.dom.events.Event
  *   the counter above zero and swallow the user's next back press.
  * - [BrowserNavState.pendingSnapshotIgnore]: incremented before every browser-initiated navigator
  *   call so the resulting [snapshotFlow] emission doesn't try to re-sync the browser history.
+ * - [BrowserNavState.pendingRootUrl]: the URL a root swap still owes the depth-0 entry, stamped
+ *   once the rewind it queued has finished. See [swapRoot].
  */
 @Composable
 actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigator: Navigator) {
@@ -67,17 +74,31 @@ actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigat
   // Stamp the initial browser history entry with the current screen's real URL path
   LaunchedEffect(Unit) { replaceDepth(state.depth, currentUrl(navStack)) }
 
-  // Circuit navStack changes → keep browser history in sync
+  NavStackToHistoryEffect(navStack, state)
+  HistoryToNavStackEffect(navStack, navigator, state)
+}
+
+/** Circuit [navStack] changes -> keep browser history in sync. */
+@Composable
+private fun NavStackToHistoryEffect(
+  navStack: NavStack<out NavStack.Record>,
+  state: BrowserNavState,
+) {
   LaunchedEffect(navStack) {
     var prevSize = navStack.size
-    snapshotFlow { navStack.size to navStack.currentDepth() }
+    var prevRoot = navStack.rootRecord?.screen
+    snapshotFlow { Triple(navStack.size, navStack.currentDepth(), navStack.rootRecord?.screen) }
       .drop(1) // skip initial emission representing the current state
       .distinctUntilChanged()
-      .collect { (newSize, newDepth) ->
+      .collect { (newSize, newDepth, newRoot) ->
         val sizeDelta = newSize - prevSize
         val depthDelta = newDepth - state.depth
+        // A root swap has to rewind history by where we *were*, so capture that before it moves.
+        val previousDepth = state.depth
+        val rootChanged = newRoot != prevRoot
         // Always update tracking state first so subsequent emissions compute correct deltas
         prevSize = newSize
+        prevRoot = newRoot
         state.depth = newDepth
 
         if (state.pendingSnapshotIgnore > 0) {
@@ -87,13 +108,14 @@ actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigat
         }
 
         when {
+          rootChanged -> swapRoot(state, previousDepth, currentUrl(navStack))
           sizeDelta > 0 -> {
             // App pushed new screen(s): add browser history entries using real URLs
             repeat(depthDelta) { _ -> pushDepth(newDepth, currentUrl(navStack)) }
           }
           sizeDelta < 0 -> {
             // App popped screen(s): walk browser history back by the depth change. One
-            // history.go covers the whole distance, however many records were popped.
+            // history.go covers the whole distance, however many records popUntil removed.
             state.pendingPopStateIgnore++
             window.history.go(depthDelta)
           }
@@ -110,35 +132,55 @@ actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigat
         }
       }
   }
+}
 
-  // Browser back/forward buttons → Circuit navigator
+/** Browser back/forward buttons -> Circuit [navigator]. */
+@Composable
+private fun HistoryToNavStackEffect(
+  navStack: NavStack<out NavStack.Record>,
+  navigator: Navigator,
+  state: BrowserNavState,
+) {
   DisposableEffect(navigator) {
     val handler: (Event) -> Unit = {
       if (state.pendingPopStateIgnore > 0) {
         // popstate was triggered by our own history call — skip it
         state.pendingPopStateIgnore--
-      } else {
-        // Recover the depth index we stamped into history.state when we pushed this entry.
-        val newDepth = historyDepth()
-        val delta = newDepth - state.depth
-
-        if (delta != 0) {
-          // Increment before calling navigator: backward()/forward() mutate the Compose
-          // snapshot synchronously, which would fire the snapshotFlow. The counter
-          // prevents that emission from re-syncing the browser history.
-          state.pendingSnapshotIgnore++
-          val moved =
-            when {
-              delta < 0 -> navigator.backward()
-              else -> navigator.forward()
-            }
-          // If navigator didn't move (e.g. no forward history exists), undo increment
-          if (!moved) state.pendingSnapshotIgnore--
+        // The last one settles a rewind, so the entry a root swap wants to restamp is now current.
+        if (state.pendingPopStateIgnore == 0) {
+          state.pendingRootUrl?.let { replaceDepth(0, it) }
+          state.pendingRootUrl = null
         }
+      } else {
+        followBrowserNavigation(navStack, navigator, state)
       }
     }
     window.addEventListener("popstate", handler)
     onDispose { window.removeEventListener("popstate", handler) }
+  }
+}
+
+/** Moves the [navigator] to wherever a browser-initiated `popstate` just landed. */
+private fun followBrowserNavigation(
+  navStack: NavStack<out NavStack.Record>,
+  navigator: Navigator,
+  state: BrowserNavState,
+) {
+  // Recover the depth index we stamped into history.state when we pushed this entry.
+  val delta = historyDepth() - state.depth
+  if (delta == 0) return
+
+  // Increment before calling navigator: backward()/forward() mutate the Compose snapshot
+  // synchronously, which would fire the snapshotFlow. The counter prevents that emission from
+  // re-syncing the browser history.
+  state.pendingSnapshotIgnore++
+  val moved = if (delta < 0) navigator.backward() else navigator.forward()
+  if (!moved) {
+    // The navigator didn't move: the browser landed on an entry the stack has no record for, which
+    // a root swap leaves behind because rewinding cannot truncate the forward entries. Undo the
+    // increment and put the address bar back on the screen on show.
+    state.pendingSnapshotIgnore--
+    replaceDepth(state.depth, currentUrl(navStack))
   }
 }
 
@@ -147,6 +189,29 @@ actual fun BrowserTabUrlEffect(tab: HomeTabScreen) {
   // replaceState rather than pushState: switching tabs should not add a history entry, and the
   // depth is read back out of history.state so this shares no mutable state with BrowserNavState.
   LaunchedEffect(tab) { HomeScreen(tab).toUrlPath()?.let { replaceDepth(historyDepth(), it) } }
+}
+
+/**
+ * Mirrors a root swap: rewind browser history to the depth-0 entry and restamp it with [url].
+ *
+ * Replacing rather than pushing is what keeps history depth mirroring stack depth -- the new root
+ * sits at depth 0, so it has to occupy the entry already stamped 0. From depth 0 there is nothing
+ * to rewind and the replace is immediate; deeper, [org.w3c.dom.History.go] is asynchronous and the
+ * entry only becomes current once its `popstate` lands, so the URL is handed to the handler that
+ * already drains [BrowserNavState.pendingPopStateIgnore].
+ *
+ * The old forward entries survive the rewind -- history cannot be truncated without pushing -- so a
+ * browser-forward can still reach an entry the stack has no record for. The `popstate` handler
+ * restamps the address bar when the navigator declines to move.
+ */
+private fun swapRoot(state: BrowserNavState, previousDepth: Int, url: String) {
+  if (previousDepth == 0) {
+    replaceDepth(0, url)
+    return
+  }
+  state.pendingRootUrl = url
+  state.pendingPopStateIgnore++
+  window.history.go(-previousDepth)
 }
 
 /** Depth of the currently active record: 0 = root, 1 = one level in, etc. */
@@ -188,4 +253,7 @@ private class BrowserNavState(initialDepth: Int) {
 
   /** Upcoming [snapshotFlow] emissions to silently ignore (browser initiated navigation). */
   var pendingSnapshotIgnore: Int = 0
+
+  /** URL a root swap owes the depth-0 entry once its rewind settles; see [swapRoot]. */
+  var pendingRootUrl: String? = null
 }
