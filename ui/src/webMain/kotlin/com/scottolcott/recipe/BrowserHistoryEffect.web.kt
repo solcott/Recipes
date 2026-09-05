@@ -52,9 +52,11 @@ import org.w3c.dom.events.Event
  * `rememberSaveableNavStack`.
  *
  * ## Counter semantics
- * - [BrowserNavState.pendingPopStateIgnore]: incremented before every [org.w3c.dom.History.go] /
- *   [org.w3c.dom.History.back] / [org.w3c.dom.History.forward] call we make so the async `popstate`
- *   it fires is silently dropped.
+ * - [BrowserNavState.pendingPopStateIgnore]: incremented once before every [org.w3c.dom.History.go]
+ *   / [org.w3c.dom.History.back] / [org.w3c.dom.History.forward] call we make so the async
+ *   `popstate` it fires is silently dropped. Once per *call*, not per entry crossed: a traversal
+ *   spanning several entries still fires a single `popstate`, so counting the steps would strand
+ *   the counter above zero and swallow the user's next back press.
  * - [BrowserNavState.pendingSnapshotIgnore]: incremented before every browser-initiated navigator
  *   call so the resulting [snapshotFlow] emission doesn't try to re-sync the browser history.
  */
@@ -90,11 +92,10 @@ actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigat
             repeat(depthDelta) { _ -> pushDepth(newDepth, currentUrl(navStack)) }
           }
           sizeDelta < 0 -> {
-            // App popped screen(s): walk browser history back by the depth change
-            // (depthDelta is negative; use its magnitude via abs)
-            val steps = -depthDelta
-            state.pendingPopStateIgnore += steps
-            window.history.go(-steps)
+            // App popped screen(s): walk browser history back by the depth change. One
+            // history.go covers the whole distance, however many records were popped.
+            state.pendingPopStateIgnore++
+            window.history.go(depthDelta)
           }
           sizeDelta == 0 && depthDelta > 0 -> {
             // App called forward() — move to an existing record in forward history
@@ -103,9 +104,8 @@ actual fun BrowserHistoryEffect(navStack: NavStack<out NavStack.Record>, navigat
           }
           sizeDelta == 0 && depthDelta < 0 -> {
             // App called backward() — move to an existing record in back history
-            val steps = -depthDelta
-            state.pendingPopStateIgnore += steps
-            window.history.go(-steps)
+            state.pendingPopStateIgnore++
+            window.history.go(depthDelta)
           }
         }
       }
