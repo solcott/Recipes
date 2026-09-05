@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.LocalAppBarNavigationIcon
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.domain.presenter.SearchScreen
@@ -95,6 +96,10 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
   AppBarWithSearch(
     state.searchBarState,
     inputField,
+    // On a layout wide enough to keep the search bar up permanently this bar *is* the top app bar,
+    // so the back control travels with it. Supplied by `RecipeAppBar`; null when this screen is
+    // used on its own, and on web, where the browser's back button makes it redundant.
+    navigationIcon = LocalAppBarNavigationIcon.current,
     colors = appBarWithSearchColors,
     modifier = modifier.padding(horizontal = 16.dp),
   )

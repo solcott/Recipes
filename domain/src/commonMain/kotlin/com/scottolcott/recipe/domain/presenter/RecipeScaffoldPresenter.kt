@@ -62,6 +62,8 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
       showNavRail || searchBarValue.value == SearchBarValue.Expanded || searchRequested.value
 
     val canGoBack = navStack.canGoBack
+    // The screen a back gesture lands on: the one directly beneath the current record.
+    val previousScreen = navStack.screensFromCurrent().getOrNull(1)
 
     val eventSink =
       remember(childNavigator) {
@@ -75,6 +77,7 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
       searchVisible,
       showNavRail,
       canGoBack,
+      previousScreen,
       eventSink,
     )
   }
@@ -112,6 +115,14 @@ private fun scaffoldEventSink(
   }
 }
 
+/**
+ * The screens from the active record toward the root, current first.
+ *
+ * `backwardItems` is already ordered that way, so the current screen just goes in front of it.
+ */
+private fun NavStack<out NavStack.Record>.screensFromCurrent(): List<Screen> =
+  listOfNotNull(currentRecord?.screen) + snapshot()?.backwardItems?.map { it.screen }.orEmpty()
+
 sealed interface RecipeScaffoldEvent : CircuitUiEvent {
   data class GoTo(val screen: Screen) : RecipeScaffoldEvent
 
@@ -132,6 +143,7 @@ data class RecipeScaffoldState(
   val searchVisible: Boolean,
   val showNavRail: Boolean,
   val canGoBack: Boolean,
+  val previousScreen: Screen?,
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,
 ) : CircuitUiState
 
