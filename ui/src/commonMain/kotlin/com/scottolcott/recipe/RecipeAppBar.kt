@@ -2,13 +2,10 @@ package com.scottolcott.recipe
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -17,8 +14,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarValue
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -26,10 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
-import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
@@ -48,9 +40,6 @@ import com.scottolcott.recipe.ui.title
 import com.slack.circuit.subcircuit.SubCircuitContent
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-
-/** Caps the back button's label so a long category cannot squeeze the search field beside it. */
-private val BackLabelMaxWidth = 160.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,59 +190,22 @@ private fun AppMarkIcon() {
 }
 
 /**
- * The back control, labelled with the destination (`< Categories`) wherever there is horizontal
- * room.
+ * The back control.
  *
- * A bare arrow is easy to miss next to a search field, and on the platforms with no system back --
- * desktop above all -- it is the only way out of a screen. Below the medium-width breakpoint the
- * label is dropped rather than truncated, since that layout is a phone with a system back of its
- * own.
+ * On the platforms with no system back -- desktop above all -- this is the only way out of a
+ * screen, so it stays a plain icon button rather than anything subtler.
  *
  * Callers decide *whether* to draw this; see [showBackButton].
  */
 @Composable
 internal fun BackButton(state: RecipeScaffoldState) {
   val icon = if (isIos()) Res.drawable.arrow_back_ios_24px else Res.drawable.arrow_back_24px
-  val isWide =
-    LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(
-      WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
-    )
-  val label = if (isWide) state.previousScreen?.title() else null
-  val onClick = { state.eventSink(RecipeScaffoldEvent.Back) }
-  val backDescription = stringResource(Res.string.back)
-
-  if (label == null) {
-    IconButton(
-      onClick,
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-      colors =
-        IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-    ) {
-      Icon(painter = painterResource(icon), contentDescription = backDescription)
-    }
-  } else {
-    TextButton(
-      onClick,
-      // The label names the *previous* screen, so it changes width while the button stays put --
-      // Categories, then "Category: Seafood" one level deeper. Expanding the slot only covers the
-      // button arriving; this covers every change after that.
-      modifier = Modifier.animateContentSize().pointerHoverIcon(PointerIcon.Hand),
-      colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-    ) {
-      // Only the arrow is described. The label is already visible text, so the button's merged
-      // semantics read "Back, Categories" without the two halves repeating each other.
-      Icon(
-        painter = painterResource(icon),
-        contentDescription = backDescription,
-        tint = MaterialTheme.colorScheme.onSurface,
-      )
-      Text(
-        label,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(start = 4.dp).widthIn(max = BackLabelMaxWidth),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
-    }
+  IconButton(
+    { state.eventSink(RecipeScaffoldEvent.Back) },
+    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+    colors =
+      IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+  ) {
+    Icon(painter = painterResource(icon), contentDescription = stringResource(Res.string.back))
   }
 }

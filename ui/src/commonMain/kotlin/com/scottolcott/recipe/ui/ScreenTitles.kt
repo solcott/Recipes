@@ -18,18 +18,16 @@ import org.jetbrains.compose.resources.stringResource
  * that mapper because it resolves `Res.string` — a presentation concern, and `:domain` carries no
  * compose resources.
  *
- * Used for the recipes list's own heading and for the label on the back button, which names the
- * screen the user is going *back to* rather than the one they are on. The top app bar carries no
- * title — a screen names itself in its own content, where the name survives the search bar taking
- * the whole bar over on wide layouts.
+ * Used for the recipes list's own heading. The top app bar carries neither a title nor a labelled
+ * back button — a screen names itself in its own content, where the name survives the search bar
+ * taking the whole bar over on wide layouts.
  *
  * The tab branch is left exhaustive on purpose: adding a `HomeTabScreen` should fail to compile
  * here until it is given a name, the same way it must be added to `HOME_TABS` to be addressable.
  *
  * [RecipeDetailsScreen] is the one screen whose real title — the recipe's name — is not reachable
  * from the [Screen], which carries only a `RecipeId`. It falls back to the app name, which nothing
- * currently renders: the recipe's own headline names that screen, and a back label pointing at a
- * recipe would need something in the graph to push on top of one.
+ * currently renders: a recipe is not a list, so it heads itself with its own name instead.
  */
 @Composable
 fun Screen.title(): String? =

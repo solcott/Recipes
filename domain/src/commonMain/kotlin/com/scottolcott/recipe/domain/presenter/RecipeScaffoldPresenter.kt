@@ -73,10 +73,7 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
       showNavRail || searchBarValue.value == SearchBarValue.Expanded || searchRequested.value
 
     val canGoBack = navStack.canGoBack
-    val screens = navStack.screensFromCurrent()
-    // The screen a back gesture lands on: the one directly beneath the current record.
-    val previousScreen = screens.getOrNull(1)
-    val selectedDestination = screens.selectedDestination()
+    val selectedDestination = navStack.screensFromCurrent().selectedDestination()
 
     val eventSink =
       remember(childNavigator, showNavRail) {
@@ -90,7 +87,6 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
       searchVisible,
       showNavRail,
       canGoBack,
-      previousScreen,
       selectedDestination,
       eventSink,
     )
@@ -239,7 +235,6 @@ data class RecipeScaffoldState(
   val searchVisible: Boolean,
   val showNavRail: Boolean,
   val canGoBack: Boolean,
-  val previousScreen: Screen?,
   val selectedDestination: Screen?,
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,
 ) : CircuitUiState
