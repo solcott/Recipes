@@ -11,6 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
@@ -64,10 +65,19 @@ class RecipeFetchHistoryDataStore(private val storage: Storage<RecipeFetchHistor
     return history.first().lastFetchTimes[key]
   }
 
+  /**
+   * Whether [key] is due a network fetch, as a flow that only reports *changes* to that answer.
+   *
+   * `distinctUntilChanged` is load-bearing. Callers drive a Store stream through `flatMapLatest` on
+   * this flow, and every fetch writes a fresh [Instant] here -- so without it, each fetch re-emits
+   * the same boolean, tearing down the in-flight stream and starting another one, fetch included.
+   */
   fun refreshNeeded(key: RecipesKey, cacheExpiration: Duration): Flow<Boolean> {
-    return history.map { history ->
-      val lastFetch = history.lastFetchTimes[key]
-      lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()
-    }
+    return history
+      .map { history ->
+        val lastFetch = history.lastFetchTimes[key]
+        lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()
+      }
+      .distinctUntilChanged()
   }
 }
