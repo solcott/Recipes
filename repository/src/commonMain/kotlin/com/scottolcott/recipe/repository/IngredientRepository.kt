@@ -27,7 +27,6 @@ import org.mobilenativefoundation.store.store5.Store
 import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.Validator
 
 interface IngredientRepository {
 
@@ -103,14 +102,8 @@ internal class IngredientRepositoryImpl(
       }
       .build()
 
-  private val validator =
-    Validator.by<List<Ingredient>> { ingredients ->
-      val now = Clock.System.now()
-      ingredients.isNotEmpty() && ingredients.all { it.lastFetched.plus(cacheExpiration) > now }
-    }
-
   private val store: Store<IngredientsKey, List<Ingredient>> =
-    StoreBuilder.from(fetcher, sourceOfTruth, converter).validator(validator).build()
+    StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
   override fun getIngredients(): Flow<StoreReadResponse<List<Ingredient>>> {
     return loadIngredientsByKey(IngredientsKey.GetAll)
