@@ -30,7 +30,6 @@ import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 import org.mobilenativefoundation.store.store5.StoreReadResponse
 import org.mobilenativefoundation.store.store5.StoreReadResponse.Data
-import org.mobilenativefoundation.store.store5.Validator
 
 interface RecipeRepository {
   fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>>
@@ -61,43 +60,15 @@ internal class RecipeRepositoryImpl(
   private val cacheExpiration: Duration = 1.hours,
 ) : RecipeRepository {
 
-  private val storeBuilder: StoreBuilder<RecipesKey, RecipeResponse> =
-    StoreBuilder.from(createFetcher(), createSourceOfTruth())
-
-  val detailedRecipeValidator =
-    Validator.by<RecipeResponse> { item ->
-      val now = Clock.System.now()
-      item.recipes.isNotEmpty() &&
-        item.recipes.all {
-          val lastFetched = it.details?.lastFetched
-          it.lastFetched.plus(cacheExpiration) > now &&
-            lastFetched != null &&
-            lastFetched.plus(cacheExpiration) > now
-        }
-    }
-
-  /** This store is for api methods that return full recipe details */
-  private val detailedRecipeStore: Store<RecipesKey, RecipeResponse> =
-    storeBuilder.validator(detailedRecipeValidator).build()
-
-  val basicRecipeValidator =
-    Validator.by<RecipeResponse> { item ->
-      val now = Clock.System.now()
-      item.recipes.isNotEmpty() && item.recipes.all { it.lastFetched.plus(cacheExpiration) > now }
-    }
-
-  /** This store is for api methods that only return basic recipe details */
-  private val basicRecipeStore: Store<RecipesKey, RecipeResponse> =
-    storeBuilder.validator(basicRecipeValidator).build()
+  private val recipeStore: Store<RecipesKey, RecipeResponse> =
+    StoreBuilder.from(createFetcher(), createSourceOfTruth()).build()
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> {
     val key = RecipesKey.Query(query.trim())
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh ->
-        detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
-      }
+      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -112,7 +83,7 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ByCategory(category)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
+      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -127,13 +98,9 @@ internal class RecipeRepositoryImpl(
     ingredients: Set<String>
   ): Flow<StoreReadResponse<List<Recipe>>> {
     val key = RecipesKey.ByIngredient.of(ingredients)
-    // The detailed store, not the basic one: the fetcher below hydrates every filter hit into a
-    // full recipe, so expired details should force a refetch.
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh ->
-        detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
-      }
+      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -148,7 +115,7 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ByArea(area)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> basicRecipeStore.stream(StoreReadRequest.cached(key, refresh)) }
+      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
@@ -163,9 +130,7 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ById(id)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh ->
-        detailedRecipeStore.stream(StoreReadRequest.cached(key, refresh))
-      }
+      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
       .map {
         when (it) {
           is Data<RecipeResponse> -> Data(it.value.recipes.firstOrNull(), it.origin)
@@ -177,7 +142,7 @@ internal class RecipeRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> {
-    return detailedRecipeStore
+    return recipeStore
       .stream(StoreReadRequest.cached(RecipesKey.Favorites, false))
       .map {
         when (it) {
@@ -259,16 +224,7 @@ internal class RecipeRepositoryImpl(
           is RecipesKey.Favorites -> recipeDao.getFavorites()
           is RecipesKey.ByIngredient ->
             recipeDao.getByIngredients(key.ingredients, key.ingredients.size)
-        }.map {
-          RecipeResponse(
-            it.toModel(),
-            query =
-              when (key) {
-                is RecipesKey.Query -> key.query
-                else -> null
-              },
-          )
-        }
+        }.map { RecipeResponse(it.toModel()) }
       },
       writer = { key, dtos ->
         val area =
@@ -302,4 +258,10 @@ private const val MAX_HYDRATED_RESULTS = 40
 
 private const val HYDRATION_CONCURRENCY = 4
 
-data class RecipeResponse(val recipes: List<Recipe>, val query: String?, val id: RecipeId? = null)
+/**
+ * What the source of truth hands back for a [RecipesKey].
+ *
+ * A wrapper around the list rather than the list itself because Store needs a single output type
+ * for every key, including the ones that read a single recipe.
+ */
+data class RecipeResponse(val recipes: List<Recipe>)

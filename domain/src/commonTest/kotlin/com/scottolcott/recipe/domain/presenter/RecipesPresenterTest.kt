@@ -36,7 +36,7 @@ private class FakeRecipeRepository : RecipeRepository {
     emitAll(responses)
   }
 
-  override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> = emptyFlow()
+  override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> = responses
 
   override fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>> =
     emptyFlow()
@@ -88,9 +88,33 @@ val recipesPresenterTests by testSuite {
         )
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(2, state.recipes.size)
+      // The UI names the list from this; `Screen.title()` lives in `:ui` and cannot be reached
+      // here.
+      assertEquals(screen, state.screen)
 
       assertEquals(1, repository.ingredientSubscriptions)
       assertEquals(setOf("chicken", "rice"), repository.lastIngredients)
+    }
+  }
+
+  // Regression: a search that matches nothing is an answer, not a pending request. It used to be
+  // unreachable -- the repository's Store validator called an empty result invalid, so the store
+  // refetched instead of emitting it and the screen sat on a spinner while the network was
+  // hammered.
+  test("a search with no matches settles on an empty success") {
+    val screen = RecipesScreen.BySearch("zzzzqqq")
+    val repository = FakeRecipeRepository()
+    val presenter = RecipesPresenter(screen, FakeNavigator(screen), RecipesProducer(repository))
+
+    presenter.test {
+      assertIs<RecipesState.Loading>(awaitItem())
+
+      repository.responses.value =
+        StoreReadResponse.Data(emptyList(), StoreReadResponseOrigin.SourceOfTruth)
+
+      val state = assertIs<RecipesState.Success>(awaitItem())
+      assertEquals(emptyList(), state.recipes)
+      assertEquals(screen, state.screen)
     }
   }
 }

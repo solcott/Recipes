@@ -27,7 +27,6 @@ import org.mobilenativefoundation.store.store5.Store
 import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.Validator
 
 interface CategoryRepository {
 
@@ -47,12 +46,6 @@ internal class CategoryRepositoryImpl(
   private val cacheExpiration: Duration = 6.hours,
 ) : CategoryRepository {
 
-  private val validator =
-    Validator.by<List<Category>> { categories ->
-      val now = Clock.System.now()
-      categories.isNotEmpty() && categories.all { it.lastFetched.plus(cacheExpiration) > now }
-    }
-
   private val converter: Converter<List<CategoryDto>, List<CategoryEntity>, List<Category>> =
     Converter.Builder<List<CategoryDto>, List<CategoryEntity>, List<Category>>()
       .fromNetworkToLocal { dtos ->
@@ -70,7 +63,6 @@ internal class CategoryRepositoryImpl(
         sourceOfTruth = createSourceOfTruth(),
         converter = converter,
       )
-      .validator(validator)
       .build()
 
   private fun createFetcher(): Fetcher<CategoriesKey, List<CategoryDto>> {

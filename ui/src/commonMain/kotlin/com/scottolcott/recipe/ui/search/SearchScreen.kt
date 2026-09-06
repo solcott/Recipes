@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.ui.search
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
@@ -19,15 +20,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.LocalAppBarNavigationIcon
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.presenter.SearchEvent
 import com.scottolcott.recipe.domain.presenter.SearchScreen
 import com.scottolcott.recipe.domain.presenter.SearchState
+import com.scottolcott.recipe.isEscapeShortcut
 import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.check_24px
@@ -72,13 +77,31 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
         searchBarState = state.searchBarState,
         onSearch = { onSearch(SearchSuggestion.QuerySuggestion(it)) },
         colors = appBarWithSearchColors,
+        // Escape is handled here rather than at the desktop window because the expanded bar is a
+        // ComposeSceneLayer of its own: keys typed into it never reach the main window's handler.
+        // The field holds focus while the bar is open, so a preview handler on it always sees them.
+        onEscape = {
+          if (state.searchBarState.currentValue == SearchBarValue.Expanded) {
+            scope.launch {
+              keyboardController?.hide()
+              state.searchBarState.animateToCollapsed()
+            }
+            true
+          } else {
+            false
+          }
+        },
       )
     }
   AppBarWithSearch(
     state.searchBarState,
     inputField,
+    // On a layout wide enough to keep the search bar up permanently this bar *is* the top app bar,
+    // so the back control travels with it. Supplied by `RecipeAppBar`; null when this screen is
+    // used on its own, and on web, where the browser's back button makes it redundant.
+    navigationIcon = LocalAppBarNavigationIcon.current,
     colors = appBarWithSearchColors,
-    modifier = modifier,
+    modifier = modifier.padding(horizontal = 16.dp),
   )
   ExpandedSearchBar(
     state.searchBarState,
@@ -201,10 +224,11 @@ private fun RecipeSearchBarInputField(
   searchBarState: SearchBarState,
   onSearch: (String) -> Unit,
   colors: AppBarWithSearchColors,
+  onEscape: () -> Boolean,
   modifier: Modifier = Modifier,
 ) {
   SearchBarDefaults.InputField(
-    modifier = modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth().onPreviewKeyEvent { isEscapeShortcut(it) && onEscape() },
     textFieldState = searchText,
     searchBarState = searchBarState,
     colors = colors.searchBarColors.inputFieldColors,

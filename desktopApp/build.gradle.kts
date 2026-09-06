@@ -69,8 +69,10 @@ dependencyAnalysis {
   }
 }
 
+// Compose Hot Reload launches through its own tasks (hotRun, hotRunAsync), not `run`, so the guard
+// has to cover both or RuntimeConfigImpl.debugBuild silently flips to false under hot reload.
 tasks.withType<JavaExec>().configureEach {
-  if (name == "run") {
+  if (name == "run" || name.startsWith("hotRun")) {
     systemProperty("debug", "true")
   }
 }

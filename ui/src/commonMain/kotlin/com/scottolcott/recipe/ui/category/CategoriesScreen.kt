@@ -36,6 +36,7 @@ import com.scottolcott.recipe.domain.presenter.CategoriesState
 import com.scottolcott.recipe.model.Category
 import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
+import com.scottolcott.recipe.ui.isShortWindow
 import com.scottolcott.recipe.ui.no_categories_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
 import com.scottolcott.recipe.ui.rememberAdaptivePadding
@@ -47,43 +48,52 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(CategoriesScreen::class, AppScope::class)
 fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
-  val cells = rememberAdaptiveGridCells(minWidthMediumCompact = 225.dp)
+  val cells = rememberAdaptiveGridCells(targetWidth = 165.dp, shortWindowTargetWidth = 200.dp)
   val padding = rememberAdaptivePadding()
+  // A short window is starved of vertical space even when it is wide -- a landscape phone -- so the
+  // larger label is held back for windows that are both wide and tall.
+  val roomyLabel =
+    LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND) &&
+      !isShortWindow()
   val labelTextStyle =
-    if (LocalWindowSizeClass.current.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)) {
-      MaterialTheme.typography.titleLargeEmphasized
-    } else {
+    if (roomyLabel) {
       MaterialTheme.typography.titleMediumEmphasized
+    } else {
+      MaterialTheme.typography.titleSmallEmphasized
     }
-  when (state) {
-    is CategoriesState.Error ->
-      Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        ErrorDisplay(onRetryClick = { state.eventSink(CategoriesEvent.Error.RetryClicked) })
-      }
-    CategoriesState.Loading ->
-      Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-      }
-    is CategoriesState.Success -> {
-      if (state.categories.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Text(stringResource(Res.string.no_categories_found))
+  Box(modifier, contentAlignment = Alignment.TopCenter) {
+    when (state) {
+      is CategoriesState.Error ->
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          ErrorDisplay(onRetryClick = { state.eventSink(CategoriesEvent.Error.RetryClicked) })
         }
-      } else {
-        LazyVerticalGrid(
-          cells,
-          modifier = modifier.fillMaxSize(),
-          verticalArrangement = Arrangement.spacedBy(12.dp),
-          horizontalArrangement = Arrangement.spacedBy(12.dp),
-          contentPadding = padding,
-        ) {
-          items(state.categories, key = { it.id }, contentType = { "category_item" }) {
-            CategoryItem(
-              it,
-              labelTextStyle = labelTextStyle,
-              { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
-              Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-            )
+
+      CategoriesState.Loading ->
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          CircularProgressIndicator()
+        }
+
+      is CategoriesState.Success -> {
+        if (state.categories.isEmpty()) {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(stringResource(Res.string.no_categories_found))
+          }
+        } else {
+          LazyVerticalGrid(
+            cells,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = padding,
+          ) {
+            items(state.categories, key = { it.id }, contentType = { "category_item" }) {
+              CategoryItem(
+                it,
+                labelTextStyle = labelTextStyle,
+                { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
+                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+              )
+            }
           }
         }
       }
@@ -114,6 +124,7 @@ fun CategoryItem(
       category.name,
       Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
       style = labelTextStyle,
+      maxLines = 1,
     )
   }
 }

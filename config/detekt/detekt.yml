@@ -871,6 +871,13 @@ Compose:
     active: true
     allowedCompositionLocals:
       - LocalWindowSizeClass
+      # The search bar stands in for the top app bar on wide layouts, but it is a sub-circuit --
+      # SubUi.Content(state, modifier) is its only entry point, so its back button has nowhere to
+      # arrive as a parameter.
+      - LocalAppBarNavigationIcon
+      # Desktop's keyboard back has to be handled at the window, and RecipeScaffoldScreen is built
+      # by Circuit from its Screen, so there is no parameter list to thread the host down through.
+      - LocalBackShortcutHost
   CompositionLocalNaming:
     active: true
   ContentEmitterReturningValues:
