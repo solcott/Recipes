@@ -88,6 +88,9 @@ val recipesPresenterTests by testSuite {
         )
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(2, state.recipes.size)
+      // The UI names the list from this; `Screen.title()` lives in `:ui` and cannot be reached
+      // here.
+      assertEquals(screen, state.screen)
 
       assertEquals(1, repository.ingredientSubscriptions)
       assertEquals(setOf("chicken", "rice"), repository.lastIngredients)

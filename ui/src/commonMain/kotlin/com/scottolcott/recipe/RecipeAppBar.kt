@@ -42,7 +42,6 @@ import com.scottolcott.recipe.ui.back
 import com.scottolcott.recipe.ui.chef_hat_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.favorites
-import com.scottolcott.recipe.ui.recipes
 import com.scottolcott.recipe.ui.search
 import com.scottolcott.recipe.ui.search_24px
 import com.scottolcott.recipe.ui.title
@@ -101,9 +100,10 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
-  val screenTitle =
-    state.navStack.currentRecord?.screen?.title() ?: stringResource(Res.string.recipes)
-  val title = @Composable { Text(screenTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+  // No title: a screen names itself in its own content, where that name is visible at every window
+  // size. This bar is replaced wholesale by the search bar on a layout wide enough for the
+  // navigation rail, so a title here would be a name that comes and goes with the window.
+  val title = @Composable {}
   // No navigation rail exists on this layout, so the app mark still earns the slot when there is
   // nowhere to go back to.
   val navigationIcon =

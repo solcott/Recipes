@@ -56,6 +56,7 @@ internal constructor(
     return when (recipesResponse) {
       is StoreReadResponse.Data<List<Recipe>> ->
         RecipesState.Success(
+          screen,
           recipesResponse.value,
           isRefreshing = false,
           showAreaLabel = showAreaLabel,
@@ -70,6 +71,7 @@ internal constructor(
         val cached = lastRecipes
         if (cached != null) {
           RecipesState.Success(
+            screen,
             cached,
             isRefreshing = true,
             showAreaLabel = showAreaLabel,
@@ -116,6 +118,13 @@ sealed interface RecipesState : CircuitUiState {
   data class Error(val message: String, val eventSink: (RecipesEvent.Error) -> Unit) : RecipesState
 
   data class Success(
+    /**
+     * The screen this list was built for, so the UI can name it.
+     *
+     * `Screen.title()` lives in `:ui` because it resolves compose resources, so the screen has to
+     * travel to reach it -- the name cannot be resolved here.
+     */
+    val screen: RecipesScreen,
     val recipes: List<Recipe>,
     val isRefreshing: Boolean,
     val showAreaLabel: Boolean,

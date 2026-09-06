@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,6 +37,7 @@ import com.scottolcott.recipe.ui.isShortWindow
 import com.scottolcott.recipe.ui.no_recipes_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
 import com.scottolcott.recipe.ui.rememberAdaptivePadding
+import com.scottolcott.recipe.ui.title
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
 import org.jetbrains.compose.resources.stringResource
@@ -60,8 +62,11 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
       }
     is RecipesState.Success -> {
       if (state.recipes.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Text(stringResource(Res.string.no_recipes_found))
+        Column(modifier.fillMaxSize().padding(padding)) {
+          RecipesHeading(state.screen)
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(stringResource(Res.string.no_recipes_found))
+          }
         }
       } else {
         LazyVerticalGrid(
@@ -71,6 +76,12 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
           horizontalArrangement = Arrangement.spacedBy(12.dp),
           contentPadding = padding,
         ) {
+          // Inside the grid rather than above it: it picks up the same contentPadding as the cards
+          // it heads, so the two line up with no second padding calculation, and it scrolls away
+          // with them -- which is what a short window wants from a headline.
+          item(span = { GridItemSpan(maxLineSpan) }, contentType = "heading") {
+            RecipesHeading(state.screen)
+          }
           items(state.recipes, key = { it.id }, contentType = { "recipe_item" }) {
             RecipeCard(
               it,
@@ -83,6 +94,24 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
         }
       }
     }
+  }
+}
+
+/**
+ * Names the list -- `Category: Seafood`, `Favorites`, `Results for "chicken"`.
+ *
+ * The list is the only place that name appears. The top app bar carries no title, and on a layout
+ * wide enough for the navigation rail the search bar stands in for the bar entirely, so a screen
+ * that does not name itself is not named anywhere. [RecipeDetailsScreen] and the home tabs already
+ * do; a grid of cards had nothing.
+ *
+ * A step down from the detail screen's `headlineMediumEmphasized`: a grid of small cards under a
+ * hero-sized headline reads top-heavy.
+ */
+@Composable
+private fun RecipesHeading(screen: RecipesScreen, modifier: Modifier = Modifier) {
+  screen.title()?.let {
+    Text(it, style = MaterialTheme.typography.headlineSmallEmphasized, modifier = modifier)
   }
 }
 
