@@ -3,10 +3,14 @@ package com.scottolcott.recipe
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,25 +23,34 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import com.scottolcott.recipe.domain.presenter.HomeScreen
+import com.scottolcott.recipe.domain.presenter.NavigationLayout
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
+import com.scottolcott.recipe.domain.presenter.SearchTabScreen
+import com.scottolcott.recipe.ui.LocalFloatingBarInset
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.chef_hat_24px
+import com.scottolcott.recipe.ui.design.AppDestination
+import com.scottolcott.recipe.ui.design.AppNavigationBar
 import com.scottolcott.recipe.ui.favorite_24px
 import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.favorites
 import com.scottolcott.recipe.ui.maxContentWidth
 import com.scottolcott.recipe.ui.recipes
+import com.scottolcott.recipe.ui.search
+import com.scottolcott.recipe.ui.search_24px
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
@@ -53,71 +66,140 @@ import org.jetbrains.compose.resources.stringResource
 fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   BrowserHistoryEffect(navStack = state.navStack, navigator = state.navigator)
   BackShortcutEffect(state)
+  val railDestinations = rememberAppDestinations(includeSearch = false)
+  val tabBarDestinations = rememberAppDestinations(includeSearch = true)
   Row(modifier.fillMaxSize()) {
     AnimatedVisibility(
-      state.showNavRail,
+      state.navigationLayout == NavigationLayout.Rail,
       enter = expandHorizontally(),
       exit = shrinkHorizontally(),
     ) {
-      RecipeNavigationRail(state)
+      RecipeNavigationRail(state, railDestinations)
     }
     Scaffold(
       modifier = Modifier.weight(1f),
       topBar = { RecipeAppBar(state, modifier = Modifier.fillMaxWidth()) },
+      bottomBar = { ScaffoldBottomBar(state, tabBarDestinations) },
       contentWindowInsets = WindowInsets(0.dp),
     ) { paddingValues ->
-      Box(Modifier.fillMaxSize().padding(paddingValues)) {
-        SharedElementTransitionLayout {
-          NavigableCircuitContent(
-            navigator = state.navigator,
-            navStack = state.navStack,
-            decoratorFactory = remember(state.navigator) { GestureNavigationDecorationFactory() },
-            modifier = Modifier.fillMaxHeight().maxContentWidth(),
-          )
+      val layoutDirection = LocalLayoutDirection.current
+      // The bottom inset is handed to the screens rather than cut out of the content box. The
+      // Cupertino tab bar is a capsule floating *over* the page and narrower than the window, so
+      // reserving its height here would leave a dead strip beneath every screen and strand the
+      // capsule in it. Screens add it to the bottom of their scroll padding instead, which lets a
+      // list run under the capsule and past either side of it; see [LocalFloatingBarInset]. Every
+      // other edge is applied here as usual.
+      CompositionLocalProvider(
+        LocalFloatingBarInset provides paddingValues.calculateBottomPadding()
+      ) {
+        Box(
+          Modifier.fillMaxSize()
+            .padding(
+              start = paddingValues.calculateStartPadding(layoutDirection),
+              top = paddingValues.calculateTopPadding(),
+              end = paddingValues.calculateEndPadding(layoutDirection),
+            )
+        ) {
+          SharedElementTransitionLayout {
+            NavigableCircuitContent(
+              navigator = state.navigator,
+              navStack = state.navStack,
+              decoratorFactory =
+                remember(state.navigator) { GestureNavigationDecorationFactory() },
+              modifier = Modifier.fillMaxHeight().maxContentWidth(),
+            )
+          }
         }
       }
     }
   }
 }
 
+/** The tab bar, growing and shrinking the slot rather than popping in and out of it. */
 @Composable
-private fun RecipeNavigationRail(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
+private fun ScaffoldBottomBar(state: RecipeScaffoldState, destinations: List<AppDestination>) {
+  AnimatedVisibility(
+    state.navigationLayout == NavigationLayout.BottomBar,
+    enter = expandVertically(),
+    exit = shrinkVertically(),
+  ) {
+    AppNavigationBar(
+      destinations = destinations,
+      selected = state.selectedDestination,
+      onSelect = { state.eventSink(RecipeScaffoldEvent.SelectDestination(it)) },
+    )
+  }
+}
+
+/**
+ * The sections the rail and the tab bar offer.
+ *
+ * One builder for both so the two cannot drift apart as sections are added. They differ in exactly
+ * one entry: [includeSearch]. A rail layout keeps the search field docked in the app bar beside it,
+ * so a Search destination there would point at a field already on screen; a tab bar has no room for
+ * that field, so Search becomes somewhere you go instead.
+ */
+@Composable
+private fun rememberAppDestinations(includeSearch: Boolean): List<AppDestination> =
+  remember(includeSearch) {
+    buildList {
+      add(
+        AppDestination(
+          screen = HomeScreen(),
+          icon = Res.drawable.chef_hat_24px,
+          selectedIcon = Res.drawable.chef_hat_24px,
+          label = Res.string.recipes,
+        )
+      )
+      add(
+        AppDestination(
+          screen = RecipesScreen.Favorites,
+          icon = Res.drawable.favorite_24px,
+          selectedIcon = Res.drawable.favorite_24px_filled,
+          label = Res.string.favorites,
+        )
+      )
+      if (includeSearch) {
+        add(
+          AppDestination(
+            screen = SearchTabScreen,
+            icon = Res.drawable.search_24px,
+            selectedIcon = Res.drawable.search_24px,
+            label = Res.string.search,
+          )
+        )
+      }
+    }
+  }
+
+@Composable
+private fun RecipeNavigationRail(
+  state: RecipeScaffoldState,
+  destinations: List<AppDestination>,
+  modifier: Modifier = Modifier,
+) {
   // Selection follows the section the current screen sits under, not the current record itself, so
   // a recipe opened from Favorites keeps Favorites lit rather than clearing the rail entirely.
-  val favoritesSelected = state.selectedDestination == RecipesScreen.Favorites
   NavigationRail(
     modifier = modifier.fillMaxHeight(),
     header = {},
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
   ) {
-    NavigationRailItem(
-      selected = state.selectedDestination is HomeScreen,
-      onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(HomeScreen())) },
-      icon = {
-        Icon(painter = painterResource(Res.drawable.chef_hat_24px), contentDescription = null)
-      },
-      label = { Text(stringResource(Res.string.recipes)) },
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).align(Alignment.Start),
-    )
-    NavigationRailItem(
-      selected = favoritesSelected,
-      onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(RecipesScreen.Favorites)) },
-      icon = {
-        Icon(
-          painter =
-            painterResource(
-              if (favoritesSelected) {
-                Res.drawable.favorite_24px_filled
-              } else {
-                Res.drawable.favorite_24px
-              }
-            ),
-          contentDescription = null,
-        )
-      },
-      label = { Text(stringResource(Res.string.favorites)) },
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).align(Alignment.Start),
-    )
+    destinations.forEach { destination ->
+      val selected = destination.isSelectedBy(state.selectedDestination)
+      NavigationRailItem(
+        selected = selected,
+        onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(destination.screen)) },
+        icon = {
+          Icon(
+            painter = painterResource(destination.iconFor(selected)),
+            contentDescription = null,
+          )
+        },
+        label = { Text(stringResource(destination.label)) },
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).align(Alignment.Start),
+      )
+    }
   }
 }
 

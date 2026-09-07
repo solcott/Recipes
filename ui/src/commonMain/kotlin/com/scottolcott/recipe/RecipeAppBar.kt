@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
+import com.scottolcott.recipe.domain.presenter.NavigationLayout
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldEvent
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
@@ -47,7 +48,11 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
   AnimatedContent(state.searchVisible) { isActive ->
     if (isActive) {
       val initialSearchBarValue = remember {
-        if (state.showNavRail) SearchBarValue.Collapsed else SearchBarValue.Expanded
+        if (state.navigationLayout == NavigationLayout.Rail) {
+          SearchBarValue.Collapsed
+        } else {
+          SearchBarValue.Expanded
+        }
       }
       // The search bar stands in for the whole top app bar here, so the back control has to travel
       // with it. Nothing else does: the navigation rail beside it already carries the app mark and
@@ -58,7 +63,10 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
       ) {
         SubCircuitContent(
           SearchScreen(initialSearchBarValue = initialSearchBarValue),
-          modifier = modifier.padding(vertical = if (state.showNavRail) 8.dp else 4.dp),
+          modifier =
+            modifier.padding(
+              vertical = if (state.navigationLayout == NavigationLayout.Rail) 8.dp else 4.dp
+            ),
           outerEventSink = {
             when (it) {
               is SearchOuterEvent.NavigateToSearchResults -> {
@@ -96,17 +104,30 @@ private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Mod
   // No navigation rail exists on this layout, so the app mark still earns the slot when there is
   // nowhere to go back to.
   val navigationIcon =
-    @Composable { if (showBackButton(state)) BackButton(state) else AppMarkIcon() }
+    @Composable {
+      if (showBackButton(state)) {
+        BackButton(state)
+      } else if (state.navigationLayout != NavigationLayout.BottomBar) {
+        // With a tab bar on screen the mark is already down there, and showing it twice a few
+        // pixels apart reads as a rendering fault rather than branding -- the same reasoning
+        // `AppMarkIcon` already applies to the navigation rail.
+        AppMarkIcon()
+      }
+    }
   val actions: @Composable RowScope.() -> Unit = {
-    FavoritesAction(state)
-    IconButton(
-      onClick = { state.eventSink(RecipeScaffoldEvent.SearchClicked) },
-      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-    ) {
-      Icon(
-        painter = painterResource(Res.drawable.search_24px),
-        contentDescription = stringResource(Res.string.search),
-      )
+    // Favorites is a tab of its own on that layout; here it would be a second door to one room.
+    if (state.navigationLayout != NavigationLayout.BottomBar) FavoritesAction(state)
+    // Search is a tab of its own on that layout, so the bar keeps no shortcut to it either.
+    if (state.navigationLayout != NavigationLayout.BottomBar) {
+      IconButton(
+        onClick = { state.eventSink(RecipeScaffoldEvent.SearchClicked) },
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+      ) {
+        Icon(
+          painter = painterResource(Res.drawable.search_24px),
+          contentDescription = stringResource(Res.string.search),
+        )
+      }
     }
   }
 
