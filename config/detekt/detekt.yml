@@ -878,6 +878,10 @@ Compose:
       # Desktop's keyboard back has to be handled at the window, and RecipeScaffoldScreen is built
       # by Circuit from its Screen, so there is no parameter list to thread the host down through.
       - LocalBackShortcutHost
+      # Which visual language the app is speaking. Read by both presenters and composables across
+      # every screen; as a parameter it would be an argument on nearly every signature in :ui, and
+      # it is set once at the root and never changes.
+      - LocalAppDesign
   CompositionLocalNaming:
     active: true
   ContentEmitterReturningValues:
