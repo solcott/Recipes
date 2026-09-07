@@ -34,6 +34,11 @@ kotlin {
   iosArm64()
   iosSimulatorArm64()
   js {
+    // Stays on Karma despite Kotlin 2.4.20's Playwright/Mocha replacement: the testBalloon
+    // plugin hands its parameters to browser tests by generating karma.config.d/
+    // testBalloonParameters.js, and the new DSL does not read karma.config.d. Under it
+    // :domain:jsBrowserTest never receives TESTBALLOON_* and hangs to the 30s timeout.
+    // Revisit when de.infix.testBalloon supports the new DSL.
     browser()
     useEsModules()
   }
