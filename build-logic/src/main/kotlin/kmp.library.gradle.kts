@@ -15,8 +15,16 @@ plugins {
   id("formatting")
 }
 
+// The toolchain compiles and runs on JDK 25; the bytecode target stays at 17. A toolchain silently
+// sets jvmTarget to its own version unless every JVM target pins one, so both the jvm() and android
+// compilations below do that explicitly. -Xjdk-release additionally hides post-17 JDK APIs, which
+// matters because these modules ship to Android as well as to the desktop JVM. It is a JVM-only
+// flag - keep it out of the project-wide compilerOptions, which also feeds Native, JS, and WasmJS.
+val catalog = project.versionCatalog
+val jvmBytecodeTarget = catalog.findVersion("jvmTargetCompatibility").get().requiredVersion
+
 kotlin {
-  jvmToolchain(project.versionCatalog.findVersion("jvm-toolchain").get().requiredVersion.toInt())
+  jvmToolchain(catalog.findVersion("jvm-toolchain").get().requiredVersion.toInt())
   compilerOptions { freeCompilerArgs.add("-Xexpect-actual-classes") }
   android {
     val libs = project.versionCatalog
@@ -24,11 +32,16 @@ kotlin {
     minSdk = libs.findVersion("androidMinSdk").get().requiredVersion.toInt()
     compileSdk = libs.findVersion("androidCompileSdk").get().requiredVersion.toInt()
     compilerOptions {
-      jvmTarget =
-        JvmTarget.fromTarget(libs.findVersion("jvmTargetCompatibility").get().requiredVersion)
+      jvmTarget = JvmTarget.fromTarget(jvmBytecodeTarget)
+      freeCompilerArgs.add("-Xjdk-release=$jvmBytecodeTarget")
     }
   }
-  jvm()
+  jvm {
+    compilerOptions {
+      jvmTarget = JvmTarget.fromTarget(jvmBytecodeTarget)
+      freeCompilerArgs.add("-Xjdk-release=$jvmBytecodeTarget")
+    }
+  }
   iosArm64()
   iosSimulatorArm64()
   js {
@@ -71,6 +84,14 @@ kotlin {
       }
     }
   }
+}
+
+// No module has .java sources, but the Kotlin/Java target consistency check (default: error on
+// Gradle 8+) compares these task attributes against jvmTarget regardless of whether anything
+// compiles through them. Left unset they would inherit the toolchain's 25 and fail the build.
+tasks.withType<JavaCompile>().configureEach {
+  sourceCompatibility = catalog.findVersion("jvmSourceCompatibility").get().requiredVersion
+  targetCompatibility = jvmBytecodeTarget
 }
 
 // Compose UI tests on js are only loadable when the target produces a webpack bundle, which is what

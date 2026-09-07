@@ -1,6 +1,7 @@
 @file:OptIn(ExperimentalMetroGradleApi::class)
 
 import dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.android.application)
@@ -49,6 +50,13 @@ android {
 
 kotlin {
   jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
+  // The toolchain is JDK 25; without an explicit jvmTarget Kotlin would follow it to bytecode 25
+  // while `compileOptions` above keeps Java at 17, which fails the target consistency check.
+  // -Xjdk-release also keeps post-17 JDK APIs out of reach, which is what minSdk 28 actually needs.
+  compilerOptions {
+    jvmTarget = JvmTarget.fromTarget(libs.versions.jvmTargetCompatibility.get())
+    freeCompilerArgs.add("-Xjdk-release=${libs.versions.jvmTargetCompatibility.get()}")
+  }
   dependencies {
     api(projects.config)
     api(projects.core)
