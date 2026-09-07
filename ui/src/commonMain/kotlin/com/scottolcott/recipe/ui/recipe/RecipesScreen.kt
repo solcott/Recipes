@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,6 +32,7 @@ import com.scottolcott.recipe.domain.presenter.RecipesState
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
+import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
 import com.scottolcott.recipe.ui.no_recipes_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
@@ -123,7 +123,7 @@ private fun RecipeCard(
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  OutlinedCard(onClick = onClick, modifier = modifier.pointerHoverIcon(PointerIcon.Hand, true)) {
+  AppCard(onClick = onClick, modifier = modifier.pointerHoverIcon(PointerIcon.Hand, true)) {
     if (horizontalCards) {
       Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -3,7 +3,6 @@
 package com.scottolcott.recipe.ui.category
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,6 +34,7 @@ import com.scottolcott.recipe.domain.presenter.CategoriesState
 import com.scottolcott.recipe.model.Category
 import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
+import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
 import com.scottolcott.recipe.ui.no_categories_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
@@ -109,7 +108,7 @@ fun CategoryItem(
   modifier: Modifier = Modifier,
 ) {
 
-  OutlinedCard(modifier.clickable(true, onClick = onCategoryClick)) {
+  AppCard(onClick = onCategoryClick, modifier = modifier) {
     AsyncImage(
       category.thumb,
       contentDescription = category.name,
