@@ -9,7 +9,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.node.DelegatableNode
@@ -23,14 +22,13 @@ import kotlinx.coroutines.launch
  * because every `clickable`, `IconButton`, `Card` and `ListItem` resolves its indication through
  * `LocalIndication`, swapping that one value removes it everywhere at once.
  *
- * iOS uses two different treatments and they are not interchangeable, so both live here:
- * - [CupertinoFadeIndication] dims the *content*, which is what controls, icons and cards do. This
- *   is the one installed globally.
- * - [CupertinoHighlightIndication] fills the *background* with grey and leaves content alone, which
- *   is what table rows do. [AppListSection] opts into it.
+ * This dims the *content*, which is what iOS controls, icons and cards do. Table rows are the one
+ * thing it does not cover: those fill their *background* with grey and leave the content alone.
+ * Nothing in this app is a grouped table yet, so that second treatment is left unwritten rather
+ * than kept warm unused -- it belongs with the list section that would opt into it.
  *
- * Both take their colour as a constructor parameter rather than reading the theme, because a
- * `Modifier.Node` has no composition to read from. The theme supplies it at the point of install.
+ * The alpha is a constructor parameter rather than a theme read, because a `Modifier.Node` has no
+ * composition to read from. The theme supplies it at the point of install.
  */
 @Immutable
 internal data class CupertinoFadeIndication(private val pressedAlpha: Float = DEFAULT_FADE_ALPHA) :
@@ -39,29 +37,28 @@ internal data class CupertinoFadeIndication(private val pressedAlpha: Float = DE
     FadeNode(interactionSource, pressedAlpha)
 }
 
-@Immutable
-internal data class CupertinoHighlightIndication(private val highlight: Color) :
-  IndicationNodeFactory {
-  override fun create(interactionSource: InteractionSource): DelegatableNode =
-    HighlightNode(interactionSource, highlight)
-}
-
 private const val DEFAULT_FADE_ALPHA = 0.4f
-private const val HIGHLIGHT_ALPHA = 0.12f
 private const val PRESS_IN_MILLIS = 90
 private const val PRESS_OUT_MILLIS = 260
 
 /**
- * Tracks nested press/release pairs and drives [progress] between 0 (idle) and 1 (held).
+ * Fades the content it is attached to while the pointer is held.
  *
- * The press-in is quick and the release slow, matching how iOS snaps to the pressed state but eases
- * back out. Counting presses rather than using a boolean keeps a release from clearing the state
- * while a second pointer is still down.
+ * Nested press/release pairs drive [progress] between 0 (idle) and 1 (held). The press-in is quick
+ * and the release slow, matching how iOS snaps to the pressed state but eases back out. Counting
+ * presses rather than using a boolean keeps a release from clearing the state while a second
+ * pointer is still down.
  */
-private abstract class PressProgressNode(private val interactionSource: InteractionSource) :
-  Modifier.Node(), DrawModifierNode {
+private class FadeNode(
+  private val interactionSource: InteractionSource,
+  private val pressedAlpha: Float,
+) : Modifier.Node(), DrawModifierNode {
 
-  protected val progress = Animatable(0f)
+  private val progress = Animatable(0f)
+
+  // saveLayer rather than a plain overlay: fading the content is not the same as painting
+  // translucent paint over it, and only the former reads as an iOS control being pressed.
+  private val paint = Paint()
 
   override fun onAttach() {
     coroutineScope.launch {
@@ -82,14 +79,6 @@ private abstract class PressProgressNode(private val interactionSource: Interact
       }
     }
   }
-}
-
-private class FadeNode(interactionSource: InteractionSource, private val pressedAlpha: Float) :
-  PressProgressNode(interactionSource) {
-
-  // saveLayer rather than a plain overlay: fading the content is not the same as painting
-  // translucent paint over it, and only the former reads as an iOS control being pressed.
-  private val paint = Paint()
 
   override fun ContentDrawScope.draw() {
     val alpha = 1f - (1f - pressedAlpha) * progress.value
@@ -101,15 +90,5 @@ private class FadeNode(interactionSource: InteractionSource, private val pressed
     drawContext.canvas.saveLayer(Rect(Offset.Zero, size), paint)
     drawContent()
     drawContext.canvas.restore()
-  }
-}
-
-private class HighlightNode(interactionSource: InteractionSource, private val highlight: Color) :
-  PressProgressNode(interactionSource) {
-
-  override fun ContentDrawScope.draw() {
-    val alpha = progress.value * HIGHLIGHT_ALPHA
-    if (alpha > 0f) drawRect(color = highlight, alpha = alpha)
-    drawContent()
   }
 }

@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
  *
  * Flatter than Material's ramp throughout -- iOS reserves large radii for cards and sheets and
  * keeps controls comparatively square. `medium` is 10dp because that is the inset-grouped table
- * radius, which [AppListSection] and every card in the app inherit.
+ * radius, which every card in the app inherits through [AppCard].
  */
 internal val cupertinoShapes =
   Shapes(

@@ -135,8 +135,7 @@ private fun LazyListScope.historySection(
           contentDescription = null,
           modifier = Modifier.width(LeadingImageWidth).aspectRatio(LEADING_IMAGE_ASPECT_RATIO),
           // The recents glyph is a secondary-label grey on iOS -- Safari, Maps and the App Store
-          // all
-          // spend the tint on the row's action, never on its icon.
+          // all spend the tint on the row's action, never on its icon.
           colorFilter =
             ColorFilter.tint(
               if (isCupertino) {
