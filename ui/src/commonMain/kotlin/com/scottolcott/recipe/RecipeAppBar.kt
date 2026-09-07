@@ -156,7 +156,7 @@ private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Mod
     // A tab root gets the large title that collapses as the user scrolls; a pushed screen gets the
     // inline centred one over a back chevron. That split is iOS's own -- Music and Photos both do
     // it -- and it falls out of `canGoBack` without a hand-rolled bar.
-    isCupertino && !showBackButton(state) ->
+    state.appBarTitleCollapses() ->
       LargeTopAppBar(
         title = title,
         navigationIcon = navigationIcon,
@@ -225,7 +225,7 @@ private fun FavoritesAction(state: RecipeScaffoldState) {
  * [BrowserHistoryEffect]. A second one inside the page is redundant at best and a second source of
  * truth at worst.
  */
-private fun showBackButton(state: RecipeScaffoldState) = state.canGoBack && !isWeb()
+internal fun showBackButton(state: RecipeScaffoldState) = state.canGoBack && !isWeb()
 
 /**
  * [BackButton] wrapped so it grows and shrinks the slot instead of popping in and out.

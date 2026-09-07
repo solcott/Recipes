@@ -885,6 +885,10 @@ Compose:
       # The Cupertino large title collapses against this, but the bar is built inside RecipeAppBar
       # while the scroll arrives from whichever screen NavigableCircuitContent is showing.
       - LocalTopAppBarScrollBehavior
+      # Whether the top app bar is already showing the screen's name, so the screen knows not to
+      # repeat it -- or, on a layout where the search field takes the bar, that it must name itself.
+      # Read by screens Circuit builds from their Screen, with no parameter list from the scaffold.
+      - LocalAppBarShowsScreenTitle
       # How far the floating tab bar reaches up over the content. Every scrolling screen needs it
       # to pad its last row clear of the capsule, and those screens are built by Circuit from their
       # Screen, so there is no parameter list running from the scaffold down to reach them.

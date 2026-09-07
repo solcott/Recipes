@@ -75,7 +75,11 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
   val railDestinations = rememberAppDestinations(includeSearch = false)
   val tabBarDestinations = rememberAppDestinations(includeSearch = true)
   val scrollBehavior = rememberCollapsingTitleBehavior(state.navStack.currentRecord?.screen)
-  CompositionLocalProvider(LocalTopAppBarScrollBehavior provides scrollBehavior) {
+  val collapsingTitle = state.appBarTitleCollapses()
+  CompositionLocalProvider(
+    LocalTopAppBarScrollBehavior provides scrollBehavior,
+    LocalAppBarShowsScreenTitle provides state.appBarShowsScreenTitle(),
+  ) {
     Row(modifier.fillMaxSize()) {
       AnimatedVisibility(
         state.navigationLayout == NavigationLayout.Rail,
@@ -89,7 +93,17 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
           Modifier.weight(1f).let {
             // Nested scroll bubbles up from whichever screen is showing, so catching it here
             // means no screen has to know the bar exists.
-            if (scrollBehavior != null) it.nestedScroll(scrollBehavior.nestedScrollConnection)
+            //
+            // Only while that bar is actually on screen, though. The connection consumes an upward
+            // delta for as long as the collapse has room left to run, and the room is
+            // `heightOffsetLimit` -- which only a bar handed this behaviour ever measures onto the
+            // state. With no such bar it stays at -Float.MAX_VALUE: the collapse never bottoms out,
+            // every delta is swallowed, and nothing below scrolls. Silently, too, since an
+            // unbounded limit also holds `collapsedFraction` at zero, so the bar does not even
+            // appear to move. That is what froze every screen on a layout wide enough for the rail,
+            // where the search field takes the whole bar and no large title is composed at all.
+            if (scrollBehavior != null && collapsingTitle)
+              it.nestedScroll(scrollBehavior.nestedScrollConnection)
             else it
           },
         topBar = { RecipeAppBar(state, modifier = Modifier.fillMaxWidth()) },

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
-import com.scottolcott.recipe.domain.isCupertino
+import com.scottolcott.recipe.LocalAppBarShowsScreenTitle
 import com.scottolcott.recipe.domain.presenter.RecipesEvent
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.domain.presenter.RecipesState
@@ -52,7 +52,8 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
   // Read once here rather than per card: the cell width and the card design have to come from the
   // same answer, and a grid item is the wrong place to read a CompositionLocal.
   val horizontalCards = isShortWindow()
-  val cupertino = isCupertino
+  // Whoever the bar is not naming has to name itself; see [LocalAppBarShowsScreenTitle].
+  val titledByAppBar = LocalAppBarShowsScreenTitle.current
   when (state) {
     is RecipesState.Error ->
       Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -65,7 +66,7 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
     is RecipesState.Success -> {
       if (state.recipes.isEmpty()) {
         Column(modifier.fillMaxSize().padding(padding)) {
-          RecipesHeading(state.screen)
+          if (!titledByAppBar) RecipesHeading(state.screen)
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(Res.string.no_recipes_found))
           }
@@ -81,9 +82,10 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
           // Inside the grid rather than above it: it picks up the same contentPadding as the cards
           // it heads, so the two line up with no second padding calculation, and it scrolls away
           // with them -- which is what a short window wants from a headline.
-          // Under Cupertino the navigation bar carries this name as a large title, so repeating it
-          // here would show it twice.
-          if (!cupertino) {
+          // Skipped only when the top app bar is already showing this name, which under Cupertino
+          // it usually is -- but not on a layout wide enough for the navigation rail, where the
+          // search field takes the whole bar and this heading is the only name the screen has.
+          if (!titledByAppBar) {
             item(span = { GridItemSpan(maxLineSpan) }, contentType = "heading") {
               RecipesHeading(state.screen)
             }
@@ -106,11 +108,11 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
 /**
  * Names the list -- `Category: Seafood`, `Favorites`, `Results for "chicken"`.
  *
- * Under the Material design the list is the only place that name appears: the top app bar carries
- * no title, and on a layout wide enough for the navigation rail the search bar stands in for the
- * bar entirely, so a screen that does not name itself is not named anywhere. [RecipeDetailsScreen]
- * and the home tabs already do; a grid of cards had nothing. Cupertino names the screen in the
- * navigation bar instead, and skips this.
+ * Shown wherever the top app bar is not already showing this name. Under Material that is
+ * everywhere -- the bar carries no title at all -- and under Cupertino it is the layouts wide
+ * enough for the navigation rail, where the search field stands in for the bar entirely. A screen
+ * that does not name itself there is not named anywhere: [RecipeDetailsScreen] and the home tabs
+ * already do, a grid of cards had nothing.
  *
  * A step down from the detail screen's `headlineMediumEmphasized`: a grid of small cards under a
  * hero-sized headline reads top-heavy.
