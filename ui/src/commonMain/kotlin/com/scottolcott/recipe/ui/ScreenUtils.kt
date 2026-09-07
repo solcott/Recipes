@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,10 +50,26 @@ fun Modifier.maxContentWidth(): Modifier =
     .widthIn(max = WIDTH_DP_LARGE_LOWER_BOUND.dp)
     .fillMaxWidth()
 
+/**
+ * How much room the chrome floating over the bottom of the content needs, or `0.dp` where none
+ * floats there.
+ *
+ * The Cupertino tab bar is a capsule that hovers over the page rather than a band beside it, and it
+ * is narrower than the window, so the scaffold hands its height down here instead of cutting it out
+ * of the content box -- which would strand the capsule in a dead strip. A screen that scrolls adds
+ * it to the bottom of its scroll padding: the last row then comes to rest clear of the capsule,
+ * while everything above it passes under and to either side of the capsule on the way, which is the
+ * iOS look. Screens padding with [rememberAdaptivePadding] get this for free.
+ *
+ * Zero under Material, which reserves the space for its bars in the usual way.
+ */
+val LocalFloatingBarInset = compositionLocalOf { 0.dp }
+
 @Composable
 fun rememberAdaptivePadding(): PaddingValues {
   val windowSizeClass = LocalWindowSizeClass.current
-  return remember(windowSizeClass) {
+  val floatingBarInset = LocalFloatingBarInset.current
+  return remember(windowSizeClass, floatingBarInset) {
     val isMediumWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
     val isExpandedWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND)
     val isLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_LARGE_LOWER_BOUND)
@@ -85,6 +102,11 @@ fun rememberAdaptivePadding(): PaddingValues {
         isMediumHeight -> 24.dp
         else -> 16.dp
       }
-    PaddingValues(horizontal = horizontal, vertical = vertical)
+    PaddingValues(
+      start = horizontal,
+      top = vertical,
+      end = horizontal,
+      bottom = vertical + floatingBarInset,
+    )
   }
 }

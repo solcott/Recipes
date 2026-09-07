@@ -11,8 +11,8 @@ import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.isCupertino
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
-import com.scottolcott.recipe.isIos
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
@@ -31,13 +31,19 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
 
 /**
- * The sections the navigation rail switches between, and the roots the app-bar shortcuts lead back
- * to.
+ * The sections the navigation rail and the tab bar switch between, and the roots the app-bar
+ * shortcuts lead back to.
+ *
+ * [SearchTabScreen] is reachable only from the tab bar -- a rail layout keeps the search field
+ * docked in the app bar, so it needs no destination -- but it belongs here regardless, because this
+ * list is what `selectedDestination` matches against for the highlight and what makes a root swap
+ * onto it safe.
  *
  * Order is the rail's order. Matching against these goes through [isSameDestinationAs] rather than
  * equality -- see there for why [HomeScreen] cannot be compared directly.
  */
-internal val TOP_LEVEL_DESTINATIONS: List<Screen> = listOf(HomeScreen(), RecipesScreen.Favorites)
+internal val TOP_LEVEL_DESTINATIONS: List<Screen> =
+  listOf(HomeScreen(), RecipesScreen.Favorites, SearchTabScreen)
 
 @CircuitInject(RecipeScaffoldScreen::class, AppScope::class)
 @Inject
@@ -59,10 +65,22 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
     val childNavigator = rememberCircuitNavigator(navStack) { navigator.pop() }
 
     val windowSizeClass = LocalWindowSizeClass.current
-    val showNavRail =
+    val roomForRail =
       windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) &&
-        windowSizeClass.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND) &&
-        !isIos()
+        windowSizeClass.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND)
+    val navigationLayout =
+      when {
+        roomForRail -> NavigationLayout.Rail
+        // Requiring medium in *both* axes above is what keeps a landscape phone here: it clears
+        // the width breakpoint comfortably but never the height one.
+        //
+        // Keyed on the design rather than on `isIos()` so `-Pdesign=cupertino` shows the real iOS
+        // layout on desktop. Which navigation surface a window gets is a design decision, and
+        // pinning it to the platform would have made the tab bar the one piece of this work that
+        // could only ever be seen through Xcode.
+        isCupertino -> NavigationLayout.BottomBar
+        else -> NavigationLayout.None
+      }
 
     val searchBarValue = retain { mutableStateOf(SearchBarValue.Collapsed) }
     // Whether the user asked for search on a layout that does not show it permanently. Derived
@@ -70,14 +88,22 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
     // breakpoint -- is reflected during composition, with no apply-phase write to snapshot state.
     val searchRequested = retain { mutableStateOf(false) }
     val searchVisible =
-      showNavRail || searchBarValue.value == SearchBarValue.Expanded || searchRequested.value
+      navigationLayout == NavigationLayout.Rail ||
+        searchBarValue.value == SearchBarValue.Expanded ||
+        searchRequested.value
 
     val canGoBack = navStack.canGoBack
     val selectedDestination = navStack.screensFromCurrent().selectedDestination()
 
     val eventSink =
-      remember(childNavigator, showNavRail) {
-        scaffoldEventSink(childNavigator, navStack, showNavRail, searchBarValue, searchRequested)
+      remember(childNavigator, navigationLayout) {
+        scaffoldEventSink(
+          childNavigator,
+          navStack,
+          navigationLayout,
+          searchBarValue,
+          searchRequested,
+        )
       }
 
     @Suppress("OPT_IN_USAGE")
@@ -85,7 +111,7 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
       navStack,
       childNavigator,
       searchVisible,
-      showNavRail,
+      navigationLayout,
       canGoBack,
       selectedDestination,
       eventSink,
@@ -104,7 +130,7 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
 private fun scaffoldEventSink(
   navigator: Navigator,
   navStack: NavStack<out NavStack.Record>,
-  showNavRail: Boolean,
+  navigationLayout: NavigationLayout,
   searchBarValue: MutableState<SearchBarValue>,
   searchRequested: MutableState<Boolean>,
 ): (RecipeScaffoldEvent) -> Unit = { event ->
@@ -115,7 +141,11 @@ private fun scaffoldEventSink(
       searchRequested.value = false
     }
     is RecipeScaffoldEvent.SelectDestination -> {
-      navigator.selectDestination(navStack, event.screen, canSwapRoot = showNavRail)
+      navigator.selectDestination(
+        navStack,
+        event.screen,
+        canSwapRoot = navigationLayout != NavigationLayout.None,
+      )
       searchRequested.value = false
     }
     RecipeScaffoldEvent.ExitSearch -> searchRequested.value = false
@@ -139,9 +169,9 @@ private fun scaffoldEventSink(
  *
  * Three cases, each a single net change to the stack:
  * - Already inside the section: collapse it to its own root.
- * - No rail on screen ([canSwapRoot] false): push. The rail is what makes a root swap safe -- below
- *   its breakpoint the app-bar shortcut is the only way across, and swapping would strand the user
- *   with a system back that exits the app.
+ * - No persistent navigation on screen ([canSwapRoot] false): push. A rail or a tab bar is what
+ *   makes a root swap safe -- with neither, the app-bar shortcut is the only way across, and
+ *   swapping would strand the user with a system back that exits the app.
  * - Otherwise: collapse the section being left, then swap the root.
  *
  * The collapse before the swap is what keeps `StateOptions.SaveAndRestore` honest here. `resetRoot`
@@ -212,6 +242,28 @@ internal fun List<Screen>.selectedDestination(): Screen? = firstNotNullOfOrNull 
   TOP_LEVEL_DESTINATIONS.firstOrNull { screen.isSameDestinationAs(it) }
 }
 
+/**
+ * Which persistent navigation surface the window is wide enough for.
+ *
+ * Replaces the earlier `showNavRail` boolean, which could only say "rail or nothing" -- and on iOS
+ * always said nothing, at every size, leaving the platform with no way between sections but a heart
+ * icon in the top app bar.
+ *
+ * [BottomBar] is iOS-only for now. Compact Android windows keep [None], which is what they have
+ * always had; giving them a tab bar too is a one-line change to the `when` that builds this, but it
+ * is a change to Android's design rather than a fix to iOS's.
+ */
+enum class NavigationLayout {
+  /** A navigation rail down the leading edge. Any platform, given medium width *and* height. */
+  Rail,
+
+  /** A tab bar across the bottom. iPhone, in either orientation. */
+  BottomBar,
+
+  /** Nothing persistent; the top app bar's actions are the only way across. */
+  None,
+}
+
 sealed interface RecipeScaffoldEvent : CircuitUiEvent {
   data class GoTo(val screen: Screen) : RecipeScaffoldEvent
 
@@ -233,7 +285,7 @@ data class RecipeScaffoldState(
   val navStack: NavStack<out NavStack.Record>,
   val navigator: Navigator,
   val searchVisible: Boolean,
-  val showNavRail: Boolean,
+  val navigationLayout: NavigationLayout,
   val canGoBack: Boolean,
   val selectedDestination: Screen?,
   @Redacted val eventSink: (RecipeScaffoldEvent) -> Unit,

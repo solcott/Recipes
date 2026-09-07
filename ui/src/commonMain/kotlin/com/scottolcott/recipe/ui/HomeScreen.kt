@@ -3,6 +3,7 @@ package com.scottolcott.recipe.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -15,13 +16,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.scottolcott.recipe.BrowserTabUrlEffect
+import com.scottolcott.recipe.domain.isCupertino
 import com.scottolcott.recipe.domain.presenter.AreasScreen
 import com.scottolcott.recipe.domain.presenter.CategoriesScreen
 import com.scottolcott.recipe.domain.presenter.HomeEvent
 import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.HomeState
+import com.scottolcott.recipe.domain.presenter.HomeTabScreen
 import com.scottolcott.recipe.domain.presenter.IngredientsScreen
+import com.scottolcott.recipe.ui.design.AppSegmentedControl
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.CircuitContent
 import dev.zacsweers.metro.AppScope
@@ -50,31 +55,32 @@ fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
       .collect { page -> state.eventSink(HomeEvent.TabSelected(state.tabScreens[page])) }
   }
   Column(modifier = modifier.fillMaxSize()) {
-    PrimaryTabRow(
-      selectedTabIndex = state.selectedIndex,
-      contentColor = MaterialTheme.colorScheme.onSurface,
-      indicator = {
-        TabRowDefaults.PrimaryIndicator(
-          modifier = Modifier.tabIndicatorOffset(state.selectedIndex, matchContentSize = true),
-          width = Dp.Unspecified,
-          color = MaterialTheme.colorScheme.onSurface,
-        )
-      },
-    ) {
-      state.tabScreens.forEach { tab ->
-        Tab(
-          selected = tab == state.selectedTabScreen,
-          onClick = { state.eventSink(HomeEvent.TabSelected(tab)) },
-          text = {
-            val label =
-              when (tab) {
-                AreasScreen -> stringResource(Res.string.areas)
-                CategoriesScreen -> stringResource(Res.string.categories)
-                IngredientsScreen -> stringResource(Res.string.ingredients)
-              }
-            Text(label)
-          },
-        )
+    if (isCupertino) {
+      AppSegmentedControl(
+        options = state.tabScreens.map { it.label() },
+        selectedIndex = state.selectedIndex,
+        onSelect = { state.eventSink(HomeEvent.TabSelected(state.tabScreens[it])) },
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+      )
+    } else {
+      PrimaryTabRow(
+        selectedTabIndex = state.selectedIndex,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        indicator = {
+          TabRowDefaults.PrimaryIndicator(
+            modifier = Modifier.tabIndicatorOffset(state.selectedIndex, matchContentSize = true),
+            width = Dp.Unspecified,
+            color = MaterialTheme.colorScheme.onSurface,
+          )
+        },
+      ) {
+        state.tabScreens.forEach { tab ->
+          Tab(
+            selected = tab == state.selectedTabScreen,
+            onClick = { state.eventSink(HomeEvent.TabSelected(tab)) },
+            text = { Text(tab.label()) },
+          )
+        }
       }
     }
 
@@ -87,3 +93,17 @@ fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
     }
   }
 }
+
+/**
+ * The tab's name.
+ *
+ * Exhaustive on purpose, like `ScreenTitles.title()`: adding a [HomeTabScreen] should fail to
+ * compile here until it is given a name.
+ */
+@Composable
+private fun HomeTabScreen.label(): String =
+  when (this) {
+    AreasScreen -> stringResource(Res.string.areas)
+    CategoriesScreen -> stringResource(Res.string.categories)
+    IngredientsScreen -> stringResource(Res.string.ingredients)
+  }

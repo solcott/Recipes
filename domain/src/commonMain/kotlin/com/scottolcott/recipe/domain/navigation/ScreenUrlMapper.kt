@@ -5,6 +5,7 @@ import com.scottolcott.recipe.domain.presenter.HOME_TABS
 import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
+import com.scottolcott.recipe.domain.presenter.SearchTabScreen
 import com.scottolcott.recipe.model.RecipeId
 import com.slack.circuit.runtime.screen.Screen
 import io.ktor.http.decodeURLPart
@@ -14,6 +15,7 @@ import io.ktor.http.encodeURLQueryComponent
 private const val DEEP_LINK_SCHEME = "recipes://"
 private const val HOME_PATH = "/home"
 private const val FAVORITES_PATH = "/recipes/favorites"
+private const val SEARCH_PATH = "/search"
 
 /** Separates the ingredient names packed into a single `/recipes/ingredient/` segment. */
 private const val INGREDIENT_SEPARATOR = ","
@@ -74,6 +76,7 @@ private fun String.encodeIngredient(): String = encodeURLQueryComponent(encodeFu
  * | RecipesScreen.BySearch(term)    | /recipes/search/{term}      |
  * | RecipesScreen.ByIngredient(set) | /recipes/ingredient/{a},{b} |
  * | RecipesScreen.Favorites         | /recipes/favorites          |
+ * | SearchTabScreen                 | /search                     |
  * | RecipeDetailsScreen(id)         | /recipe/{id}                |
  */
 fun Screen.toUrlPath(): String? =
@@ -90,6 +93,7 @@ fun Screen.toUrlPath(): String? =
         .joinToString(INGREDIENT_SEPARATOR) { it.encodeIngredient() }
         .let { "/recipes/ingredient/$it" }
     is RecipesScreen.Favorites -> FAVORITES_PATH
+    is SearchTabScreen -> SEARCH_PATH
     is RecipeDetailsScreen -> "/recipe/${id.id.encodeURLPathPart()}"
     else -> null
   }
@@ -107,6 +111,7 @@ fun urlPathToScreen(rawPathOrUrl: String): Screen? =
   when (val normalized = normalizePath(rawPathOrUrl)) {
     HOME_PATH -> HomeScreen()
     FAVORITES_PATH -> RecipesScreen.Favorites
+    SEARCH_PATH -> SearchTabScreen
     else -> parameterizedScreen(normalized)
   }
 

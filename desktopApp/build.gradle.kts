@@ -74,5 +74,9 @@ dependencyAnalysis {
 tasks.withType<JavaExec>().configureEach {
   if (name == "run" || name.startsWith("hotRun")) {
     systemProperty("debug", "true")
+    // `-Pdesign=cupertino` renders the iOS design here on desktop. That is the whole point of
+    // `AppDesign` being a composition local rather than a call to `isIos()`: the Cupertino chrome
+    // can be iterated in a hot-reload loop instead of an Xcode round-trip.
+    systemProperty("recipes.design", providers.gradleProperty("design").getOrElse("material"))
   }
 }

@@ -20,4 +20,6 @@
     <string name="ingredient">Ingredient: %1$s</string>
     <string name="search_results">Results for \"%1$s\"</string>
     <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="clear_search">Clear search</string>
 </resources>

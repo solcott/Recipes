@@ -8,6 +8,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.domain.AppDesign
+import com.scottolcott.recipe.domain.LocalAppDesign
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
@@ -36,9 +38,11 @@ fun RecipeApp(
   windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass,
   initialScreen: Screen? = null,
   backShortcutHost: BackShortcutHost? = null,
+  design: AppDesign = if (isIos()) AppDesign.Cupertino else AppDesign.Material,
 ) {
-  RecipeAppTheme {
+  RecipeAppTheme(design = design) {
     CompositionLocalProvider(
+      LocalAppDesign provides design,
       LocalWindowSizeClass provides windowSizeClass,
       LocalDeepLinkScreen provides initialScreen,
       LocalBackShortcutHost provides backShortcutHost,
