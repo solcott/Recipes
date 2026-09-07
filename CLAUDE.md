@@ -105,8 +105,9 @@ main session; delegate the execution and the summarizing.
   subprojects by the `formatting` convention plugin. Never hand-format — run `ktfmtFormat`.
 - Detekt config lives at `config/detekt/detekt.yml` (built on defaults) plus `io.nlopez.compose.rules`.
   The IDE plugin treats findings as errors.
-- `-Xexpect-actual-classes` and `-opt-in=kotlin.time.ExperimentalTime` are set project-wide by
-  `kmp.library`. Don't re-declare them per file.
+- `-Xexpect-actual-classes` is set project-wide by `kmp.library`. Don't re-declare it per file.
+  The `-opt-in=kotlin.time.ExperimentalTime` that used to sit beside it is gone: `kotlin.time.Clock`
+  and `Instant` went Stable in Kotlin 2.3.0, so neither the flag nor a per-file `@OptIn` is needed.
 
 ## Module & build conventions
 

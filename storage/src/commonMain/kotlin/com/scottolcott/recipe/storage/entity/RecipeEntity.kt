@@ -9,7 +9,6 @@ import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import androidx.room3.Relation
 import com.scottolcott.recipe.model.RecipeId
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 data class RecipeEntityWithDetail(
@@ -22,7 +21,6 @@ data class RecipeEntityWithDetail(
   val ingredients: List<RecipeIngredientEntity> = emptyList(),
 )
 
-@OptIn(ExperimentalTime::class)
 @Entity(
   tableName = "recipe",
   indices =

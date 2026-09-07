@@ -17,9 +17,7 @@ plugins {
 
 kotlin {
   jvmToolchain(project.versionCatalog.findVersion("jvm-toolchain").get().requiredVersion.toInt())
-  compilerOptions {
-    freeCompilerArgs.addAll("-Xexpect-actual-classes", "-opt-in=kotlin.time.ExperimentalTime")
-  }
+  compilerOptions { freeCompilerArgs.add("-Xexpect-actual-classes") }
   android {
     val libs = project.versionCatalog
     namespace = "com.scottolcott.recipe.${project.name.replace("-", ".")}"
