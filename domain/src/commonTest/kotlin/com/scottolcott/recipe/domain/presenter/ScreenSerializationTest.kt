@@ -35,6 +35,7 @@ private val screenSerializers = SerializersModule {
     subclass(RecipesScreen.BySearch::class, RecipesScreen.BySearch.serializer())
     subclass(RecipesScreen.ByIngredient::class, RecipesScreen.ByIngredient.serializer())
     subclass(RecipesScreen.Favorites::class, RecipesScreen.Favorites.serializer())
+    subclass(SearchTabScreen::class, SearchTabScreen.serializer())
   }
 }
 
@@ -54,6 +55,7 @@ private val roundTripScreens: List<Screen> =
     RecipesScreen.ByIngredient(setOf("chicken", "rice")),
     RecipesScreen.Favorites,
     RecipeDetailsScreen(RecipeId("52772")),
+    SearchTabScreen,
   )
 
 val screenSerializationTests by testSuite {

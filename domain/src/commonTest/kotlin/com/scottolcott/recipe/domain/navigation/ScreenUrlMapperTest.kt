@@ -7,6 +7,7 @@ import com.scottolcott.recipe.domain.presenter.IngredientsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
+import com.scottolcott.recipe.domain.presenter.SearchTabScreen
 import com.scottolcott.recipe.model.RecipeId
 import com.slack.circuit.runtime.screen.Screen
 import de.infix.testBalloon.framework.core.testSuite
@@ -24,6 +25,7 @@ private val roundTripScreens: List<Pair<Screen, String>> =
     RecipesScreen.ByIngredient(setOf("chicken")) to "/recipes/ingredient/chicken",
     RecipesScreen.ByIngredient(setOf("rice", "chicken")) to "/recipes/ingredient/chicken,rice",
     RecipesScreen.Favorites to "/recipes/favorites",
+    SearchTabScreen to "/search",
     RecipeDetailsScreen(RecipeId("52772")) to "/recipe/52772",
   )
 

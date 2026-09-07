@@ -7,6 +7,7 @@ import com.scottolcott.recipe.domain.presenter.HomeScreen
 import com.scottolcott.recipe.domain.presenter.IngredientsScreen
 import com.scottolcott.recipe.domain.presenter.RecipeDetailsScreen
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
+import com.scottolcott.recipe.domain.presenter.SearchTabScreen
 import com.slack.circuit.runtime.screen.Screen
 import org.jetbrains.compose.resources.stringResource
 
@@ -45,6 +46,7 @@ fun Screen.title(): String? =
     is RecipesScreen.ByIngredient ->
       stringResource(Res.string.ingredient, ingredients.sorted().joinToString(", "))
     is RecipesScreen.Favorites -> stringResource(Res.string.favorites)
+    is SearchTabScreen -> stringResource(Res.string.search)
     is RecipeDetailsScreen -> stringResource(Res.string.recipes)
     else -> null
   }
