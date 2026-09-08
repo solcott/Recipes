@@ -9,13 +9,13 @@ import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.SearchSearchSuggestionsDataStore
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.serialization.json.Json
 
-@ContributesTo(AppScope::class)
-interface StorageProviders {
+@BindingContainer
+object StorageProviders {
   @Provides
   @StorageJson
   @SingleIn(AppScope::class)

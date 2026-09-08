@@ -8,11 +8,24 @@ import co.touchlab.kermit.platformLogWriter
 import coil3.PlatformContext
 import com.scottolcott.recipe.config.RuntimeConfig
 import com.scottolcott.recipe.di.ApplicationContext
+import com.scottolcott.recipe.di.CoilProviders
+import com.scottolcott.recipe.domain.circuit.CircuitProviders
+import com.scottolcott.recipe.network.NetworkProviders
+import com.scottolcott.recipe.storage.StorageProviders
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 
-@DependencyGraph(AppScope::class)
+@DependencyGraph(
+  AppScope::class,
+  bindingContainers =
+    [
+      CoilProviders::class,
+      CircuitProviders::class,
+      StorageProviders::class,
+      NetworkProviders::class,
+    ],
+)
 interface DesktopAppGraph : AppGraph {
 
   @Provides
