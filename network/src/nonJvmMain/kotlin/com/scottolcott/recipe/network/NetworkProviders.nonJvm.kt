@@ -2,13 +2,9 @@ package com.scottolcott.recipe.network
 
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
+import co.touchlab.kermit.ktor.KermitKtorLogger
 import com.scottolcott.recipe.config.RuntimeConfig
-import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.plugins.logging.Logger as KtorLogger
-
-actual fun HttpClientEngineConfig.configureEngine() {
-  // no-op
-}
 
 actual fun provideKtorLogger(logger: Logger, runtimeConfig: RuntimeConfig): KtorLogger {
   val severity = if (runtimeConfig.debugBuild) Severity.Debug else Severity.Info

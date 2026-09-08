@@ -16,7 +16,7 @@ import com.slack.circuit.subcircuit.SubCircuit
 import com.slack.circuit.subcircuit.SubPresenterFactory
 import com.slack.circuit.subcircuit.SubUiFactory
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
@@ -26,63 +26,65 @@ import kotlin.reflect.KClass
 @OptIn(
   ExperimentalCircuitApi::class // For AnimatedScreenTransform
 )
-@ContributesTo(AppScope::class)
+@BindingContainer
 interface CircuitProviders {
 
-  /**
-   * Screens are persisted with kotlinx-serialization; [registrations] is the multibound set Circuit
-   * codegen emits for every `@CircuitSerializable` screen.
-   *
-   * Saving an unregistered screen throws, but restoring one only returns null and the nav stack
-   * silently drops that record, so the restore-error callback is wired to the logger to make it
-   * visible.
-   */
-  @Provides
-  @SingleIn(AppScope::class)
-  fun provideCircuitSaver(
-    registrations: Set<CircuitSerializerRegistration>,
-    logger: Logger,
-  ): CircuitSaver =
-    SerializableCircuitSaver(
-      registrations,
-      onRestoreError = {
-        logger.e(it) { "Failed to restore a Circuit screen; dropping the record" }
-      },
-    )
+  companion object {
+    /**
+     * Screens are persisted with kotlinx-serialization; [registrations] is the multibound set
+     * Circuit codegen emits for every `@CircuitSerializable` screen.
+     *
+     * Saving an unregistered screen throws, but restoring one only returns null and the nav stack
+     * silently drops that record, so the restore-error callback is wired to the logger to make it
+     * visible.
+     */
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideCircuitSaver(
+      registrations: Set<CircuitSerializerRegistration>,
+      logger: Logger,
+    ): CircuitSaver =
+      SerializableCircuitSaver(
+        registrations,
+        onRestoreError = {
+          logger.e(it) { "Failed to restore a Circuit screen; dropping the record" }
+        },
+      )
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun provideCircuit(
+      presenterFactories: Set<Presenter.Factory>,
+      uiFactories: Set<Ui.Factory>,
+      animatedScreenTransforms:
+        @JvmSuppressWildcards
+        Map<KClass<out Screen>, AnimatedScreenTransform>,
+      circuitSaver: CircuitSaver,
+    ): Circuit {
+      return Circuit.Builder()
+        .addPresenterFactories(presenterFactories)
+        .addUiFactories(uiFactories)
+        .addAnimatedScreenTransforms(animatedScreenTransforms)
+        .setCircuitSaver(circuitSaver)
+        .build()
+    }
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideSubCircuit(
+      presenterFactories: Set<SubPresenterFactory>,
+      uiFactories: Set<SubUiFactory>,
+    ): SubCircuit =
+      SubCircuit.builder()
+        .addPresenterFactories(presenterFactories)
+        .addUiFactories(uiFactories)
+        .build()
+  }
 
   @Multibinds(allowEmpty = true)
   fun animatedScreenTransforms(): Map<KClass<out Screen>, AnimatedScreenTransform>
 
-  @SingleIn(AppScope::class)
-  @Provides
-  fun provideCircuit(
-    presenterFactories: Set<Presenter.Factory>,
-    uiFactories: Set<Ui.Factory>,
-    animatedScreenTransforms:
-      @JvmSuppressWildcards
-      Map<KClass<out Screen>, AnimatedScreenTransform>,
-    circuitSaver: CircuitSaver,
-  ): Circuit {
-    return Circuit.Builder()
-      .addPresenterFactories(presenterFactories)
-      .addUiFactories(uiFactories)
-      .addAnimatedScreenTransforms(animatedScreenTransforms)
-      .setCircuitSaver(circuitSaver)
-      .build()
-  }
-
   @Multibinds(allowEmpty = true) fun subPresenterFactories(): Set<SubPresenterFactory>
 
   @Multibinds(allowEmpty = true) fun subUiFactories(): Set<SubUiFactory>
-
-  @Provides
-  @SingleIn(AppScope::class)
-  fun provideSubCircuit(
-    presenterFactories: Set<SubPresenterFactory>,
-    uiFactories: Set<SubUiFactory>,
-  ): SubCircuit =
-    SubCircuit.builder()
-      .addPresenterFactories(presenterFactories)
-      .addUiFactories(uiFactories)
-      .build()
 }

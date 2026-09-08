@@ -1,8 +1,10 @@
 package com.scottolcott.recipe.network
 
+import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.config.RuntimeConfig
 import com.scottolcott.recipe.serialization.NetworkJson
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
@@ -29,7 +31,8 @@ private const val MAX_RETRIES = 3
 private const val MEALDB_BASE_URL = "https://www.themealdb.com/api/json/v2/"
 
 @ContributesTo(AppScope::class)
-interface NetworkProviders {
+@BindingContainer
+object NetworkProviders {
 
   @Provides
   @NetworkJson
@@ -53,7 +56,7 @@ interface NetworkProviders {
       install(ContentNegotiation) { json(json) }
 
       install(Logging) {
-        this.logger = logger.redacting(runtimeConfig.mealDbApiKey)
+        this.logger = logger
         level = if (runtimeConfig.debugBuild) LogLevel.ALL else LogLevel.HEADERS
       }
 
@@ -75,6 +78,14 @@ interface NetworkProviders {
       }
     }
   }
+
+  @SingleIn(AppScope::class)
+  @Provides
+  fun provideKtorLogger(logger: Logger, runtimeConfig: RuntimeConfig): KtorLogger {
+    return com.scottolcott.recipe.network
+      .provideKtorLogger(logger, runtimeConfig)
+      .redacting(runtimeConfig.mealDbApiKey)
+  }
 }
 
 /**
@@ -93,3 +104,5 @@ expect fun provideKtorEngineFactory(): HttpClientEngineFactory<*>
 
 // Currently needed until https://github.com/touchlab/Kermit/issues/474 is fixed
 expect fun HttpClientEngineConfig.configureEngine()
+
+expect fun provideKtorLogger(logger: Logger, runtimeConfig: RuntimeConfig): KtorLogger
