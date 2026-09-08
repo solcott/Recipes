@@ -10,6 +10,7 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.scottolcott.recipe.domain.AppDesign
+import com.scottolcott.recipe.domain.AppInput
 import com.scottolcott.recipe.domain.navigation.urlPathToScreen
 import com.slack.circuit.runtime.screen.Screen
 import dev.zacsweers.metro.createGraph
@@ -25,15 +26,24 @@ fun main(args: Array<String>) {
   // recomposition of the application root, taking the database connection and HTTP client with it.
   val graph = createGraph<DesktopAppGraph>()
   val initialScreen = args.firstOrNull()?.let { urlPathToScreen(it) }
-  // See desktopApp/build.gradle.kts: `./gradlew :desktopApp:hotRun -Pdesign=cupertino` previews
-  // the iOS design without a simulator.
-  val design =
-    if (System.getProperty("recipes.design").equals("cupertino", ignoreCase = true)) {
-      AppDesign.Cupertino
-    } else {
-      AppDesign.Material
-    }
-  application { RecipeWindow(graph, initialScreen, design) }
+  // See desktopApp/build.gradle.kts: `-Pdesign=cupertino` previews the iOS design without a
+  // simulator, and `-Pinput=touch` drops the pointer density that desktop otherwise takes. The two
+  // are independent on purpose -- `-Pdesign=cupertino -Pinput=touch` is what an iPhone actually
+  // gets, and either one alone is a design nothing ships, which is exactly what makes them useful
+  // for telling apart what each axis is doing.
+  val design = systemPropertyOr("recipes.design", AppDesign.Material)
+  val input = systemPropertyOr("recipes.input", AppInput.Pointer)
+  application { RecipeWindow(graph, initialScreen, design, input) }
+}
+
+/**
+ * Reads an enum out of a system property by name, falling back to [default] for anything the enum
+ * does not know -- including the property being absent, which is how a plain `:desktopApp:run`
+ * arrives here.
+ */
+private inline fun <reified T : Enum<T>> systemPropertyOr(property: String, default: T): T {
+  val value = System.getProperty(property) ?: return default
+  return enumValues<T>().firstOrNull { it.name.equals(value, ignoreCase = true) } ?: default
 }
 
 @Composable
@@ -41,6 +51,7 @@ private fun ApplicationScope.RecipeWindow(
   graph: DesktopAppGraph,
   initialScreen: Screen?,
   design: AppDesign,
+  input: AppInput,
 ) {
   // The Cupertino preview opens phone-shaped, since that is the only size that shows the tab-bar
   // layout. `rememberWindowState` owns the size, so resizing the window from outside will not do.
@@ -63,6 +74,7 @@ private fun ApplicationScope.RecipeWindow(
       initialScreen = initialScreen,
       backShortcutHost = backShortcutHost,
       design = design,
+      input = input,
     )
   }
 }
