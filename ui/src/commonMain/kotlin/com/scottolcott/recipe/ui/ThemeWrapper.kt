@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewWrapperProvider
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.scottolcott.recipe.domain.AppInput
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.ui.theme.RecipeAppTheme
 import org.jetbrains.compose.resources.painterResource
@@ -32,7 +33,11 @@ class ThemeWrapper : PreviewWrapperProvider {
   @Composable
   override fun Wrap(content: @Composable (() -> Unit)) {
     val windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
-    RecipeAppTheme {
+    // Pinned rather than left to the default, which reads the host: previews render on the JVM, so
+    // the default would quietly dress every preview in the pointer design regardless of which
+    // platform's screen is being previewed. The pointer design is inspected through
+    // `:desktopApp:hotRun -Pinput=pointer`, where the whole app is in it.
+    RecipeAppTheme(input = AppInput.Touch) {
       CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
         Scaffold(
           Modifier.fillMaxSize(),

@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.AppDesign
-import com.scottolcott.recipe.domain.LocalAppDesign
+import com.scottolcott.recipe.domain.AppInput
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldScreen
@@ -39,10 +39,12 @@ fun RecipeApp(
   initialScreen: Screen? = null,
   backShortcutHost: BackShortcutHost? = null,
   design: AppDesign = if (isIos()) AppDesign.Cupertino else AppDesign.Material,
+  input: AppInput = if (isDesktop() || isWeb()) AppInput.Pointer else AppInput.Touch,
 ) {
-  RecipeAppTheme(design = design) {
+  // `RecipeAppTheme` provides both LocalAppDesign and LocalAppInput from these same values, so the
+  // tokens and the branches below them can never disagree about which design is in force.
+  RecipeAppTheme(design = design, input = input) {
     CompositionLocalProvider(
-      LocalAppDesign provides design,
       LocalWindowSizeClass provides windowSizeClass,
       LocalDeepLinkScreen provides initialScreen,
       LocalBackShortcutHost provides backShortcutHost,
