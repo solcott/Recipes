@@ -37,6 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -300,7 +302,11 @@ private fun LazyItemScope.SuggestionRow(
       },
       trailingContent = trailingContent,
       colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-      modifier = Modifier.clickable(onClick = onClick).fillMaxWidth(),
+      // No `overrideDescendants`: the trailing delete button declares no cursor of its own, so it
+      // inherits this one -- which is the cursor it wants anyway. Overriding here would only take
+      // that choice away from any future child that needs a different one.
+      modifier =
+        Modifier.clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).fillMaxWidth(),
     )
     if (cupertino) {
       HorizontalDivider(

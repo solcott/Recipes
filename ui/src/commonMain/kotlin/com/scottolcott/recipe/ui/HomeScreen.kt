@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.scottolcott.recipe.BrowserTabUrlEffect
@@ -79,6 +81,7 @@ fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
             selected = tab == state.selectedTabScreen,
             onClick = { state.eventSink(HomeEvent.TabSelected(tab)) },
             text = { Text(tab.label()) },
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
           )
         }
       }
