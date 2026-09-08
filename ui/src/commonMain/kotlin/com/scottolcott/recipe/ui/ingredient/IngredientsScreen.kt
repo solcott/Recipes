@@ -33,7 +33,7 @@ import com.scottolcott.recipe.ui.ErrorDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
-import com.scottolcott.recipe.ui.no_categories_found
+import com.scottolcott.recipe.ui.no_ingredients_found
 import com.scottolcott.recipe.ui.rememberAdaptiveGridCells
 import com.scottolcott.recipe.ui.rememberAdaptivePadding
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -72,7 +72,7 @@ fun IngredientScreen(state: IngredientsState, modifier: Modifier = Modifier) {
       is IngredientsState.Success -> {
         if (state.ingredients.isEmpty()) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.no_categories_found))
+            Text(stringResource(Res.string.no_ingredients_found))
           }
         } else {
           LazyVerticalGrid(
@@ -82,7 +82,7 @@ fun IngredientScreen(state: IngredientsState, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = padding,
           ) {
-            items(state.ingredients, key = { it.id }, contentType = { "category_item" }) {
+            items(state.ingredients, key = { it.id }, contentType = { "ingredient_item" }) {
               IngredientItem(
                 it,
                 labelTextStyle = labelTextStyle,
@@ -99,16 +99,16 @@ fun IngredientScreen(state: IngredientsState, modifier: Modifier = Modifier) {
 
 @Composable
 fun IngredientItem(
-  category: Ingredient,
+  ingredient: Ingredient,
   labelTextStyle: TextStyle,
-  onCategoryClick: () -> Unit,
+  onIngredientClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
 
-  AppCard(onClick = onCategoryClick, modifier = modifier) {
+  AppCard(onClick = onIngredientClick, modifier = modifier) {
     AsyncImage(
-      category.thumbnail,
-      contentDescription = category.name,
+      ingredient.thumbnail,
+      contentDescription = ingredient.name,
       imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
       contentScale = ContentScale.Crop,
       modifier =
@@ -117,7 +117,7 @@ fun IngredientItem(
           .background(MaterialTheme.colorScheme.surface),
     )
     Text(
-      category.name,
+      ingredient.name,
       Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
       style = labelTextStyle,
       maxLines = 1,
