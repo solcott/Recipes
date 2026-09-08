@@ -4,6 +4,8 @@ import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioStorage
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import com.scottolcott.recipe.storage.datastore.AreasFetchHistory
+import com.scottolcott.recipe.storage.datastore.AreasFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistory
 import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
@@ -29,6 +31,7 @@ actual class StorageFactory(
   private val historySerializer: RecipeFetchHistoryJsonSerializer,
   private val categoriesHistorySerializer: CategoriesFetchHistoryJsonSerializer,
   private val ingredientsHistorySerializer: IngredientsFetchHistoryJsonSerializer,
+  private val areasHistorySerializer: AreasFetchHistoryJsonSerializer,
 ) {
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val dbFilePath = documentDirectory() + "/" + DATABASE_NAME
@@ -67,6 +70,14 @@ actual class StorageFactory(
       fileSystem = FileSystem.SYSTEM,
       serializer = ingredientsHistorySerializer,
       producePath = { (documentDirectory() + "/" + INGREDIENTS_FETCH_HISTORY_FILE).toPath() },
+    )
+  }
+
+  actual fun createAreasFetchHistoryDataStoreStorage(): Storage<AreasFetchHistory> {
+    return OkioStorage(
+      fileSystem = FileSystem.SYSTEM,
+      serializer = areasHistorySerializer,
+      producePath = { (documentDirectory() + "/" + AREAS_FETCH_HISTORY_FILE).toPath() },
     )
   }
 

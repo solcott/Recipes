@@ -1,9 +1,11 @@
 package com.scottolcott.recipe.storage
 
 import com.scottolcott.recipe.serialization.StorageJson
+import com.scottolcott.recipe.storage.dao.AreaDao
 import com.scottolcott.recipe.storage.dao.CategoryDao
 import com.scottolcott.recipe.storage.dao.IngredientDao
 import com.scottolcott.recipe.storage.dao.RecipeDao
+import com.scottolcott.recipe.storage.datastore.AreasFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistoryDataStore
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
@@ -41,6 +43,8 @@ object StorageProviders {
   @Provides
   fun provideIngredientsDao(appDatabase: AppDatabase): IngredientDao = appDatabase.ingredientDao()
 
+  @Provides fun provideAreasDao(appDatabase: AppDatabase): AreaDao = appDatabase.areaDao()
+
   @Provides
   @SingleIn(AppScope::class)
   fun provideSuggestionsDataStore(
@@ -68,4 +72,11 @@ object StorageProviders {
     storageFactory: StorageFactory
   ): IngredientsFetchHistoryDataStore =
     IngredientsFetchHistoryDataStore(storageFactory.createIngredientsFetchHistoryDataStoreStorage())
+
+  @Provides
+  @SingleIn(AppScope::class)
+  fun provideAreasFetchHistoryDataStore(
+    storageFactory: StorageFactory
+  ): AreasFetchHistoryDataStore =
+    AreasFetchHistoryDataStore(storageFactory.createAreasFetchHistoryDataStoreStorage())
 }

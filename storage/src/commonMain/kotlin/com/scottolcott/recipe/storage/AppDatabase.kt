@@ -6,9 +6,11 @@ import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import androidx.sqlite.SQLiteDriver
+import com.scottolcott.recipe.storage.dao.AreaDao
 import com.scottolcott.recipe.storage.dao.CategoryDao
 import com.scottolcott.recipe.storage.dao.IngredientDao
 import com.scottolcott.recipe.storage.dao.RecipeDao
+import com.scottolcott.recipe.storage.entity.AreaEntity
 import com.scottolcott.recipe.storage.entity.CategoryEntity
 import com.scottolcott.recipe.storage.entity.FavoriteEntity
 import com.scottolcott.recipe.storage.entity.IngredientEntity
@@ -26,6 +28,7 @@ import kotlin.coroutines.CoroutineContext
       CategoryEntity::class,
       FavoriteEntity::class,
       IngredientEntity::class,
+      AreaEntity::class,
     ],
   version = 1,
 )
@@ -37,6 +40,8 @@ abstract class AppDatabase : RoomDatabase() {
   abstract fun categoryDao(): CategoryDao
 
   abstract fun ingredientDao(): IngredientDao
+
+  abstract fun areaDao(): AreaDao
 }
 
 // The Room compiler generates the `actual` implementations.

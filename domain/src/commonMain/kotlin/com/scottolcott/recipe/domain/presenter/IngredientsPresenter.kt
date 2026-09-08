@@ -1,5 +1,3 @@
-@file:Suppress("MatchingDeclarationName")
-
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
