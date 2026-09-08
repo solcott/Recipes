@@ -21,15 +21,18 @@ datastore = "1.3.0-alpha10"
 dependency-analysis = "3.19.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
+# The JDK that compiles the project and runs it: desktop app, tests, jpackage runtime image.
 #noinspection UnusedVersionCatalogEntry
-jvm-toolchain = "17"
+jvm-toolchain = "25"
+# The bytecode and JDK-API level everything targets, deliberately independent of the toolchain above.
+# Enforced per JVM target with jvmTarget + -Xjdk-release; without those the toolchain silently wins.
 #noinspection UnusedVersionCatalogEntry
 jvmSourceCompatibility = "17"
 #noinspection UnusedVersionCatalogEntry
 jvmTargetCompatibility = "17"
 kermit = "2.1.0"
 kmp-parcelize = "1.0.4"
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.11"

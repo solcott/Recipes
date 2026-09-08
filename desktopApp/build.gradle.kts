@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   alias(libs.plugins.kotlin.jvm)
@@ -10,9 +11,23 @@ plugins {
   id("detekt")
 }
 
+// `kotlin("jvm")` brings the Java plugin, so targetCompatibility would otherwise default to the
+// toolchain's 25 and disagree with the Kotlin target below. Nothing here is written in Java; this
+// exists to keep the Kotlin/Java target consistency check satisfied.
+java {
+  sourceCompatibility = JavaVersion.toVersion(libs.versions.jvmSourceCompatibility.get())
+  targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTargetCompatibility.get())
+}
+
 kotlin {
+  // Compiles and runs on JDK 25 - `run` and `hotRun` set no javaLauncher, so they inherit this
+  // toolchain, which is the whole point. The emitted bytecode stays at 17, read from the catalog
+  // rather than hardcoded so it cannot drift from the toolchain line above it.
   jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
-  compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+  compilerOptions {
+    jvmTarget = JvmTarget.fromTarget(libs.versions.jvmTargetCompatibility.get())
+    freeCompilerArgs.add("-Xjdk-release=${libs.versions.jvmTargetCompatibility.get()}")
+  }
   dependencies {
     api(projects.config)
     api(projects.core)

@@ -25,6 +25,6 @@ subprojects {
 }
 
 tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
-  languageVersion = JavaLanguageVersion.of(26)
+  languageVersion = JavaLanguageVersion.of(25)
   vendor.set(JvmVendorSpec.AMAZON)
 }

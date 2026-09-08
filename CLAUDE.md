@@ -6,9 +6,21 @@ Kotlin Multiplatform recipe app targeting Android, iOS, Desktop (JVM), JS, and W
 
 ## Build & verify
 
-Gradle 9.7.1. The daemon runs on **Amazon Corretto 25**, auto-provisioned via foojay from
-`gradle/gradle-daemon-jvm.properties`; Kotlin and Java compile to **JVM 17** (`jvmToolchain(17)`).
+Gradle 9.7.1. Everything runs on **JDK 25** and everything compiles to **JVM 17** — those are two
+different settings and the split is deliberate. The daemon uses Amazon Corretto 25, auto-provisioned
+via foojay from `gradle/gradle-daemon-jvm.properties`; `jvm-toolchain = "25"` in the catalog is the
+JDK that compiles the code and runs it (`:desktopApp:run`, tests, the jpackage runtime image), while
+`jvmSourceCompatibility`/`jvmTargetCompatibility = "17"` is the bytecode and API level.
 Don't override the JDK.
+
+A toolchain silently sets `jvmTarget` to its own version unless a target pins one, so **every JVM
+compilation pins it explicitly** — `jvm {}` and `android {}` in `kmp.library`, plus `:app` and
+`:desktopApp` — each with `jvmTarget` *and* `-Xjdk-release=17`, which additionally hides post-17 JDK
+APIs so nothing that would crash on Android can compile. Drop either and you silently get bytecode
+25. `-Xjdk-release` is JVM-only: never add it to the project-wide `compilerOptions`, which also
+feeds Native, JS, and WasmJS. `kotlin.jvm.target.validation.mode` is unset (default `error`), so a
+Kotlin/Java target mismatch fails the build rather than shipping — that check is a feature, not an
+obstacle.
 
 - **Compile check after edits:** `./gradlew :<module>:build`. Builds every target for that module,
   which catches `expect`/`actual` mismatches and web/native breakage that a single-target compile misses.
@@ -43,9 +55,10 @@ The `exclude("org.jetbrains.compose.hot-reload:hot-reload-runtime-api")` lines i
 
 `gradle.properties` sets `compose.reload.jbr.autoProvisioningEnabled=true`: hot reload needs a
 JetBrains Runtime for enhanced class redefinition, and no JBR is installed system-wide, so Gradle
-fetches one through the foojay resolver on first use (~200MB, once). It provisions **JBR 21**, not a
-17 to match `jvmToolchain(17)` — JBR's latest line is 21, and JVM 17 bytecode runs on it fine. This
-is the one place the "don't override the JDK" rule bends, and only for the run JVM.
+fetches one through the foojay resolver on first use (~200MB, once). It follows the project
+toolchain, so it now provisions **JBR 25** (`jbrsdk_jcef-25.0.4.1`) and the daemon, the compile
+toolchain, and the hot-reload JVM are all 25. An older `jbrsdk_jcef-21` may still be sitting in
+`~/.gradle/jdks` from before the toolchain moved; it is unused.
 
 ```
 ./gradlew :desktopApp:hotRun --auto   # continuous build; reloads on save
@@ -105,8 +118,9 @@ main session; delegate the execution and the summarizing.
   subprojects by the `formatting` convention plugin. Never hand-format — run `ktfmtFormat`.
 - Detekt config lives at `config/detekt/detekt.yml` (built on defaults) plus `io.nlopez.compose.rules`.
   The IDE plugin treats findings as errors.
-- `-Xexpect-actual-classes` and `-opt-in=kotlin.time.ExperimentalTime` are set project-wide by
-  `kmp.library`. Don't re-declare them per file.
+- `-Xexpect-actual-classes` is set project-wide by `kmp.library`. Don't re-declare it per file.
+  The `-opt-in=kotlin.time.ExperimentalTime` that used to sit beside it is gone: `kotlin.time.Clock`
+  and `Instant` went Stable in Kotlin 2.3.0, so neither the flag nor a per-file `@OptIn` is needed.
 
 ## Module & build conventions
 
