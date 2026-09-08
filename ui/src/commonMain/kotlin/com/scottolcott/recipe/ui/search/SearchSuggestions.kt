@@ -155,7 +155,16 @@ private fun LazyListScope.historySection(
       },
       trailingContent = {
         IconButton(onClick = { onRemoveSuggestionClick(it) }) {
-          Icon(painterResource(Res.drawable.delete_24px), "Delete")
+          Icon(
+            painterResource(Res.drawable.delete_24px),
+            "Delete",
+            tint =
+              if (isCupertino) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+              } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+              },
+          )
         }
       },
     )
