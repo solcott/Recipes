@@ -93,5 +93,8 @@ tasks.withType<JavaExec>().configureEach {
     // `AppDesign` being a composition local rather than a call to `isIos()`: the Cupertino chrome
     // can be iterated in a hot-reload loop instead of an Xcode round-trip.
     systemProperty("recipes.design", providers.gradleProperty("design").getOrElse("material"))
+    // `-Pinput=touch` does the same for the other axis: desktop runs in the pointer design by
+    // default, and this is how it is compared against the touch metrics the phones get.
+    systemProperty("recipes.input", providers.gradleProperty("input").getOrElse("pointer"))
   }
 }

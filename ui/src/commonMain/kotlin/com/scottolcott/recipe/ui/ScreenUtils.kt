@@ -16,6 +16,7 @@ import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_L
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_LARGE_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
+import com.scottolcott.recipe.domain.isPointer
 
 /**
  * Whether the window is too short to spend vertical space freely -- a landscape phone, or a squat
@@ -65,43 +66,58 @@ fun Modifier.maxContentWidth(): Modifier =
  */
 val LocalFloatingBarInset = compositionLocalOf { 0.dp }
 
+/**
+ * The screen padding for this window, and for whatever is driving it.
+ *
+ * The window size is the primary axis and the input steps it: a large window on a desk is still a
+ * large window, but its margins are read at a glance rather than reached around a thumb, and every
+ * dp spent on them is one the grid does not get. Each pointer tier lands on the touch tier one step
+ * below it, which is what keeps the two ramps from drifting apart as either is tuned.
+ */
 @Composable
 fun rememberAdaptivePadding(): PaddingValues {
   val windowSizeClass = LocalWindowSizeClass.current
   val floatingBarInset = LocalFloatingBarInset.current
-  return remember(windowSizeClass, floatingBarInset) {
+  val pointer = isPointer
+  return remember(windowSizeClass, floatingBarInset, pointer) {
     val isMediumWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
     val isExpandedWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND)
     val isLargeWidth = windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_LARGE_LOWER_BOUND)
 
     val isMediumHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)
     val isExpandedHeight = windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_EXPANDED_LOWER_BOUND)
-    // Every branch differs from the one below it, or the tier is dead code -- expanded and medium
-    // both returned 24dp until this ramp replaced them. The steps are small at the low end on
-    // purpose: padding is subtracted from the width the grid measures itself against, so a big
-    // step here can cost a column at the very width that just gained the room for one.
+    // Each ramp is widest-first, and the input shifts the tier one step down it rather than
+    // branching per tier: "a pointer gets the margins of the window one size below" is then the
+    // structure rather than a claim in a comment that eight separate numbers have to keep.
+    //
+    // The steps are small at the low end on purpose: padding is subtracted from the width the grid
+    // measures itself against, so a big step here can cost a column at the very width that just
+    // gained the room for one.
     //
     // Large is the terminal tier because [maxContentWidth] freezes the content column there. An
     // extra-large step would read the window while the column it pads no longer grows, so it would
     // only take width away from the grid -- the same failure, arriving from the other direction.
-    val horizontal =
+    val step = if (pointer) 1 else 0
+    val horizontalTier =
       when {
-        isLargeWidth -> 32.dp
-        isExpandedWidth -> 24.dp
-        isMediumWidth -> 20.dp
-        else -> 16.dp
+        isLargeWidth -> 0
+        isExpandedWidth -> 1
+        isMediumWidth -> 2
+        else -> 3
       }
+    val horizontal = HORIZONTAL_RAMP[horizontalTier + step]
 
-    val vertical =
+    val verticalTier =
       when {
         // If not at least medium width then most likely a phone. Deliberately first, so it
         // shadows both height branches: a tall phone should keep phone padding rather than pick
         // up the roomier spacing meant for a tall window on a larger screen.
-        !isMediumWidth -> 16.dp
-        isExpandedHeight -> 32.dp
-        isMediumHeight -> 24.dp
-        else -> 16.dp
+        !isMediumWidth -> 3
+        isExpandedHeight -> 0
+        isMediumHeight -> 1
+        else -> 3
       }
+    val vertical = VERTICAL_RAMP[verticalTier + step]
     PaddingValues(
       start = horizontal,
       top = vertical,
@@ -110,3 +126,13 @@ fun rememberAdaptivePadding(): PaddingValues {
     )
   }
 }
+
+/**
+ * Horizontal screen padding, widest window first, with one extra step on the end for a pointer at
+ * the narrowest tier. Indexed by [rememberAdaptivePadding]; every value is one tier's answer for
+ * touch and the next tier's answer for a pointer, which is what keeps the two ramps in step.
+ */
+private val HORIZONTAL_RAMP = listOf(32.dp, 24.dp, 20.dp, 16.dp, 12.dp)
+
+/** Vertical screen padding. Same shape as [HORIZONTAL_RAMP]; see [rememberAdaptivePadding]. */
+private val VERTICAL_RAMP = listOf(32.dp, 24.dp, 20.dp, 16.dp, 12.dp)

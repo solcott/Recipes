@@ -889,6 +889,11 @@ Compose:
       # repeat it -- or, on a layout where the search field takes the bar, that it must name itself.
       # Read by screens Circuit builds from their Screen, with no parameter list from the scaffold.
       - LocalAppBarShowsScreenTitle
+      # Whether the app is being driven by a finger or by a pointer and keyboard. Read by both
+      # presenters and composables across every screen, alongside LocalAppDesign and for the same
+      # reason: as a parameter it would be an argument on nearly every signature in :ui, and it is
+      # set once at the root and never changes.
+      - LocalAppInput
       # How far the floating tab bar reaches up over the content. Every scrolling screen needs it
       # to pad its last row clear of the capsule, and those screens are built by Circuit from their
       # Screen, so there is no parameter list running from the scaffold down to reach them.

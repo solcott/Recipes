@@ -7,11 +7,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.scottolcott.recipe.domain.isPointer
 import kotlin.math.max
 import kotlin.math.roundToInt
 
 /** How much a cell grows per 1000dp of grid width. See [TargetWidthCells]. */
 private const val GROWTH_PER_DP = 0.02f
+
+/**
+ * How much of its target a cell keeps when a pointer is doing the browsing.
+ *
+ * Applied here rather than at the two call sites so their numbers stay what they are -- widths
+ * measured against a thumb -- and this stays the one place the pointer design restates them. A card
+ * that no longer has to be thumb-sized can be smaller, and a window that fits another column of
+ * them is showing more of the collection at once, which is the whole point of the larger screen.
+ */
+private const val POINTER_TARGET_SCALE = 0.85f
 
 /**
  * [GridCells] that keeps every cell as close as it can to a target width.
@@ -30,8 +41,10 @@ fun rememberAdaptiveGridCells(
   shortWindowTargetWidth: Dp = targetWidth,
 ): GridCells {
   val isShortWindow = isShortWindow()
-  return remember(isShortWindow, targetWidth, shortWindowTargetWidth) {
-    TargetWidthCells(if (isShortWindow) shortWindowTargetWidth else targetWidth)
+  val pointer = isPointer
+  return remember(isShortWindow, pointer, targetWidth, shortWindowTargetWidth) {
+    val target = if (isShortWindow) shortWindowTargetWidth else targetWidth
+    TargetWidthCells(if (pointer) target * POINTER_TARGET_SCALE else target)
   }
 }
 

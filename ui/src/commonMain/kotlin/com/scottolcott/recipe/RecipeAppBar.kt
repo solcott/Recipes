@@ -44,6 +44,7 @@ import com.scottolcott.recipe.ui.arrow_back_ios_24px
 import com.scottolcott.recipe.ui.back
 import com.scottolcott.recipe.ui.chef_hat_24px
 import com.scottolcott.recipe.ui.design.LocalTopAppBarScrollBehavior
+import com.scottolcott.recipe.ui.design.PointerTooltip
 import com.scottolcott.recipe.ui.favorite_24px_filled
 import com.scottolcott.recipe.ui.favorites
 import com.scottolcott.recipe.ui.navigationBarTitle
@@ -140,14 +141,16 @@ private fun RecipeTopAppBar(state: RecipeScaffoldState, modifier: Modifier = Mod
     if (state.navigationLayout != NavigationLayout.BottomBar) FavoritesAction(state)
     // Search is a tab of its own on that layout, so the bar keeps no shortcut to it either.
     if (state.navigationLayout != NavigationLayout.BottomBar) {
-      IconButton(
-        onClick = { state.eventSink(RecipeScaffoldEvent.SearchClicked) },
-        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-      ) {
-        Icon(
-          painter = painterResource(Res.drawable.search_24px),
-          contentDescription = stringResource(Res.string.search),
-        )
+      PointerTooltip(stringResource(Res.string.search)) {
+        IconButton(
+          onClick = { state.eventSink(RecipeScaffoldEvent.SearchClicked) },
+          modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+        ) {
+          Icon(
+            painter = painterResource(Res.drawable.search_24px),
+            contentDescription = stringResource(Res.string.search),
+          )
+        }
       }
     }
   }
@@ -206,14 +209,16 @@ private fun cupertinoBarColors() =
 
 @Composable
 private fun FavoritesAction(state: RecipeScaffoldState) {
-  IconButton(
-    onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(RecipesScreen.Favorites)) },
-    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-  ) {
-    Icon(
-      painter = painterResource(Res.drawable.favorite_24px_filled),
-      contentDescription = stringResource(Res.string.favorites),
-    )
+  PointerTooltip(stringResource(Res.string.favorites)) {
+    IconButton(
+      onClick = { state.eventSink(RecipeScaffoldEvent.SelectDestination(RecipesScreen.Favorites)) },
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+    ) {
+      Icon(
+        painter = painterResource(Res.drawable.favorite_24px_filled),
+        contentDescription = stringResource(Res.string.favorites),
+      )
+    }
   }
 }
 
@@ -281,16 +286,18 @@ internal fun BackButton(state: RecipeScaffoldState) {
 
 @Composable
 private fun MaterialBackButton(state: RecipeScaffoldState) {
-  IconButton(
-    { state.eventSink(RecipeScaffoldEvent.Back) },
-    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-    colors =
-      IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-  ) {
-    Icon(
-      painter = painterResource(Res.drawable.arrow_back_24px),
-      contentDescription = stringResource(Res.string.back),
-    )
+  PointerTooltip(stringResource(Res.string.back)) {
+    IconButton(
+      { state.eventSink(RecipeScaffoldEvent.Back) },
+      modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+      colors =
+        IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+    ) {
+      Icon(
+        painter = painterResource(Res.drawable.arrow_back_24px),
+        contentDescription = stringResource(Res.string.back),
+      )
+    }
   }
 }
 

@@ -28,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -117,6 +119,14 @@ fun SearchScreen(state: SearchState, modifier: Modifier = Modifier) {
 }
 
 /**
+ * How much has to be typed before the field will submit.
+ *
+ * Named so the enabled state and the cursor that advertises it are stated once rather than twice --
+ * see the trailing icon in [RecipeSearchBarInputField].
+ */
+private const val MIN_SEARCH_LENGTH = 3
+
+/**
  * The search field, plus whatever the design puts beside it.
  *
  * The same instance backs both the collapsed app bar and the expanded overlay -- Material morphs
@@ -167,7 +177,11 @@ private fun SearchInputField(
   ) {
     field(Modifier.weight(1f))
     if (expanded) {
-      TextButton(onClick = onCancel, contentPadding = PaddingValues(start = 12.dp)) {
+      TextButton(
+        onClick = onCancel,
+        contentPadding = PaddingValues(start = 12.dp),
+        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+      ) {
         Text(stringResource(Res.string.cancel), style = MaterialTheme.typography.bodyLarge)
       }
     }
@@ -340,7 +354,10 @@ private fun RecipeSearchBarInputField(
         // trailing slot holds a clear button rather than the checkmark -- which would in any case
         // be a second way out of the field, next to the Cancel button beside it.
         if (searchText.text.isNotEmpty()) {
-          IconButton(onClick = { searchText.clearText() }) {
+          IconButton(
+            onClick = searchText::clearText,
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+          ) {
             Icon(
               painter = painterResource(Res.drawable.cancel_24px),
               contentDescription = stringResource(Res.string.clear_search),
@@ -348,9 +365,15 @@ private fun RecipeSearchBarInputField(
           }
         }
       } else if (searchBarState.currentValue == SearchBarValue.Expanded) {
+        // One predicate feeding both, so the cursor cannot promise a click the button will not
+        // take: a hand over a disabled control reads as an unresponsive app rather than a
+        // disabled one.
+        val canSubmit = searchText.text.length >= MIN_SEARCH_LENGTH
         IconButton(
           { onSearch(searchText.text.toString()) },
-          enabled = searchText.text.length >= 3,
+          enabled = canSubmit,
+          modifier =
+            Modifier.pointerHoverIcon(if (canSubmit) PointerIcon.Hand else PointerIcon.Default),
         ) {
           Icon(painter = painterResource(Res.drawable.check_24px), contentDescription = "")
         }

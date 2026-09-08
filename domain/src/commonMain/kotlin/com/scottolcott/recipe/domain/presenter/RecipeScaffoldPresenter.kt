@@ -4,14 +4,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
-import androidx.compose.runtime.setValue
 import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
 import com.scottolcott.recipe.domain.isCupertino
+import com.scottolcott.recipe.domain.isPointer
 import com.scottolcott.recipe.domain.navigation.LocalDeepLinkScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
@@ -68,19 +67,7 @@ class RecipeScaffoldPresenter internal constructor(private val navigator: Naviga
     val roomForRail =
       windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) &&
         windowSizeClass.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND)
-    val navigationLayout =
-      when {
-        roomForRail -> NavigationLayout.Rail
-        // Requiring medium in *both* axes above is what keeps a landscape phone here: it clears
-        // the width breakpoint comfortably but never the height one.
-        //
-        // Keyed on the design rather than on `isIos()` so `-Pdesign=cupertino` shows the real iOS
-        // layout on desktop. Which navigation surface a window gets is a design decision, and
-        // pinning it to the platform would have made the tab bar the one piece of this work that
-        // could only ever be seen through Xcode.
-        isCupertino -> NavigationLayout.BottomBar
-        else -> NavigationLayout.None
-      }
+    val navigationLayout = navigationLayoutFor(roomForRail, isPointer, isCupertino)
 
     val searchBarValue = retain { mutableStateOf(SearchBarValue.Collapsed) }
     // Whether the user asked for search on a layout that does not show it permanently. Derived
@@ -243,18 +230,54 @@ internal fun List<Screen>.selectedDestination(): Screen? = firstNotNullOfOrNull 
 }
 
 /**
+ * Which navigation surface a window gets, given the room it has and the design it is wearing.
+ *
+ * Pulled out of `present` so it can be exercised without standing up a composition -- the three
+ * inputs are all the decision has, and every one of them arrives as a composition value up there.
+ *
+ * [roomForRail] requires medium in *both* axes, which is what keeps a landscape phone out of it: a
+ * phone on its side clears the width breakpoint comfortably but never the height one.
+ *
+ * A pointer takes the rail below the breakpoint too. 80dp of the leading edge is something a narrow
+ * desktop or browser window can spare where it could not spare a bottom bar, and a bottom bar is a
+ * touch idiom besides. Without that arm a small window falls to [NavigationLayout.None] and has no
+ * route between sections at all -- the gap the tab bar closed on iOS.
+ *
+ * The last arm is keyed on the design rather than on `isIos()` so `-Pdesign=cupertino` shows the
+ * real iOS layout on desktop. Which navigation surface a window gets is a design decision, and
+ * pinning it to the platform would have made the tab bar the one piece of that work that could only
+ * ever be seen through Xcode.
+ */
+internal fun navigationLayoutFor(
+  roomForRail: Boolean,
+  pointer: Boolean,
+  cupertino: Boolean,
+): NavigationLayout =
+  when {
+    roomForRail -> NavigationLayout.Rail
+    pointer -> NavigationLayout.Rail
+    cupertino -> NavigationLayout.BottomBar
+    else -> NavigationLayout.None
+  }
+
+/**
  * Which persistent navigation surface the window is wide enough for.
  *
  * Replaces the earlier `showNavRail` boolean, which could only say "rail or nothing" -- and on iOS
  * always said nothing, at every size, leaving the platform with no way between sections but a heart
  * icon in the top app bar.
  *
- * [BottomBar] is iOS-only for now. Compact Android windows keep [None], which is what they have
- * always had; giving them a tab bar too is a one-line change to the `when` that builds this, but it
- * is a change to Android's design rather than a fix to iOS's.
+ * [BottomBar] is iOS-only. Compact Android windows keep [None], which is what they have always had;
+ * giving them a tab bar too is a one-line change to the `when` that builds this, but it is a change
+ * to Android's design rather than a fix to iOS's.
+ *
+ * [Rail] is also what a pointer gets at any size, not only above the breakpoint -- see the `when`.
  */
 enum class NavigationLayout {
-  /** A navigation rail down the leading edge. Any platform, given medium width *and* height. */
+  /**
+   * A navigation rail down the leading edge. Any platform, given medium width *and* height, and any
+   * window being driven by a pointer regardless of size.
+   */
   Rail,
 
   /** A tab bar across the bottom. iPhone, in either orientation. */
