@@ -3,7 +3,6 @@ package com.scottolcott.recipe.domain.presenter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
@@ -17,7 +16,6 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 @CircuitInject(IngredientsScreen::class, AppScope::class)
 @Inject
@@ -30,18 +28,12 @@ internal constructor(
   override fun present(): IngredientsState {
     var retryTrigger by retain { mutableIntStateOf(0) }
     val response = ingredientsProducer.produce(retryTrigger)
-    var lastIngredients by retain(retryTrigger) { mutableStateOf<List<Ingredient>?>(null) }
-
-    if (response is StoreReadResponse.Data) {
-      lastIngredients = response.value
-    }
 
     val successEventSink: (IngredientsEvent.Success) -> Unit = remember {
       { event ->
         when (event) {
-          is IngredientsEvent.Success.IngredientClicked -> {
+          is IngredientsEvent.Success.IngredientClicked ->
             navigator.goTo(RecipesScreen.ByIngredient(setOf(event.ingredient)))
-          }
         }
       }
     }
@@ -49,46 +41,15 @@ internal constructor(
     val errorEventSink: (IngredientsEvent.Error) -> Unit = remember {
       { event ->
         when (event) {
-          IngredientsEvent.Error.RetryClicked -> {
-            retryTrigger++
-          }
+          IngredientsEvent.Error.RetryClicked -> retryTrigger++
         }
       }
     }
-    return when (response) {
-      is StoreReadResponse.Initial,
-      is StoreReadResponse.Loading,
-      is StoreReadResponse.NoNewData -> {
-        val cached = lastIngredients
-        if (cached != null) {
-          IngredientsState.Success(
-            ingredients = cached,
-            isRefreshing = true,
-            eventSink = successEventSink,
-          )
-        } else {
-          IngredientsState.Loading
-        }
-      }
 
-      is StoreReadResponse.Data ->
-        IngredientsState.Success(
-          ingredients = response.value,
-          isRefreshing = false,
-          eventSink = successEventSink,
-        )
-
-      is StoreReadResponse.Error.Exception ->
-        IngredientsState.Error(
-          message = response.error.message ?: "Unknown error",
-          eventSink = errorEventSink,
-        )
-
-      is StoreReadResponse.Error.Message ->
-        IngredientsState.Error(message = response.message, eventSink = errorEventSink)
-      // TODO not sure what to do here
-      is StoreReadResponse.Error.Custom<*> ->
-        IngredientsState.Error(message = response.toString(), eventSink = errorEventSink)
+    return when (val ui = rememberListUi(response, retryTrigger)) {
+      ListUi.Loading -> IngredientsState.Loading
+      is ListUi.Content -> IngredientsState.Success(ui.items, ui.isRefreshing, successEventSink)
+      is ListUi.Failure -> IngredientsState.Error(ui.message, errorEventSink)
     }
   }
 }
