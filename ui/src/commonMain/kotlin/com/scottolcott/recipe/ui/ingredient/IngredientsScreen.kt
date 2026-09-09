@@ -43,7 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 @Suppress("unused")
 @Composable
 @CircuitInject(IngredientsScreen::class, AppScope::class)
-fun IngredientScreen(state: IngredientsState, modifier: Modifier = Modifier) {
+fun IngredientsScreen(state: IngredientsState, modifier: Modifier = Modifier) {
   val cells = rememberAdaptiveGridCells(targetWidth = 165.dp, shortWindowTargetWidth = 200.dp)
   val padding = rememberAdaptivePadding()
   // A short window is starved of vertical space even when it is wide -- a landscape phone -- so the
