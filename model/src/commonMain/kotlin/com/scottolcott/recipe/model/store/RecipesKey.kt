@@ -49,7 +49,7 @@ sealed interface RecipesKey {
   }
 
   /** Key for recipes originating from a specific geographic area. */
-  @Serializable data class ByArea(val area: String, val country: String?) : RecipesKey
+  @Serializable data class ByArea(val area: String) : RecipesKey
 
   /** Key for the user's favorite recipes, which are stored locally. */
   @Serializable data object Favorites : RecipesKey

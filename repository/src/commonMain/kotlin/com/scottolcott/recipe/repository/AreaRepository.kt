@@ -3,23 +3,21 @@ package com.scottolcott.recipe.repository
 import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.logErrors
 import com.scottolcott.recipe.model.Area
-import com.scottolcott.recipe.model.store.AreasKey
 import com.scottolcott.recipe.network.api.AreaApi
 import com.scottolcott.recipe.network.dto.AreaDto
 import com.scottolcott.recipe.storage.dao.AreaDao
 import com.scottolcott.recipe.storage.datastore.AreasFetchHistoryDataStore
 import com.scottolcott.recipe.storage.entity.AreaEntity
-import com.scottolcott.recipe.swapType
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import kotlin.collections.orEmpty
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import org.mobilenativefoundation.store.store5.Converter
@@ -34,11 +32,19 @@ interface AreaRepository {
 
   fun getAreas(): Flow<StoreReadResponse<List<Area>>>
 
-  fun filterAreasByName(nameFilter: String): Flow<StoreReadResponse<List<Area>>>
-
-  fun getArea(area: String): Flow<StoreReadResponse<Area?>>
+  /**
+   * The country [area] names, or `null` if the list does not know this area or could not be loaded.
+   *
+   * A one-shot rather than a [Flow] on purpose: [RecipeRepository] needs the country to build one
+   * network request, and driving a Store key off a flow that emits before the areas cache is warm
+   * makes the key change mid-load and refetches everything behind it.
+   */
+  suspend fun countryFor(area: String): String?
 }
 
+// detekt 2.0.0-alpha.6 false positive: UnusedPrivateProperty misses references made from lambdas
+// in property initializers, i.e. `fetcher` and `sourceOfTruth` below. CategoryRepositoryImpl
+// builds the same objects in member functions instead and is not flagged. Remove on detekt upgrade.
 @Suppress("UnusedPrivateProperty")
 @OptIn(ExperimentalCoroutinesApi::class)
 @SingleIn(AppScope::class)
@@ -52,49 +58,18 @@ internal class AreaRepositoryImpl(
   private val cacheExpiration: Duration = 6.hours,
 ) : AreaRepository {
 
-  private val fetcher: Fetcher<AreasKey, List<AreaDto>> = Fetcher.of { key ->
-    when (key) {
-      AreasKey.GetAll,
-      is AreasKey.FilterByName,
-      is AreasKey.GetArea -> api.getAreas().meals.orEmpty()
-    }
-  }
+  // `list.php?a=list` has no parameters beyond the literal `list`, so there is nothing to key on:
+  // every read is the whole list, and Unit says so rather than a sealed type with one member.
+  private val fetcher: Fetcher<Unit, List<AreaDto>> = Fetcher.of { api.getAreas().meals.orEmpty() }
 
-  private val sourceOfTruth: SourceOfTruth<AreasKey, List<AreaEntity>, List<Area>> =
+  private val sourceOfTruth: SourceOfTruth<Unit, List<AreaEntity>, List<Area>> =
     SourceOfTruth.of(
-      reader = { key: AreasKey ->
-        when (key) {
-          AreasKey.GetAll -> dao.getAllAreasAsFlow().mapToAreas()
-
-          is AreasKey.FilterByName -> dao.filterByName(key.text).mapToAreas()
-          is AreasKey.GetArea ->
-            dao.getAreaAsFlow(key.area).map {
-              if (it == null) {
-                emptyList()
-              } else {
-                listOf(it.toArea())
-              }
-            }
-        }
+      reader = { dao.getAllAreasAsFlow().map { entities -> entities.map { it.toArea() } } },
+      writer = { _, local ->
+        dao.insert(local)
+        fetchHistoryDataStore.updateLastFetchTime(Clock.System.now())
       },
-      writer = { key, local ->
-        when (key) {
-          AreasKey.GetAll,
-          is AreasKey.FilterByName,
-          is AreasKey.GetArea -> {
-            dao.insert(local)
-          }
-        }
-        val now = Clock.System.now()
-        fetchHistoryDataStore.updateLastFetchTime(now)
-      },
-      delete = { key ->
-        when (key) {
-          AreasKey.GetAll -> dao.deleteAll()
-          is AreasKey.FilterByName -> dao.deleteWhereNameLike(key.text)
-          is AreasKey.GetArea -> dao.deleteArea(key.area)
-        }
-      },
+      delete = { dao.deleteAll() },
       deleteAll = { dao.deleteAll() },
     )
 
@@ -102,51 +77,32 @@ internal class AreaRepositoryImpl(
     Converter.Builder<List<AreaDto>, List<AreaEntity>, List<Area>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
-        dtos.map { dto -> AreaEntity(dto.area, dto.country, lastFetched) }
+        dtos.map { AreaEntity(it.area, it.country, lastFetched) }
       }
       .fromOutputToLocal { models ->
         models.map { AreaEntity(it.area, it.country, it.lastFetched) }
       }
       .build()
 
-  private val store: Store<AreasKey, List<Area>> =
+  private val store: Store<Unit, List<Area>> =
     StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
   override fun getAreas(): Flow<StoreReadResponse<List<Area>>> {
-    return loadAreasByKey(AreasKey.GetAll)
-  }
-
-  override fun filterAreasByName(nameFilter: String): Flow<StoreReadResponse<List<Area>>> {
-    return loadAreasByKey(AreasKey.FilterByName(nameFilter))
-  }
-
-  override fun getArea(area: String): Flow<StoreReadResponse<Area?>> {
-    return loadAreasByKey(AreasKey.GetArea(area)).map {
-      when (it) {
-        is StoreReadResponse.Data -> {
-          val area = it.value.firstOrNull()
-          StoreReadResponse.Data(area, it.origin)
-        }
-        else -> it.swapType()
-      }
-    }
-  }
-
-  private fun loadAreasByKey(key: AreasKey): Flow<StoreReadResponse<List<Area>>> {
     return fetchHistoryDataStore
       .refreshNeeded(cacheExpiration)
-      .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading areas by $key")
+      .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(Unit, refresh)) }
+      .logErrors(logger, "Error loading areas")
   }
 
-  private fun Flow<List<AreaEntity>>.mapToAreas(): Flow<List<Area>> = map { entities ->
-    entities.map { it.toArea() }
+  override suspend fun countryFor(area: String): String? {
+    // Waits for the first *settled* response. A Store stream never completes, so taking `first()`
+    // of the data alone would hang forever on an area the list does not contain.
+    val settled = getAreas().first { it is StoreReadResponse.Data || it is StoreReadResponse.Error }
+    return (settled as? StoreReadResponse.Data)
+      ?.value
+      ?.firstOrNull { it.area.equals(area, ignoreCase = true) }
+      ?.country
   }
 
-  private fun AreaEntity.toArea() =
-    Area(
-      area = area,
-      country = country,
-      lastFetched = lastFetched,
-    )
+  private fun AreaEntity.toArea() = Area(area = area, country = country, lastFetched = lastFetched)
 }

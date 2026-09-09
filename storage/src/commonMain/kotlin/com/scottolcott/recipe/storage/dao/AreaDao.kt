@@ -10,29 +10,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AreaDao {
 
-  @Query("SELECT * FROM AREA ORDER BY AREA") fun getAllAreasAsFlow(): Flow<List<AreaEntity>>
-
-  @Query("SELECT * FROM AREA WHERE AREA = :area ORDER BY AREA limit 1")
-  fun getAreaAsFlow(area: String): Flow<AreaEntity?>
-
-  @Query(
-    """
-    SELECT * FROM AREA WHERE AREA LIKE :query || '%'
-    UNION ALL
-    SELECT * FROM AREA WHERE AREA LIKE '%' || :query || '%' AND AREA NOT LIKE :query || '%'
-  """
-  )
-  fun filterByName(query: String): Flow<List<AreaEntity>>
-
-  @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(entity: AreaEntity)
+  @Query("SELECT * FROM area ORDER BY area") fun getAllAreasAsFlow(): Flow<List<AreaEntity>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
-  suspend fun insert(entity: Collection<AreaEntity>)
+  suspend fun insert(entities: Collection<AreaEntity>)
 
-  @Query("DELETE FROM AREA") suspend fun deleteAll()
-
-  @Query("DELETE FROM AREA WHERE AREA = :area") suspend fun deleteArea(area: String)
-
-  @Query("DELETE FROM AREA WHERE AREA LIKE '%' || :name || '%'")
-  suspend fun deleteWhereNameLike(name: String)
+  @Query("DELETE FROM area") suspend fun deleteAll()
 }
