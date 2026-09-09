@@ -3,13 +3,11 @@ package com.scottolcott.recipe.storage.datastore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioSerializer
-import com.scottolcott.recipe.model.store.IngredientsKey
 import com.scottolcott.recipe.serialization.StorageJson
 import dev.zacsweers.metro.Inject
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
-import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -20,12 +18,12 @@ import okio.BufferedSink
 import okio.BufferedSource
 import okio.use
 
-@Serializable data class IngredientsFetchHistory(val lastFetchTimes: Map<IngredientsKey, Instant>)
+@Serializable data class IngredientsFetchHistory(val lastFetchTime: Instant?)
 
 @Inject
 class IngredientsFetchHistoryJsonSerializer(@param:StorageJson private val json: Json) :
   OkioSerializer<IngredientsFetchHistory> {
-  override val defaultValue: IngredientsFetchHistory = IngredientsFetchHistory(persistentMapOf())
+  override val defaultValue: IngredientsFetchHistory = IngredientsFetchHistory(null)
 
   override suspend fun readFrom(source: BufferedSource): IngredientsFetchHistory {
     return try {
@@ -46,36 +44,25 @@ class IngredientsFetchHistoryDataStore(private val storage: Storage<IngredientsF
   val history: Flow<IngredientsFetchHistory>
     get() = dataStore.data
 
-  suspend fun updateLastFetchTime(
-    key: IngredientsKey,
-    time: Instant,
-    expirationThreshold: Instant? = null,
-  ) = dataStore.updateData { prev ->
-    val updatedTimes = prev.lastFetchTimes.toMutableMap().apply { put(key, time) }
-    val finalTimes =
-      if (expirationThreshold != null) {
-        updatedTimes.filterValues { it >= expirationThreshold }
-      } else {
-        updatedTimes
-      }
-    prev.copy(lastFetchTimes = finalTimes)
+  suspend fun updateLastFetchTime(time: Instant) = dataStore.updateData { prev ->
+    prev.copy(lastFetchTime = time)
   }
 
-  suspend fun getLastFetchTime(key: IngredientsKey): Instant? {
-    return history.first().lastFetchTimes[key]
+  suspend fun getLastFetchTime(): Instant? {
+    return history.first().lastFetchTime
   }
 
   /**
-   * Whether [key] is due a network fetch, as a flow that only reports *changes* to that answer.
+   * Whether a network fetch is needed, as a flow that only reports *changes* to that answer.
    *
    * `distinctUntilChanged` is load-bearing. Callers drive a Store stream through `flatMapLatest` on
    * this flow, and every fetch writes a fresh [Instant] here -- so without it, each fetch re-emits
    * the same boolean, tearing down the in-flight stream and starting another one, fetch included.
    */
-  fun refreshNeeded(key: IngredientsKey, cacheExpiration: Duration): Flow<Boolean> {
+  fun refreshNeeded(cacheExpiration: Duration): Flow<Boolean> {
     return history
       .map { history ->
-        val lastFetch = history.lastFetchTimes[key]
+        val lastFetch = history.lastFetchTime
         lastFetch == null || lastFetch.plus(cacheExpiration) < Clock.System.now()
       }
       .distinctUntilChanged()

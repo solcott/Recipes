@@ -76,7 +76,7 @@ internal class IngredientRepositoryImpl(
           }
         }
         val now = Clock.System.now()
-        fetchHistoryDataStore.updateLastFetchTime(key, now, now.minus(cacheExpiration))
+        fetchHistoryDataStore.updateLastFetchTime(now)
       },
       delete = { key ->
         when (key) {
@@ -117,7 +117,7 @@ internal class IngredientRepositoryImpl(
 
   private fun loadIngredientsByKey(key: IngredientsKey): Flow<StoreReadResponse<List<Ingredient>>> {
     return fetchHistoryDataStore
-      .refreshNeeded(key, cacheExpiration)
+      .refreshNeeded(cacheExpiration)
       .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
       .logErrors(logger, "Error loading ingredients by $key")
   }

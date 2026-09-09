@@ -53,7 +53,7 @@ class AreasFetchHistoryDataStore(private val storage: Storage<AreasFetchHistory>
   }
 
   /**
-   * Whether [key] is due a network fetch, as a flow that only reports *changes* to that answer.
+   * Whether a network fetch is needed, as a flow that only reports *changes* to that answer.
    *
    * `distinctUntilChanged` is load-bearing. Callers drive a Store stream through `flatMapLatest` on
    * this flow, and every fetch writes a fresh [Instant] here -- so without it, each fetch re-emits
