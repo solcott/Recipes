@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8f1ee3f465548209b59c79688e1243cd",
+    "identityHash": "afc02a7c216d37e556c752a3afb7d628",
     "entities": [
       {
         "tableName": "recipe",
@@ -368,7 +368,7 @@
       },
       {
         "tableName": "area",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`area` TEXT NOT NULL, `country` TEXT NOT NULL, `lastFetched` TEXT NOT NULL, PRIMARY KEY(`area`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`area` TEXT NOT NULL, `country` TEXT, `lastFetched` TEXT NOT NULL, PRIMARY KEY(`area`))",
         "fields": [
           {
             "fieldPath": "area",
@@ -379,8 +379,7 @@
           {
             "fieldPath": "country",
             "columnName": "country",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "lastFetched",
@@ -399,7 +398,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8f1ee3f465548209b59c79688e1243cd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'afc02a7c216d37e556c752a3afb7d628')"
     ]
   }
 }

@@ -7,6 +7,6 @@ import kotlin.time.Instant
 @Entity(tableName = "area")
 data class AreaEntity(
   @PrimaryKey val area: String,
-  val country: String,
+  val country: String?,
   val lastFetched: Instant,
 )

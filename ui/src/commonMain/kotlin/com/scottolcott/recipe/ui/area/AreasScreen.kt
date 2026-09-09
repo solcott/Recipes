@@ -154,16 +154,17 @@ fun AreaItem(
       Box(Modifier.height(areaHeight).fillMaxWidth(), contentAlignment = Alignment.BottomStart) {
         FittedLabel(area.area, areaTextStyle, AREA_MIN_FONT_SIZE)
       }
-      Box(
-        Modifier.height(countryHeight).fillMaxWidth(),
-        contentAlignment = Alignment.TopStart,
-      ) {
-        FittedLabel(
-          area.country,
-          countryTextStyle,
-          COUNTRY_MIN_FONT_SIZE,
-          MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+      // The box is laid out even when there is no country, so a row of cards stays flush: the
+      // grid sizes a row to its tallest card, and a card that shed a line would leave a gap.
+      Box(Modifier.height(countryHeight).fillMaxWidth(), contentAlignment = Alignment.TopStart) {
+        area.country?.let {
+          FittedLabel(
+            it,
+            countryTextStyle,
+            COUNTRY_MIN_FONT_SIZE,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
       }
     }
   }
