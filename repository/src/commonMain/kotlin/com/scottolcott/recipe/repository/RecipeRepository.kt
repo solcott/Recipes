@@ -21,8 +21,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import org.mobilenativefoundation.store.store5.Fetcher
 import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
@@ -55,6 +57,7 @@ interface RecipeRepository {
 internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
+  private val areaRepository: AreaRepository,
   private val fetchHistoryDataStore: RecipeFetchHistoryDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
@@ -112,17 +115,35 @@ internal class RecipeRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> {
-    val key = RecipesKey.ByArea(area)
-    return fetchHistoryDataStore
-      .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
-          else -> it.swapType()
+    return areaRepository
+      .getArea(area)
+      .mapNotNull { response ->
+        if (response is Data) {
+          val value = response.value
+          if (value != null) {
+            RecipesKey.ByArea(area, value.country)
+          } else {
+            RecipesKey.ByArea(area, null)
+          }
+        } else if (response is StoreReadResponse.Error) {
+          RecipesKey.ByArea(area, null)
+        } else {
+          null
         }
       }
-      .logErrors(logger, "Error loading recipes by area $area")
+      .distinctUntilChanged()
+      .flatMapLatest { key ->
+        fetchHistoryDataStore
+          .refreshNeeded(key, cacheExpiration)
+          .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
+          .map {
+            when (it) {
+              is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
+              else -> it.swapType()
+            }
+          }
+          .logErrors(logger, "Error loading recipes by area $area")
+      }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -201,7 +222,7 @@ internal class RecipeRepositoryImpl(
         is RecipesKey.Query -> recipeApi.searchRecipe(key.query)?.meals.orEmpty()
         is RecipesKey.ById -> recipeApi.getRecipe(key.id)?.meals.orEmpty()
         is RecipesKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
-        is RecipesKey.ByArea -> recipeApi.getByArea(key.area)?.meals.orEmpty()
+        is RecipesKey.ByArea -> recipeApi.getByArea(key.area, key.country)?.meals.orEmpty()
         RecipesKey.Favorites -> emptyList() // No api to support this as favorites are store locally
         is RecipesKey.ByIngredient -> fetchByIngredients(key)
       }

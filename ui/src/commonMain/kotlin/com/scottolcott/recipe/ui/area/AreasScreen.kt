@@ -87,12 +87,12 @@ fun AreasScreen(state: AreasState, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = padding,
           ) {
-            items(state.areas, key = { it.area }, contentType = { "area_item" }) {
+            items(state.areas, key = { it.area }, contentType = { "area_item" }) { area ->
               AreaItem(
-                it,
+                area,
                 areaTextStyle = areaTextStyle,
                 countryTextStyle = countryTextStyle,
-                { state.eventSink(AreasEvent.Success.AreaClicked(it.area)) },
+                { state.eventSink(AreasEvent.Success.AreaClicked(area.area)) },
                 Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
               )
             }

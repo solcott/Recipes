@@ -9,6 +9,7 @@ import com.scottolcott.recipe.network.dto.AreaDto
 import com.scottolcott.recipe.storage.dao.AreaDao
 import com.scottolcott.recipe.storage.datastore.AreasFetchHistoryDataStore
 import com.scottolcott.recipe.storage.entity.AreaEntity
+import com.scottolcott.recipe.swapType
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -34,6 +35,8 @@ interface AreaRepository {
   fun getAreas(): Flow<StoreReadResponse<List<Area>>>
 
   fun filterAreasByName(nameFilter: String): Flow<StoreReadResponse<List<Area>>>
+
+  fun getArea(area: String): Flow<StoreReadResponse<Area?>>
 }
 
 @Suppress("UnusedPrivateProperty")
@@ -52,7 +55,8 @@ internal class AreaRepositoryImpl(
   private val fetcher: Fetcher<AreasKey, List<AreaDto>> = Fetcher.of { key ->
     when (key) {
       AreasKey.GetAll,
-      is AreasKey.FilterByName -> api.getAreas().meals.orEmpty()
+      is AreasKey.FilterByName,
+      is AreasKey.GetArea -> api.getAreas().meals.orEmpty()
     }
   }
 
@@ -63,22 +67,32 @@ internal class AreaRepositoryImpl(
           AreasKey.GetAll -> dao.getAllAreasAsFlow().mapToAreas()
 
           is AreasKey.FilterByName -> dao.filterByName(key.text).mapToAreas()
+          is AreasKey.GetArea ->
+            dao.getAreaAsFlow(key.area).map {
+              if (it == null) {
+                emptyList()
+              } else {
+                listOf(it.toArea())
+              }
+            }
         }
       },
       writer = { key, local ->
         when (key) {
           AreasKey.GetAll,
-          is AreasKey.FilterByName -> {
+          is AreasKey.FilterByName,
+          is AreasKey.GetArea -> {
             dao.insert(local)
           }
         }
         val now = Clock.System.now()
-        fetchHistoryDataStore.updateLastFetchTime(key, now, now.minus(cacheExpiration))
+        fetchHistoryDataStore.updateLastFetchTime(now)
       },
       delete = { key ->
         when (key) {
           AreasKey.GetAll -> dao.deleteAll()
           is AreasKey.FilterByName -> dao.deleteWhereNameLike(key.text)
+          is AreasKey.GetArea -> dao.deleteArea(key.area)
         }
       },
       deleteAll = { dao.deleteAll() },
@@ -106,9 +120,21 @@ internal class AreaRepositoryImpl(
     return loadAreasByKey(AreasKey.FilterByName(nameFilter))
   }
 
+  override fun getArea(area: String): Flow<StoreReadResponse<Area?>> {
+    return loadAreasByKey(AreasKey.GetArea(area)).map {
+      when (it) {
+        is StoreReadResponse.Data -> {
+          val area = it.value.firstOrNull()
+          StoreReadResponse.Data(area, it.origin)
+        }
+        else -> it.swapType()
+      }
+    }
+  }
+
   private fun loadAreasByKey(key: AreasKey): Flow<StoreReadResponse<List<Area>>> {
     return fetchHistoryDataStore
-      .refreshNeeded(key, cacheExpiration)
+      .refreshNeeded(cacheExpiration)
       .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
       .logErrors(logger, "Error loading areas by $key")
   }

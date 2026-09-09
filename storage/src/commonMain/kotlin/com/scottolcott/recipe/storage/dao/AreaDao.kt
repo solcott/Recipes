@@ -12,6 +12,9 @@ interface AreaDao {
 
   @Query("SELECT * FROM AREA ORDER BY AREA") fun getAllAreasAsFlow(): Flow<List<AreaEntity>>
 
+  @Query("SELECT * FROM AREA WHERE AREA = :area ORDER BY AREA limit 1")
+  fun getAreaAsFlow(area: String): Flow<AreaEntity?>
+
   @Query(
     """
     SELECT * FROM AREA WHERE AREA LIKE :query || '%'
@@ -27,6 +30,8 @@ interface AreaDao {
   suspend fun insert(entity: Collection<AreaEntity>)
 
   @Query("DELETE FROM AREA") suspend fun deleteAll()
+
+  @Query("DELETE FROM AREA WHERE AREA = :area") suspend fun deleteArea(area: String)
 
   @Query("DELETE FROM AREA WHERE AREA LIKE '%' || :name || '%'")
   suspend fun deleteWhereNameLike(name: String)
