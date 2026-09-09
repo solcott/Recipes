@@ -66,6 +66,9 @@ internal class AreaRepositoryImpl(
     SourceOfTruth.of(
       reader = { dao.getAllAreasAsFlow().map { entities -> entities.map { it.toArea() } } },
       writer = { _, local ->
+        // Replace rather than upsert: an upsert would leave an area dropped upstream in the grid
+        // forever. CategoryRepositoryImpl clears the table the same way.
+        dao.deleteAll()
         dao.insert(local)
         fetchHistoryDataStore.updateLastFetchTime(Clock.System.now())
       },
