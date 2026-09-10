@@ -33,6 +33,7 @@ kotlin {
 
         implementation(projects.config)
         implementation(libs.kermit.core)
+        implementation(libs.kermit.ktor)
         implementation(libs.kotlin.serialization.json)
         implementation(libs.ktor.client.content.negotiation)
         implementation(libs.ktor.client.logging)
@@ -45,7 +46,6 @@ kotlin {
       }
     }
     commonJvmMain { dependencies { implementation(libs.ktor.client.okhttp) } }
-    getByName("nonJvmMain") { dependencies { implementation(libs.kermit.ktor) } }
     iosMain { dependencies { implementation(libs.ktor.client.darwin) } }
     jsMain { dependencies {} }
     wasmJsMain { dependencies {} }

@@ -55,6 +55,7 @@ interface RecipeRepository {
 internal class RecipeRepositoryImpl(
   private val recipeApi: RecipeApi,
   private val recipeDao: RecipeDao,
+  private val areaRepository: AreaRepository,
   private val fetchHistoryDataStore: RecipeFetchHistoryDataStore,
   private val logger: Logger,
   private val cacheExpiration: Duration = 1.hours,
@@ -201,7 +202,8 @@ internal class RecipeRepositoryImpl(
         is RecipesKey.Query -> recipeApi.searchRecipe(key.query)?.meals.orEmpty()
         is RecipesKey.ById -> recipeApi.getRecipe(key.id)?.meals.orEmpty()
         is RecipesKey.ByCategory -> recipeApi.getByCategory(key.category)?.meals.orEmpty()
-        is RecipesKey.ByArea -> recipeApi.getByArea(key.area)?.meals.orEmpty()
+        is RecipesKey.ByArea ->
+          recipeApi.getByArea(key.area, areaRepository.countryFor(key.area)).meals.orEmpty()
         RecipesKey.Favorites -> emptyList() // No api to support this as favorites are store locally
         is RecipesKey.ByIngredient -> fetchByIngredients(key)
       }

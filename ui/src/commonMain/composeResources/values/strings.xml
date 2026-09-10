@@ -4,6 +4,8 @@
     <string name="search">Search</string>
     <string name="no_recipes_found">No recipes found</string>
     <string name="no_categories_found">No categories found</string>
+    <string name="no_ingredients_found">No ingredients found</string>
+    <string name="no_areas_found">No areas found</string>
     <string name="categories">Categories</string>
     <string name="ingredients">Ingredients</string>
     <string name="recent">Recent</string>

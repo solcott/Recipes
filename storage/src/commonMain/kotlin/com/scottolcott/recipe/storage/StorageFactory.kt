@@ -2,6 +2,7 @@ package com.scottolcott.recipe.storage
 
 import androidx.datastore.core.Storage
 import androidx.room3.RoomDatabase
+import com.scottolcott.recipe.storage.datastore.AreasFetchHistory
 import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistory
 import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistory
@@ -22,6 +23,9 @@ internal const val CATEGORIES_FETCH_HISTORY_FILE = "categories_fetch_history.jso
 /** Filename of the ingredients fetch-history DataStore, identical on every platform. */
 internal const val INGREDIENTS_FETCH_HISTORY_FILE = "ingredients_fetch_history.json"
 
+/** Filename of the areas fetch-history DataStore, identical on every platform. */
+internal const val AREAS_FETCH_HISTORY_FILE = "areas_fetch_history.json"
+
 expect class StorageFactory {
 
   fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase>
@@ -33,4 +37,6 @@ expect class StorageFactory {
   fun createCategoriesFetchHistoryDataStoreStorage(): Storage<CategoriesFetchHistory>
 
   fun createIngredientsFetchHistoryDataStoreStorage(): Storage<IngredientsFetchHistory>
+
+  fun createAreasFetchHistoryDataStoreStorage(): Storage<AreasFetchHistory>
 }

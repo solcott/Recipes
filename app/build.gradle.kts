@@ -89,8 +89,6 @@ kotlin {
     implementation(libs.metro.android)
 
     debugImplementation(libs.compose.ui.tooling)
-    debugImplementation(libs.kermit.android.debug)
-    debugImplementation(libs.kermit.core.android.debug)
 
     releaseImplementation(libs.kermit.core)
 

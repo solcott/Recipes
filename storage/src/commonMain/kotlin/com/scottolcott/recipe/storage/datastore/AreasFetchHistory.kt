@@ -18,30 +18,30 @@ import okio.BufferedSink
 import okio.BufferedSource
 import okio.use
 
-@Serializable data class IngredientsFetchHistory(val lastFetchTime: Instant?)
+@Serializable data class AreasFetchHistory(val lastFetchTime: Instant?)
 
 @Inject
-class IngredientsFetchHistoryJsonSerializer(@param:StorageJson private val json: Json) :
-  OkioSerializer<IngredientsFetchHistory> {
-  override val defaultValue: IngredientsFetchHistory = IngredientsFetchHistory(null)
+class AreasFetchHistoryJsonSerializer(@param:StorageJson private val json: Json) :
+  OkioSerializer<AreasFetchHistory> {
+  override val defaultValue: AreasFetchHistory = AreasFetchHistory(null)
 
-  override suspend fun readFrom(source: BufferedSource): IngredientsFetchHistory {
+  override suspend fun readFrom(source: BufferedSource): AreasFetchHistory {
     return try {
-      json.decodeFromString<IngredientsFetchHistory>(source.readUtf8())
+      json.decodeFromString<AreasFetchHistory>(source.readUtf8())
     } catch (_: Exception) {
       defaultValue
     }
   }
 
-  override suspend fun writeTo(t: IngredientsFetchHistory, sink: BufferedSink) {
-    sink.use { it.writeUtf8(json.encodeToString(IngredientsFetchHistory.serializer(), t)) }
+  override suspend fun writeTo(t: AreasFetchHistory, sink: BufferedSink) {
+    sink.use { it.writeUtf8(json.encodeToString(AreasFetchHistory.serializer(), t)) }
   }
 }
 
-class IngredientsFetchHistoryDataStore(private val storage: Storage<IngredientsFetchHistory>) {
+class AreasFetchHistoryDataStore(private val storage: Storage<AreasFetchHistory>) {
   private val dataStore = DataStoreFactory.create(storage = storage)
 
-  val history: Flow<IngredientsFetchHistory>
+  val history: Flow<AreasFetchHistory>
     get() = dataStore.data
 
   suspend fun updateLastFetchTime(time: Instant) = dataStore.updateData { prev ->

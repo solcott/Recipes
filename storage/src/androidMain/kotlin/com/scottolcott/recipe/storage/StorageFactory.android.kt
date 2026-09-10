@@ -5,6 +5,8 @@ import androidx.datastore.core.Storage
 import androidx.datastore.core.okio.OkioStorage
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import com.scottolcott.recipe.storage.datastore.AreasFetchHistory
+import com.scottolcott.recipe.storage.datastore.AreasFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistory
 import com.scottolcott.recipe.storage.datastore.CategoriesFetchHistoryJsonSerializer
 import com.scottolcott.recipe.storage.datastore.IngredientsFetchHistory
@@ -27,37 +29,41 @@ actual class StorageFactory(
   private val historySerializer: RecipeFetchHistoryJsonSerializer,
   private val categoriesHistorySerializer: CategoriesFetchHistoryJsonSerializer,
   private val ingredientsHistorySerializer: IngredientsFetchHistoryJsonSerializer,
+  private val areasHistorySerializer: AreasFetchHistoryJsonSerializer,
 ) {
   actual fun createRoomDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     val appContext = context.applicationContext
     val dbFile = appContext.getDatabasePath(DATABASE_NAME)
-    return Room.databaseBuilder<AppDatabase>(context = appContext, name = dbFile.absolutePath,
-        factory = {
-            AppDatabaseConstructor.initialize()
-        })
+    return Room.databaseBuilder<AppDatabase>(
+      context = appContext,
+      name = dbFile.absolutePath,
+      factory = { AppDatabaseConstructor.initialize() },
+    )
   }
 
   actual fun createSearchSuggestionsDataStoreStorage(): Storage<SearchHistorySuggestions> {
-      return OkioStorage(
-          serializer = suggestionsSerializer,
-          fileSystem = FileSystem.SYSTEM,
-          producePath = { context.filesDir.resolve(SEARCH_SUGGESTIONS_FILE).absolutePath.toPath() },
-      )
+    return OkioStorage(
+      serializer = suggestionsSerializer,
+      fileSystem = FileSystem.SYSTEM,
+      producePath = { context.filesDir.resolve(SEARCH_SUGGESTIONS_FILE).absolutePath.toPath() },
+    )
   }
 
   actual fun createRecipeFetchHistoryDataStoreStorage(): Storage<RecipeFetchHistory> {
-      return OkioStorage(
-          serializer = historySerializer,
-          fileSystem = FileSystem.SYSTEM,
-          producePath = { context.filesDir.resolve(RECIPE_FETCH_HISTORY_FILE).absolutePath.toPath() },
-      )
+    return OkioStorage(
+      serializer = historySerializer,
+      fileSystem = FileSystem.SYSTEM,
+      producePath = { context.filesDir.resolve(RECIPE_FETCH_HISTORY_FILE).absolutePath.toPath() },
+    )
   }
 
   actual fun createCategoriesFetchHistoryDataStoreStorage(): Storage<CategoriesFetchHistory> {
     return OkioStorage(
       serializer = categoriesHistorySerializer,
       fileSystem = FileSystem.SYSTEM,
-      producePath = { context.filesDir.resolve(CATEGORIES_FETCH_HISTORY_FILE).absolutePath.toPath() },
+      producePath = {
+        context.filesDir.resolve(CATEGORIES_FETCH_HISTORY_FILE).absolutePath.toPath()
+      },
     )
   }
 
@@ -65,7 +71,17 @@ actual class StorageFactory(
     return OkioStorage(
       serializer = ingredientsHistorySerializer,
       fileSystem = FileSystem.SYSTEM,
-      producePath = { context.filesDir.resolve(INGREDIENTS_FETCH_HISTORY_FILE).absolutePath.toPath() },
+      producePath = {
+        context.filesDir.resolve(INGREDIENTS_FETCH_HISTORY_FILE).absolutePath.toPath()
+      },
+    )
+  }
+
+  actual fun createAreasFetchHistoryDataStoreStorage(): Storage<AreasFetchHistory> {
+    return OkioStorage(
+      serializer = areasHistorySerializer,
+      fileSystem = FileSystem.SYSTEM,
+      producePath = { context.filesDir.resolve(AREAS_FETCH_HISTORY_FILE).absolutePath.toPath() },
     )
   }
 }

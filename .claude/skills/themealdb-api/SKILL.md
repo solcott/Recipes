@@ -38,7 +38,8 @@ wrapper if you touch the logging block, and never add a second client that logs 
 | `filter.php` | `i` ingredient(s) | **summaries** | — not wired |
 | `categories.php` | — | category records | `CategoryResource` |
 | `list.php` | `i=list` | full ingredient records | `IngredientsResource` |
-| `list.php` | `c=list` / `a=list` | bare category / area names | — not wired |
+| `list.php` | `a=list` | area records (`strArea` + `strCountry`) | `AreasResource` |
+| `list.php` | `c=list` | bare category names | — not wired |
 | `popular.php` | — | full meals (20) | — not wired |
 | `latest.php` | — | full meals (10) | — not wired |
 | `randomselection.php` | — | full meals (10) | — not wired |
@@ -49,6 +50,13 @@ repository. Adding one is a normal change — mirror an existing sibling in `res
 
 Spaces in `c` / `a` / `i` values may be written as underscores (`chicken_breast`). URL-encode
 anything user-supplied. `filter.php?i=` accepts **up to four** comma-separated ingredients on v2.
+
+**`list.php?a=list` and `filter.php?a=` do not agree on what an area is.** The list returns ~195
+rows with a real key (see the tier table below), but `filter.php` matches the exact `strArea`
+string meals actually carry — 14 distinct values on v1. Most rows in the area list therefore have
+no recipes behind them. `RecipeApiImpl.getByArea` asks for both spellings the list gives
+(`Italian` and `Italy`) and merges the results, which recovers some but not all of the gap. If
+the Areas tab looks full of dead ends, this is why — not a bug in the screen.
 
 Full spec: `reference/openapi-v2.yaml` (vendored 2026-08-26).
 
@@ -103,6 +111,8 @@ and it is also just true of the data — a summary has no instructions to show.
   wraps it as `RecipeId`.
 - **`strThumb` on ingredients is a lie.** `IngredientDto` declares it, but `list.php?i=list` does not
   return it. Build ingredient images from the name instead (below).
+- **`strCountry` on the area list is nullable** and absent on some rows, so `AreaDto.country` is
+  `String?`. A non-null declaration fails the decode of the *entire* list on one bad row.
 - Nullable in practice: `strArea`, `strCategory`, `strTags`, `strYoutube`, `strSource`,
   `strImageSource`, `strCreativeCommonsConfirmed`, `dateModified`.
 
