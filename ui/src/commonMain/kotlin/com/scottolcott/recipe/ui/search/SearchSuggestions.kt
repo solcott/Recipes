@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.style.ExperimentalFoundationStyleApi
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -47,6 +48,8 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import com.scottolcott.recipe.domain.isCupertino
 import com.scottolcott.recipe.domain.presenter.SearchState
+import com.scottolcott.recipe.model.Category
+import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.model.SearchSuggestion
 import com.scottolcott.recipe.ui.LocalFloatingBarInset
 import com.scottolcott.recipe.ui.Res
@@ -78,6 +81,9 @@ internal fun SearchSuggestionItems(
   onRemoveSuggestionClick: (SearchSuggestion) -> Unit,
 ) {
   val listState = rememberLazyListState()
+  // In the order the repository combines them. Each is its own ContentState, so a section keeps its
+  // last rows while its source reloads, and appears as soon as that source answers.
+  val (history, categories, ingredients) = state.suggestions
   // The only scrolling list here that does not pad itself with `rememberAdaptivePadding` -- a
   // suggestion row runs edge to edge, so it has no horizontal padding to inherit. It still has to
   // clear the floating tab bar, hence the bottom inset on its own.
@@ -86,9 +92,9 @@ internal fun SearchSuggestionItems(
     state = listState,
     contentPadding = PaddingValues(bottom = LocalFloatingBarInset.current),
   ) {
-    historySection(state, listState, onSearch, onRemoveSuggestionClick)
-    categorySection(state, listState, onSearch)
-    ingredientSection(state, listState, onSearch)
+    historySection(history.data, state.searchText, listState, onSearch, onRemoveSuggestionClick)
+    categorySection(categories.data, listState, onSearch)
+    ingredientSection(ingredients.data, listState, onSearch)
   }
 }
 
@@ -104,15 +110,16 @@ private fun LazyListScope.sectionHeader(
 }
 
 private fun LazyListScope.historySection(
-  state: SearchState,
+  history: List<SearchSuggestion>,
+  searchText: TextFieldState,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
   onRemoveSuggestionClick: (SearchSuggestion) -> Unit,
 ) {
-  if (state.suggestions.history.isEmpty()) return
+  if (history.isEmpty()) return
   sectionHeader("recents_header", Res.string.recent, listState)
   items(
-    state.suggestions.history,
+    history,
     key = {
       when (it) {
         is SearchSuggestion.CategorySuggestion -> it.category.id
@@ -150,7 +157,7 @@ private fun LazyListScope.historySection(
         )
       },
       onClick = {
-        state.searchText.setTextAndPlaceCursorAtEnd(text)
+        searchText.setTextAndPlaceCursorAtEnd(text)
         onSearch(it)
       },
       trailingContent = {
@@ -172,11 +179,10 @@ private fun LazyListScope.historySection(
 }
 
 private fun LazyListScope.categorySection(
-  state: SearchState,
+  categories: List<Category>,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
 ) {
-  val categories = state.suggestions.categories.categories
   if (categories.isEmpty()) return
   sectionHeader("categories_header", Res.string.categories, listState)
   items(
@@ -193,11 +199,10 @@ private fun LazyListScope.categorySection(
 }
 
 private fun LazyListScope.ingredientSection(
-  state: SearchState,
+  ingredients: List<Ingredient>,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
 ) {
-  val ingredients = state.suggestions.ingredientSuggestions.ingredients
   if (ingredients.isEmpty()) return
   sectionHeader("ingredients_header", Res.string.ingredients, listState)
   items(

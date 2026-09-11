@@ -176,6 +176,13 @@ The path from a repository to a screen state is three steps:
 3. `ContentState.foldToState(onLoading, onError, onContent)` in `presenter/ListContent.kt` maps it
    onto a screen's own three-case `CircuitUiState`.
 
+A screen fed by several sources at once uses the group versions of the first two steps. The
+repository returns `combineOutcomes(a, b, c)`, a `Flow<Outcomes3<A, B, C>>` with each source seeded
+with `Loading` so the fastest one shows at once. The presenter folds it with
+`produceRetainedContentStates(contentStatesOf(…))` into one `ContentState` per source. Destructure
+the group for names; `isAnyLoading`/`errorOrNull` on it answer for all of them. `SearchPresenter` is
+the example.
+
 Two things are easy to get wrong:
 
 - **Check `hasLoaded`, never `data.isEmpty()`**, to tell "nothing has loaded yet" from "loaded and

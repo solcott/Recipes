@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.ui.search
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
@@ -211,7 +213,7 @@ private fun ExpandedSearchBar(
       colors = colors,
       properties = dockedSearchBarPopupProperties(),
     ) {
-      SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
+      SuggestionsContent(state, onSearch, onRemoveSuggestionClick)
     }
   } else {
     ExpandedFullScreenSearchBar(
@@ -220,7 +222,30 @@ private fun ExpandedSearchBar(
       modifier = Modifier.boundedToWindow(),
       colors = colors,
     ) {
-      SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
+      SuggestionsContent(state, onSearch, onRemoveSuggestionClick)
+    }
+  }
+}
+
+/**
+ * The suggestion list, with a hairline of progress across its top while any source is still
+ * answering.
+ *
+ * A hairline over the content rather than a spinner in place of it, because each source keeps
+ * showing what it last had until its new answer lands. Drawn over the list rather than above it, so
+ * a request starting or finishing never shifts the rows.
+ */
+@Composable
+private fun SuggestionsContent(
+  state: SearchState,
+  onSearch: (SearchSuggestion) -> Unit,
+  onRemoveSuggestionClick: (SearchSuggestion) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Box(modifier) {
+    SearchSuggestionItems(state, onSearch, onRemoveSuggestionClick)
+    if (state.suggestions.isAnyLoading) {
+      LinearProgressIndicator(Modifier.fillMaxWidth())
     }
   }
 }
