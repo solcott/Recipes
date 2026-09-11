@@ -8,7 +8,7 @@ androidCompileSdk = "37"
 androidMinSdk = "28"
 #noinspection UnusedVersionCatalogEntry
 androidTargetSdk = "36"
-androidx-compose = "1.12.0"
+androidx-compose = "1.12.1"
 androidx-compose-material3 = "1.5.0-alpha27"
 appdirs = "1.5.0"
 circuit = "0.38.0"
