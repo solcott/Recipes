@@ -5,7 +5,8 @@ description: Run this repo's full pre-commit check — ktfmt formatting, depende
 
 # Verify
 
-This repo has **no CI**, so this loop is the only thing standing between a change and a broken `main`.
+CI (`.github/workflows/build.yml`) runs the same checks on every PR, but it only reports — it
+doesn't format — and it skips linking the iOS frameworks. Run this loop before pushing so CI stays green.
 
 Run every Gradle command through the **`recipes-gradle-runner`** agent rather than calling
 `./gradlew` directly. KMP builds emit thousands of lines and the agent returns a verdict plus the
