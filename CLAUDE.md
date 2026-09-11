@@ -28,8 +28,10 @@ obstacle.
 - **Run:** `:desktopApp:run` · `:webApp:wasmJsBrowserDevelopmentRun` · `:webApp:jsBrowserDevelopmentRun` · `:app:installDebug`.
   For desktop UI work prefer `:desktopApp:hotRun` — see *Compose Hot Reload* below.
 
-There is **no CI**. Nothing catches formatting, detekt, or compile regressions except this loop —
-run `/verify`, or by hand:
+CI (`.github/workflows/build.yml`, ubuntu) runs `ktfmtCheck checkSortDependencies`, `detektAll`
+and `build` on every PR and push to `main`; it needs the `MEALDB_API_KEY` repository secret. It only
+reports, and Linux skips linking the iOS frameworks, so still run this loop before pushing —
+`/verify`, or by hand:
 
 ```
 ./gradlew ktfmtFormat sortDependencies
