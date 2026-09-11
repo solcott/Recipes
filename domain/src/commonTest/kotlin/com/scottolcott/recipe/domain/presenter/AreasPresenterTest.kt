@@ -6,14 +6,17 @@ import com.scottolcott.recipe.repository.AreaRepository
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.solcott.dataresult.DataError
+import io.github.solcott.dataresult.Origin
+import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponseOrigin
 
 private class AreasTestEnvironment(
   val navigator: FakeNavigator,
@@ -22,11 +25,9 @@ private class AreasTestEnvironment(
 )
 
 private class FakeAreaRepository : AreaRepository {
-  var getAreasHandler: () -> Flow<StoreReadResponse<List<Area>>> = {
-    flowOf(StoreReadResponse.Initial)
-  }
+  var getAreasHandler: () -> Flow<Outcome<List<Area>>> = { inFlight() }
 
-  override fun getAreas(): Flow<StoreReadResponse<List<Area>>> = getAreasHandler()
+  override fun getAreas(): Flow<Outcome<List<Area>>> = getAreasHandler()
 
   override suspend fun countryFor(area: String): String? = null
 }
@@ -47,18 +48,13 @@ val areasPresenterTests by testSuite {
     {
       val simpleStates =
         listOf(
-          Triple("loadingState", flowOf(StoreReadResponse.Initial)) { state: AreasState ->
+          Triple("loadingState", inFlight()) { state: AreasState ->
             assertIs<AreasState.Loading>(state)
           },
           Triple("successState", null) { state: AreasState -> assertIs<AreasState.Success>(state) },
           Triple(
             "errorState",
-            flowOf(
-              StoreReadResponse.Error.Exception(
-                RuntimeException("Error"),
-                StoreReadResponseOrigin.Fetcher(),
-              )
-            ),
+            flowOf(Outcome.Error(DataError.Unknown(message = "Error"), Origin.Network)),
           ) { state: AreasState ->
             assertIs<AreasState.Error>(state)
           },
@@ -66,11 +62,7 @@ val areasPresenterTests by testSuite {
 
       for ((name, responseFlow, assertion) in simpleStates) {
         test(name) {
-          val flow =
-            responseFlow
-              ?: flowOf(
-                StoreReadResponse.Data(areasFixture(), StoreReadResponseOrigin.SourceOfTruth)
-              )
+          val flow = responseFlow ?: flowOf(Outcome.Data(areasFixture(), Origin.Cache))
           repository.getAreasHandler = { flow }
           presenter.test {
             var state = awaitItem()
@@ -91,8 +83,8 @@ val areasPresenterTests by testSuite {
         val areas = areasFixture()
         // Driven emission by emission: a flow that emits both up front collapses into a single
         // recomposition, which would hide the transition this test is about.
-        val responses = MutableSharedFlow<StoreReadResponse<List<Area>>>(replay = 1)
-        responses.emit(StoreReadResponse.Data(areas, StoreReadResponseOrigin.SourceOfTruth))
+        val responses = MutableSharedFlow<Outcome<List<Area>>>(replay = 1)
+        responses.emit(Outcome.Data(areas, Origin.Cache))
         repository.getAreasHandler = { responses }
 
         presenter.test {
@@ -101,7 +93,7 @@ val areasPresenterTests by testSuite {
           assertIs<AreasState.Success>(state)
           assertEquals(false, state.isRefreshing)
 
-          responses.emit(StoreReadResponse.Loading(StoreReadResponseOrigin.Fetcher()))
+          responses.emit(Outcome.Loading)
 
           val refreshing = awaitItem()
           assertIs<AreasState.Success>(refreshing)
@@ -115,14 +107,9 @@ val areasPresenterTests by testSuite {
         repository.getAreasHandler = {
           callCount++
           if (callCount == 1) {
-            flowOf(
-              StoreReadResponse.Error.Exception(
-                RuntimeException("Error"),
-                StoreReadResponseOrigin.Fetcher(),
-              )
-            )
+            flowOf(Outcome.Error(DataError.Unknown(message = "Error"), Origin.Network))
           } else {
-            flowOf(StoreReadResponse.Initial)
+            inFlight()
           }
         }
         presenter.test {
@@ -140,9 +127,7 @@ val areasPresenterTests by testSuite {
 
       test("areaClick") {
         val areas = areasFixture()
-        repository.getAreasHandler = {
-          flowOf(StoreReadResponse.Data(areas, StoreReadResponseOrigin.SourceOfTruth))
-        }
+        repository.getAreasHandler = { flowOf(Outcome.Data(areas, Origin.Cache)) }
         presenter.test {
           var state = awaitItem()
           if (state is AreasState.Loading) state = awaitItem()
@@ -156,4 +141,17 @@ val areasPresenterTests by testSuite {
         }
       }
     }
+}
+
+/**
+ * A request that is still in flight: it reports loading and then stays open.
+ *
+ * Deliberately not `flowOf(Outcome.Loading)`. That completes, and a completed source that produced
+ * nothing is a *settled* empty result, not a pending one -- `produceRetainedContentState` settles
+ * the status on completion so a spinner can never hang. A Store stream never completes, so this is
+ * the faithful stand-in.
+ */
+private fun inFlight(): Flow<Outcome<Nothing>> = flow {
+  emit(Outcome.Loading)
+  awaitCancellation()
 }

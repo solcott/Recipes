@@ -4,11 +4,19 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponse.Data
-import org.mobilenativefoundation.store.store5.StoreReadResponse.Loading
-import org.mobilenativefoundation.store.store5.StoreReadResponse.NoNewData
 
-fun <T> Flow<StoreReadResponse<T>>.logErrors(
+/**
+ * Logs the failures in a Store stream without changing it.
+ *
+ * Applied before `asOutcomes()`, while Store's own error types are still intact: an exception is
+ * worth a stack trace, a message-only error is not, and that distinction is gone by the time both
+ * have become a `DataError`.
+ *
+ * `internal`, because `StoreReadResponse` appears in its signature and Store5 is an implementation
+ * detail of this module -- repositories expose `Flow<Outcome<T>>`. A public one would put Store
+ * back on every consumer's compile classpath.
+ */
+internal fun <T> Flow<StoreReadResponse<T>>.logErrors(
   logger: Logger,
   message: String,
 ): Flow<StoreReadResponse<T>> {
@@ -20,26 +28,3 @@ fun <T> Flow<StoreReadResponse<T>>.logErrors(
     }
   }
 }
-
-val StoreReadResponse.Error.errorMessage: String
-  get() =
-    when (this) {
-      is StoreReadResponse.Error.Exception -> error.message ?: "Unknown Error"
-      is StoreReadResponse.Error.Message -> message
-      is StoreReadResponse.Error.Custom<*> -> toString()
-    }
-
-val StoreReadResponse<*>.isLoading: Boolean
-  get() = this is Loading
-
-val StoreReadResponse<*>.isError: Boolean
-  get() = this is StoreReadResponse.Error
-
-fun <T> StoreReadResponse<*>.swapType(): StoreReadResponse<T> =
-  when (this) {
-    is StoreReadResponse.Error -> this
-    is Loading -> this
-    is NoNewData -> this
-    is Data -> error("cannot swap type for StoreResponse.Data")
-    is StoreReadResponse.Initial -> this
-  }

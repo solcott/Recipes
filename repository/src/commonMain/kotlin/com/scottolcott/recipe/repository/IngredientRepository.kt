@@ -13,6 +13,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.solcott.dataresult.Outcome
+import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -26,13 +28,12 @@ import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
 import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
-import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 interface IngredientRepository {
 
-  fun getIngredients(): Flow<StoreReadResponse<List<Ingredient>>>
+  fun getIngredients(): Flow<Outcome<List<Ingredient>>>
 
-  fun filterIngredientsByName(nameFilter: String): Flow<StoreReadResponse<List<Ingredient>>>
+  fun filterIngredientsByName(nameFilter: String): Flow<Outcome<List<Ingredient>>>
 }
 
 // detekt 2.0.0-alpha.6 false positive: UnusedPrivateProperty misses references made from lambdas
@@ -105,21 +106,20 @@ internal class IngredientRepositoryImpl(
   private val store: Store<IngredientsKey, List<Ingredient>> =
     StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
-  override fun getIngredients(): Flow<StoreReadResponse<List<Ingredient>>> {
+  override fun getIngredients(): Flow<Outcome<List<Ingredient>>> {
     return loadIngredientsByKey(IngredientsKey.GetAll)
   }
 
-  override fun filterIngredientsByName(
-    nameFilter: String
-  ): Flow<StoreReadResponse<List<Ingredient>>> {
+  override fun filterIngredientsByName(nameFilter: String): Flow<Outcome<List<Ingredient>>> {
     return loadIngredientsByKey(IngredientsKey.FilterByName(nameFilter))
   }
 
-  private fun loadIngredientsByKey(key: IngredientsKey): Flow<StoreReadResponse<List<Ingredient>>> {
+  private fun loadIngredientsByKey(key: IngredientsKey): Flow<Outcome<List<Ingredient>>> {
     return fetchHistoryDataStore
       .refreshNeeded(cacheExpiration)
       .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
       .logErrors(logger, "Error loading ingredients by $key")
+      .asOutcomes()
   }
 
   private fun Flow<List<IngredientEntity>>.mapToIngredients(): Flow<List<Ingredient>> =

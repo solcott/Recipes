@@ -6,16 +6,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import co.touchlab.kermit.Logger
 import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByArea
 import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByCategory
-import com.scottolcott.recipe.isError
-import com.scottolcott.recipe.isLoading
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
 import com.scottolcott.recipe.repository.RecipeRepository
 import com.slack.circuit.codegen.annotations.CircuitInject
-import com.slack.circuit.retained.produceRetainedState
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.Navigator
@@ -25,9 +21,10 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import kotlinx.coroutines.flow.onEach
+import io.github.solcott.uistate.circuit.produceRetainedContentState
+import io.github.solcott.uistate.errorOrNull
+import io.github.solcott.uistate.isLoading
 import kotlinx.coroutines.launch
-import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
 @Inject
@@ -36,33 +33,22 @@ internal constructor(
   private val screen: RecipeDetailsScreen,
   private val navigator: Navigator,
   private val recipeRepository: RecipeRepository,
-  private val logger: Logger,
 ) : Presenter<RecipeDetailsState> {
   @Composable
   override fun present(): RecipeDetailsState {
     val coroutineScope = rememberCoroutineScope()
     var retryTrigger by remember { mutableIntStateOf(0) }
-    val recipeResponse by
-      produceRetainedState<StoreReadResponse<Recipe?>>(StoreReadResponse.Initial, retryTrigger) {
-        recipeRepository
-          .getById(screen.id)
-          .onEach {
-            when (it) {
-              is StoreReadResponse.Error.Exception -> logger.e(it.error) { "Error loading recipe" }
-
-              is StoreReadResponse.Error.Message ->
-                logger.e { "Error loading recipe: ${it.message}" }
-
-              else -> Unit
-            }
-          }
-          .collect { value = it }
+    val state =
+      produceRetainedContentState<Recipe?>(null, retryTrigger) {
+        recipeRepository.getById(screen.id)
       }
-    val recipe: Recipe? = (recipeResponse as? StoreReadResponse.Data<Recipe?>)?.value
+    // Unlike the old response-shaped state, this keeps the recipe on screen through a refresh
+    // rather than blanking it whenever the store goes back to the network.
+    val recipe: Recipe? = state.data
     return RecipeDetailsState(
       recipe,
-      loading = recipeResponse.isLoading,
-      error = recipeResponse.isError,
+      loading = state.isLoading,
+      error = state.errorOrNull != null,
     ) { event ->
       when (event) {
         RecipeDetailsEvent.ToggleFavorite ->

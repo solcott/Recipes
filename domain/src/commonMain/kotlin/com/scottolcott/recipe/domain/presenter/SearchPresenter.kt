@@ -17,13 +17,9 @@ import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToCatego
 import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToIngredientResults
 import com.scottolcott.recipe.domain.presenter.SearchOuterEvent.NavigateToSearchResults
 import com.scottolcott.recipe.model.Category
-import com.scottolcott.recipe.model.CategorySuggestions
 import com.scottolcott.recipe.model.Ingredient
-import com.scottolcott.recipe.model.IngredientSuggestions
 import com.scottolcott.recipe.model.SearchSuggestion
-import com.scottolcott.recipe.model.SearchSuggestions
 import com.scottolcott.recipe.repository.SearchSuggestionsRepository
-import com.slack.circuit.retained.produceRetainedState
 import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubCircuitOuterEvent
 import com.slack.circuit.subcircuit.SubCircuitUiEvent
@@ -33,13 +29,13 @@ import com.slack.circuit.subcircuit.SubScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import io.github.solcott.uistate.ContentStates3
+import io.github.solcott.uistate.circuit.produceRetainedContentStates
+import io.github.solcott.uistate.contentStatesOf
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 
 @SubCircuitInject(SearchScreen::class, AppScope::class)
@@ -48,7 +44,7 @@ class SearchPresenter(
   private val screen: SearchScreen,
   private val searchSuggestionsRepository: SearchSuggestionsRepository,
 ) : SubPresenter<SearchOuterEvent, SearchState> {
-  @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
+  @OptIn(FlowPreview::class, ExperimentalMaterial3Api::class)
   @Composable
   override fun present(outerEventSink: (SearchOuterEvent) -> Unit): SearchState {
     @Suppress("NoNameShadowing") val outerEventSink by rememberUpdatedState(outerEventSink)
@@ -60,20 +56,21 @@ class SearchPresenter(
         .collect { outerEventSink(SearchOuterEvent.SearchBarStateChanged(it)) }
     }
     val searchText = rememberTextFieldState()
-    val suggestions by
-      produceRetainedState(
-        SearchSuggestions(
-          emptyList(),
-          CategorySuggestions(loading = true, error = false, categories = emptyList()),
-          IngredientSuggestions(loading = true, error = false, ingredients = emptyList()),
+    // One ContentState per source, so recents show at once while categories and ingredients are
+    // still loading, and a new query keeps the last lists up, marked reloading, until its own
+    // answers replace them.
+    val suggestions = snapshotFlow {
+      searchText.text.toString()
+    }
+      .debounce(300.milliseconds)
+      .produceRetainedContentStates(
+        contentStatesOf(
+          emptyList<SearchSuggestion>(),
+          emptyList<Category>(),
+          emptyList<Ingredient>(),
         )
-      ) {
-        snapshotFlow { searchText.text }
-          .debounce(300.milliseconds)
-          .transformLatest {
-            emitAll(searchSuggestionsRepository.getSearchSuggestionsAsFlow(it.toString()))
-          }
-          .collect { value = it }
+      ) { query ->
+        searchSuggestionsRepository.getSearchSuggestionsAsFlow(query)
       }
     fun eventSink(event: SearchEvent) {
       when (event) {
@@ -113,12 +110,20 @@ class SearchPresenter(
   }
 }
 
+/**
+ * One state per suggestion source, in the order the repository combines them: stored history,
+ * categories, ingredients. Destructure it to name them; `isAnyLoading` and `errorOrNull` on the
+ * group answer for all three.
+ */
+typealias SearchSuggestionStates =
+  ContentStates3<List<SearchSuggestion>, List<Category>, List<Ingredient>>
+
 data class SearchState
 @OptIn(ExperimentalMaterial3Api::class)
 constructor(
   val searchBarState: SearchBarState,
   val searchText: TextFieldState,
-  val suggestions: SearchSuggestions,
+  val suggestions: SearchSuggestionStates,
   @Redacted val eventSink: (SearchEvent) -> Unit,
 ) : SubCircuitUiState
 

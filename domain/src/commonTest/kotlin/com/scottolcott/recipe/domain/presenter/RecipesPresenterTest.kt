@@ -7,6 +7,8 @@ import com.scottolcott.recipe.repository.RecipeRepository
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.solcott.dataresult.Origin
+import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
@@ -15,11 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
-import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponseOrigin
 
 private class FakeRecipeRepository : RecipeRepository {
-  val responses = MutableStateFlow<StoreReadResponse<List<Recipe>>>(StoreReadResponse.Initial)
+  val responses = MutableStateFlow<Outcome<List<Recipe>>>(Outcome.Loading)
 
   /** Counts how many times the ingredient flow was *collected*, not how many times it was built. */
   var ingredientSubscriptions = 0
@@ -28,24 +28,21 @@ private class FakeRecipeRepository : RecipeRepository {
   var lastIngredients: Set<String>? = null
     private set
 
-  override fun recipesByIngredients(
-    ingredients: Set<String>
-  ): Flow<StoreReadResponse<List<Recipe>>> = flow {
+  override fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>> = flow {
     ingredientSubscriptions++
     lastIngredients = ingredients
     emitAll(responses)
   }
 
-  override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> = responses
+  override fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>> = responses
 
-  override fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>> =
-    emptyFlow()
+  override fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
 
-  override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> = emptyFlow()
+  override fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
 
-  override fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>> = emptyFlow()
+  override fun getById(id: RecipeId): Flow<Outcome<Recipe?>> = emptyFlow()
 
-  override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> = emptyFlow()
+  override fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>> = emptyFlow()
 
   override suspend fun addFavorite(id: RecipeId) = Unit
 
@@ -77,14 +74,13 @@ val recipesPresenterTests by testSuite {
     presenter.test {
       assertIs<RecipesState.Loading>(awaitItem())
 
-      repository.responses.value =
-        StoreReadResponse.Data(listOf(recipe("1")), StoreReadResponseOrigin.Fetcher())
+      repository.responses.value = Outcome.Data(listOf(recipe("1")), Origin.Network)
       assertIs<RecipesState.Success>(awaitItem())
 
       repository.responses.value =
-        StoreReadResponse.Data(
+        Outcome.Data(
           listOf(recipe("1"), recipe("2")),
-          StoreReadResponseOrigin.SourceOfTruth,
+          Origin.Cache,
         )
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(2, state.recipes.size)
@@ -109,8 +105,7 @@ val recipesPresenterTests by testSuite {
     presenter.test {
       assertIs<RecipesState.Loading>(awaitItem())
 
-      repository.responses.value =
-        StoreReadResponse.Data(emptyList(), StoreReadResponseOrigin.SourceOfTruth)
+      repository.responses.value = Outcome.Data(emptyList(), Origin.Cache)
 
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(emptyList(), state.recipes)

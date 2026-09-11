@@ -14,13 +14,19 @@ kotlin {
     commonMain {
       dependencies {
         api(projects.model)
+        // Repositories speak Outcome now, so `dataresult` is part of their public signatures.
+        api(libs.dataresult)
         api(libs.kermit)
         api(libs.kotlinx.coroutines)
-        api(libs.store)
 
         implementation(projects.network)
         implementation(projects.storage)
+        // `implementation`, not `api`: Store5 stopped being part of this module's public API the
+        // moment repositories started returning Flow<Outcome<T>>. It stays an implementation
+        // detail here, which is the point of the change -- :domain no longer compiles against it.
+        implementation(libs.dataresultStore5)
         implementation(libs.kermit.core)
+        implementation(libs.store)
       }
     }
 

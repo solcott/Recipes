@@ -1,84 +1,46 @@
 package com.scottolcott.recipe.domain.producer
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.repository.RecipeRepository
-import com.slack.circuit.retained.produceRetainedState
 import dev.zacsweers.metro.Inject
-import org.mobilenativefoundation.store.store5.StoreReadResponse
+import io.github.solcott.uistate.ContentState
+import io.github.solcott.uistate.circuit.produceRetainedContentState
 
 @Inject
 class RecipesProducer(private val recipeRepository: RecipeRepository) {
 
   @Composable
-  fun produceBySearchTerm(searchTerm: String, retryTrigger: Int): StoreReadResponse<List<Recipe>> {
-
-    val recipes by
-      produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Initial,
-        searchTerm,
-        retryTrigger,
-      ) {
-        recipeRepository.searchRecipes(searchTerm).collect { value = it }
-      }
-    return recipes
-  }
+  fun produceBySearchTerm(searchTerm: String, retryTrigger: Int): ContentState<List<Recipe>> =
+    produceRetainedContentState(emptyList(), searchTerm, retryTrigger) {
+      recipeRepository.searchRecipes(searchTerm)
+    }
 
   @Composable
-  fun produceByCategory(category: String, retryTrigger: Int): StoreReadResponse<List<Recipe>> {
-    val recipes by
-      produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Initial,
-        category,
-        retryTrigger,
-      ) {
-        recipeRepository.recipesByCategory(category).collect { value = it }
-      }
-    return recipes
-  }
+  fun produceByCategory(category: String, retryTrigger: Int): ContentState<List<Recipe>> =
+    produceRetainedContentState(emptyList(), category, retryTrigger) {
+      recipeRepository.recipesByCategory(category)
+    }
 
-  // A Set, not vararg: the parameter is a produceRetainedState key, and an Array compares by
+  // A Set, not vararg: the parameter is a produceRetainedContentState key, and an Array compares by
   // identity, so a vararg call site would allocate a fresh key on every recomposition and restart
   // the collection each pass.
   @Composable
   fun produceByIngredients(
     ingredients: Set<String>,
     retryTrigger: Int,
-  ): StoreReadResponse<List<Recipe>> {
-    val recipes by
-      produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Initial,
-        ingredients,
-        retryTrigger,
-      ) {
-        recipeRepository.recipesByIngredients(ingredients).collect { value = it }
-      }
-    return recipes
-  }
+  ): ContentState<List<Recipe>> =
+    produceRetainedContentState(emptyList(), ingredients, retryTrigger) {
+      recipeRepository.recipesByIngredients(ingredients)
+    }
 
   @Composable
-  fun produceByArea(area: String, retryTrigger: Int): StoreReadResponse<List<Recipe>> {
-    val recipes by
-      produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Initial,
-        area,
-        retryTrigger,
-      ) {
-        recipeRepository.recipesByArea(area).collect { value = it }
-      }
-    return recipes
-  }
+  fun produceByArea(area: String, retryTrigger: Int): ContentState<List<Recipe>> =
+    produceRetainedContentState(emptyList(), area, retryTrigger) {
+      recipeRepository.recipesByArea(area)
+    }
 
   @Composable
-  fun produceByFavorites(retryTrigger: Int): StoreReadResponse<List<Recipe>> {
-    val recipes by
-      produceRetainedState<StoreReadResponse<List<Recipe>>>(
-        StoreReadResponse.Initial,
-        retryTrigger,
-      ) {
-        recipeRepository.getFavoritesAsFlow().collect { value = it }
-      }
-    return recipes
-  }
+  fun produceByFavorites(retryTrigger: Int): ContentState<List<Recipe>> =
+    produceRetainedContentState(emptyList(), retryTrigger) { recipeRepository.getFavoritesAsFlow() }
 }

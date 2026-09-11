@@ -25,7 +25,7 @@ internal constructor(private val navigator: Navigator, private val areasProducer
   @Composable
   override fun present(): AreasState {
     var retryTrigger by retain { mutableIntStateOf(0) }
-    val response = areasProducer.produce(retryTrigger)
+    val state = areasProducer.produce(retryTrigger)
 
     val successEventSink: (AreasEvent.Success) -> Unit = remember {
       { event ->
@@ -43,11 +43,13 @@ internal constructor(private val navigator: Navigator, private val areasProducer
       }
     }
 
-    return when (val ui = rememberListUi(response, retryTrigger)) {
-      ListUi.Loading -> AreasState.Loading
-      is ListUi.Content -> AreasState.Success(ui.items, ui.isRefreshing, successEventSink)
-      is ListUi.Failure -> AreasState.Error(ui.message, errorEventSink)
-    }
+    return state.foldToState(
+      onLoading = { AreasState.Loading },
+      onError = { message -> AreasState.Error(message, errorEventSink) },
+      onContent = { items, isRefreshing ->
+        AreasState.Success(items, isRefreshing, successEventSink)
+      },
+    )
   }
 }
 

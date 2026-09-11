@@ -12,6 +12,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.solcott.dataresult.Outcome
+import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -26,11 +28,10 @@ import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
 import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
-import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 interface AreaRepository {
 
-  fun getAreas(): Flow<StoreReadResponse<List<Area>>>
+  fun getAreas(): Flow<Outcome<List<Area>>>
 
   /**
    * The country [area] names, or `null` if the list does not know this area or could not be loaded.
@@ -90,19 +91,20 @@ internal class AreaRepositoryImpl(
   private val store: Store<Unit, List<Area>> =
     StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
-  override fun getAreas(): Flow<StoreReadResponse<List<Area>>> {
+  override fun getAreas(): Flow<Outcome<List<Area>>> {
     return fetchHistoryDataStore
       .refreshNeeded(cacheExpiration)
       .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(Unit, refresh)) }
       .logErrors(logger, "Error loading areas")
+      .asOutcomes()
   }
 
   override suspend fun countryFor(area: String): String? {
     // Waits for the first *settled* response. A Store stream never completes, so taking `first()`
     // of the data alone would hang forever on an area the list does not contain.
-    val settled = getAreas().first { it is StoreReadResponse.Data || it is StoreReadResponse.Error }
-    return (settled as? StoreReadResponse.Data)
-      ?.value
+    val settled = getAreas().first { it !is Outcome.Loading }
+    return (settled as? Outcome.Data)
+      ?.data
       ?.firstOrNull { it.area.equals(area, ignoreCase = true) }
       ?.country
   }

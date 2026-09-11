@@ -3,11 +3,9 @@ package com.scottolcott.recipe.domain.presenter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.producer.RecipesProducer
-import com.scottolcott.recipe.errorMessage
 import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeId
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -20,7 +18,7 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
-import org.mobilenativefoundation.store.store5.StoreReadResponse
+import io.github.solcott.uistate.ContentState
 
 @CircuitInject(RecipesScreen::class, AppScope::class)
 @Inject
@@ -34,12 +32,7 @@ internal constructor(
   override fun present(): RecipesState {
     var retryTrigger by retain { mutableIntStateOf(0) }
     val showAreaLabel = screen is RecipesScreen.BySearch
-    val recipesResponse = produceRecipesResponse(screen, retryTrigger)
-
-    var lastRecipes by retain(retryTrigger) { mutableStateOf<List<Recipe>?>(null) }
-    if (recipesResponse is StoreReadResponse.Data) {
-      lastRecipes = recipesResponse.value
-    }
+    val state = produceRecipesState(screen, retryTrigger)
 
     val errorEventSink: (RecipesEvent.Error) -> Unit = { event ->
       when (event) {
@@ -53,42 +46,26 @@ internal constructor(
       }
     }
 
-    return when (recipesResponse) {
-      is StoreReadResponse.Data<List<Recipe>> ->
+    return state.foldToState(
+      onLoading = { RecipesState.Loading },
+      onError = { message -> RecipesState.Error(message, errorEventSink) },
+      onContent = { recipes, isRefreshing ->
         RecipesState.Success(
           screen,
-          recipesResponse.value,
-          isRefreshing = false,
+          recipes,
+          isRefreshing = isRefreshing,
           showAreaLabel = showAreaLabel,
           successEventSink,
         )
-
-      is StoreReadResponse.Error -> RecipesState.Error(recipesResponse.errorMessage, errorEventSink)
-
-      is StoreReadResponse.Initial,
-      is StoreReadResponse.Loading,
-      is StoreReadResponse.NoNewData -> {
-        val cached = lastRecipes
-        if (cached != null) {
-          RecipesState.Success(
-            screen,
-            cached,
-            isRefreshing = true,
-            showAreaLabel = showAreaLabel,
-            successEventSink,
-          )
-        } else {
-          RecipesState.Loading
-        }
-      }
-    }
+      },
+    )
   }
 
   @Composable
-  private fun produceRecipesResponse(
+  private fun produceRecipesState(
     screen: RecipesScreen,
     retryTrigger: Int,
-  ): StoreReadResponse<List<Recipe>> {
+  ): ContentState<List<Recipe>> {
     return when (screen) {
       is RecipesScreen.ByCategory ->
         recipesProducer.produceByCategory(screen.category, retryTrigger)

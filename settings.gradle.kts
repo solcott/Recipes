@@ -27,6 +27,20 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal()
+
+        // io.github.solcott:dataresult / :uistate / :dataresult-store5.
+        // GitHub Packages authenticates even public reads, so this needs a classic PAT with the
+        // read:packages scope in ~/.gradle/gradle.properties. mavenLocal() above wins while
+        // iterating on the library. See github.com/solcott/kmp-dataresult.
+        maven("https://maven.pkg.github.com/solcott/kmp-dataresult") {
+            name = "GitHubPackages"
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+            // Nothing else may resolve here, so a credential problem can't cascade.
+            content { includeGroup("io.github.solcott") }
+        }
 //        maven {
 //            url = URI("https://central.sonatype.com/repository/maven-snapshots/")
 //            mavenContent { snapshotsOnly() }

@@ -36,16 +36,17 @@ Given a screen name `Xxx` and a description of what it shows:
    - `@CircuitInject(XxxScreen::class, AppScope::class)` and `@Inject` on the presenter
    - `@Redacted` on every `eventSink` property
    - `retain { }` for retained state, never `rememberSaveable`
-   - The `when` over `StoreReadResponse` exhaustive across `Initial`, `Loading`, `NoNewData`,
-     `Data`, `Error.Exception`, `Error.Message`, `Error.Custom<*>`
+   - `ContentState.foldToState(onLoading, onError, onContent)` to map producer output onto the
+     three state cases — not a hand-written `when`, and no `retain`ed cache beside it
    - A `retryTrigger` counter wired to `XxxEvent.Error.RetryClicked`, as in the example
    - For a screen with parameters, a sealed interface whose **concrete cases** each carry
      `@CircuitSerializable(AppScope::class)` — never the sealed parent. Every parameter type must be
      `@Serializable`; if one isn't, leave a TODO and report it rather than editing `:model`
 
 2. **`domain/.../producer/XxxProducer.kt`** — only if a repository is involved. Thin `@Inject class`
-   wrapping the repository flow in `produceRetainedState`, keyed on `retryTrigger`, dropping
-   `NoNewData`. Model on `CategoriesProducer.kt`.
+   wrapping the repository flow in `produceRetainedContentState` (imported from
+   `io.github.solcott.uistate.circuit`), keyed on `retryTrigger` plus whatever else the stream
+   depends on. Model on `CategoriesProducer.kt`.
 
 3. **`ui/src/commonMain/kotlin/com/scottolcott/recipe/ui/<feature>/XxxScreen.kt`**
    `@CircuitInject(XxxScreen::class, AppScope::class)` on

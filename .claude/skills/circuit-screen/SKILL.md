@@ -63,12 +63,27 @@ Rules that are easy to get wrong:
 - Every parameter of a screen must be serializable. `RecipeId`, `CategoryId` and `IngredientId`
   already are; a new parameter type in `:model` needs `@Serializable` added there.
 
-### Handling `StoreReadResponse`
+### Turning repository data into screen state
 
-Repositories return `Flow<StoreReadResponse<T>>`, and the `when` must be exhaustive over
-`Initial`, `Loading`, `NoNewData`, `Data`, `Error.Exception`, `Error.Message`, `Error.Custom<*>`.
-The established pattern keeps the last successful value in a `retain`ed var so refreshes show
-`Success(isRefreshing = true)` instead of dropping back to `Loading`.
+Repositories return `Flow<Outcome<T>>` — Store 5 stops at `:repository`. A producer folds those
+emissions into a `ContentState<T>`, and the presenter maps that onto its own state with
+`foldToState`:
+
+```kotlin
+return state.foldToState(
+  onLoading = { XxxState.Loading },
+  onError = { message -> XxxState.Error(message, errorEventSink) },
+  onContent = { items, isRefreshing -> XxxState.Success(items, isRefreshing, successEventSink) },
+)
+```
+
+`ContentState.data` holds the last loaded value, which is what makes a refresh render as
+`Success(isRefreshing = true)` rather than dropping back to `Loading`. Do not add a `retain`ed var
+beside it to do that job — that pattern predates `ContentState` and is gone.
+
+Inside `foldToState`, **`hasLoaded` is the discriminator, not `data.isEmpty()`**: an empty list is a
+real answer, and reading it as "nothing yet" hangs a spinner over an empty screen. See the
+Architecture section of `CLAUDE.md`.
 
 ### Screen persistence
 
@@ -88,8 +103,14 @@ may hold unserializable state such as a `TextFieldState`.
 ## 2. Producer — `domain/.../producer/XxxProducer.kt`
 
 Only if the presenter reads a repository. Thin `@Inject class` wrapping the repository flow in
-`produceRetainedState`, keyed on `retryTrigger`, dropping `NoNewData`. Model on
+`produceRetainedContentState` (from `libs.uistateCircuit`, shared with the `Countries` project), passing
+`retryTrigger` plus whatever else the stream is keyed on. Model on
 `domain/.../producer/CategoriesProducer.kt`.
+
+For a source whose parameters change *while* it is on screen — a search term, a filter — reach for
+`params.produceRetainedContentState(initial, keys) { p -> … }` instead: it cancels the in-flight request
+per new parameter and marks the state reloading first, so content stays put under a refresh
+indicator. Nothing here needs it yet.
 
 ## 3. Composable — `ui/.../<feature>/XxxScreen.kt`
 
