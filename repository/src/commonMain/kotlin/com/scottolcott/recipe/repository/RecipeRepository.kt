@@ -11,11 +11,13 @@ import com.scottolcott.recipe.network.dto.RecipeFullDto
 import com.scottolcott.recipe.storage.dao.RecipeDao
 import com.scottolcott.recipe.storage.datastore.RecipeFetchHistoryDataStore
 import com.scottolcott.recipe.storage.entity.FavoriteEntity
-import com.scottolcott.recipe.swapType
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.solcott.dataresult.Outcome
+import io.github.solcott.dataresult.mapData
+import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -28,21 +30,19 @@ import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
 import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
-import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponse.Data
 
 interface RecipeRepository {
-  fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>>
+  fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>>
 
-  fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>>
+  fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>>
 
-  fun recipesByIngredients(ingredients: Set<String>): Flow<StoreReadResponse<List<Recipe>>>
+  fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>>
 
-  fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>>
+  fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>>
 
-  fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>>
+  fun getById(id: RecipeId): Flow<Outcome<Recipe?>>
 
-  fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>>
+  fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>>
 
   suspend fun addFavorite(id: RecipeId)
 
@@ -65,93 +65,67 @@ internal class RecipeRepositoryImpl(
     StoreBuilder.from(createFetcher(), createSourceOfTruth()).build()
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun searchRecipes(query: String): Flow<StoreReadResponse<List<Recipe>>> {
+  override fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>> {
     val key = RecipesKey.Query(query.trim())
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
-          else -> it.swapType()
-        }
-      }
       .logErrors(logger, "Error searching recipes by $query")
+      .asOutcomes()
+      .map { outcome -> outcome.mapData { it.recipes } }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun recipesByCategory(category: String): Flow<StoreReadResponse<List<Recipe>>> {
+  override fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>> {
     val key = RecipesKey.ByCategory(category)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
-          else -> it.swapType()
-        }
-      }
       .logErrors(logger, "Error loading recipes by category $category")
+      .asOutcomes()
+      .map { outcome -> outcome.mapData { it.recipes } }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun recipesByIngredients(
-    ingredients: Set<String>
-  ): Flow<StoreReadResponse<List<Recipe>>> {
+  override fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>> {
     val key = RecipesKey.ByIngredient.of(ingredients)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
-          else -> it.swapType()
-        }
-      }
       .logErrors(logger, "Error loading recipes by ingredients $ingredients")
+      .asOutcomes()
+      .map { outcome -> outcome.mapData { it.recipes } }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun recipesByArea(area: String): Flow<StoreReadResponse<List<Recipe>>> {
+  override fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>> {
     val key = RecipesKey.ByArea(area)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
-          else -> it.swapType()
-        }
-      }
       .logErrors(logger, "Error loading recipes by area $area")
+      .asOutcomes()
+      .map { outcome -> outcome.mapData { it.recipes } }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun getById(id: RecipeId): Flow<StoreReadResponse<Recipe?>> {
+  override fun getById(id: RecipeId): Flow<Outcome<Recipe?>> {
     val key = RecipesKey.ById(id)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes.firstOrNull(), it.origin)
-          else -> it.swapType()
-        }
-      }
       .logErrors(logger, "Error loading recipes by id : $id")
+      .asOutcomes()
+      .map { outcome -> outcome.mapData { it.recipes.firstOrNull() } }
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun getFavoritesAsFlow(): Flow<StoreReadResponse<List<Recipe>>> {
+  override fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>> {
     return recipeStore
       .stream(StoreReadRequest.cached(RecipesKey.Favorites, false))
-      .map {
-        when (it) {
-          is Data<RecipeResponse> -> Data(it.value.recipes, it.origin)
-          else -> it.swapType()
-        }
-      }
       .logErrors(logger, "Error getting recipe favorites")
+      .asOutcomes()
+      .map { outcome -> outcome.mapData { it.recipes } }
   }
 
   override suspend fun addFavorite(id: RecipeId) {

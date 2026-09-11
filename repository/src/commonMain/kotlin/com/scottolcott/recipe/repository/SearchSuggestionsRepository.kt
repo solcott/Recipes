@@ -1,7 +1,5 @@
 package com.scottolcott.recipe.repository
 
-import com.scottolcott.recipe.isError
-import com.scottolcott.recipe.isLoading
 import com.scottolcott.recipe.model.CategorySuggestions
 import com.scottolcott.recipe.model.IngredientSuggestions
 import com.scottolcott.recipe.model.SearchSuggestion
@@ -11,6 +9,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.solcott.dataresult.dataOrNull
+import io.github.solcott.dataresult.errorOrNull
+import io.github.solcott.dataresult.isLoading
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -54,12 +55,12 @@ internal class SearchSuggestionsRepositoryImpl(
         storedSuggestions,
         CategorySuggestions(
           categorySuggestions.isLoading,
-          categorySuggestions.isError,
+          categorySuggestions.errorOrNull != null,
           categorySuggestions.dataOrNull().orEmpty(),
         ),
         IngredientSuggestions(
           ingredientSuggestions.isLoading,
-          ingredientSuggestions.isError,
+          ingredientSuggestions.errorOrNull != null,
           ingredientSuggestions.dataOrNull().orEmpty(),
         ),
       )

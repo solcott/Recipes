@@ -4,12 +4,15 @@ import androidx.compose.runtime.Composable
 import com.scottolcott.recipe.model.Ingredient
 import com.scottolcott.recipe.repository.IngredientRepository
 import dev.zacsweers.metro.Inject
-import org.mobilenativefoundation.store.store5.StoreReadResponse
+import io.github.solcott.uistate.ContentState
+import io.github.solcott.uistate.circuit.produceRetainedContentState
 
 @Inject
 internal class IngredientsProducer(private val ingredientsRepository: IngredientRepository) {
 
   @Composable
-  fun produce(retryTrigger: Int): StoreReadResponse<List<Ingredient>> =
-    produceStoreState(retryTrigger) { ingredientsRepository.getIngredients() }
+  fun produce(retryTrigger: Int): ContentState<List<Ingredient>> =
+    produceRetainedContentState(emptyList(), retryTrigger) {
+      ingredientsRepository.getIngredients()
+    }
 }

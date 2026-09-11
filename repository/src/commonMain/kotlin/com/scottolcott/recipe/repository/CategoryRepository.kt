@@ -13,6 +13,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.solcott.dataresult.Outcome
+import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -26,13 +28,12 @@ import org.mobilenativefoundation.store.store5.SourceOfTruth
 import org.mobilenativefoundation.store.store5.Store
 import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
-import org.mobilenativefoundation.store.store5.StoreReadResponse
 
 interface CategoryRepository {
 
-  fun getCategories(): Flow<StoreReadResponse<List<Category>>>
+  fun getCategories(): Flow<Outcome<List<Category>>>
 
-  fun getCategories(nameFilter: String): Flow<StoreReadResponse<List<Category>>>
+  fun getCategories(nameFilter: String): Flow<Outcome<List<Category>>>
 }
 
 @SingleIn(AppScope::class)
@@ -112,19 +113,20 @@ internal class CategoryRepositoryImpl(
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun getCategories(): Flow<StoreReadResponse<List<Category>>> {
+  override fun getCategories(): Flow<Outcome<List<Category>>> {
     return loadCategoriesByKey(CategoriesKey.GetCategories)
   }
 
-  override fun getCategories(nameFilter: String): Flow<StoreReadResponse<List<Category>>> {
+  override fun getCategories(nameFilter: String): Flow<Outcome<List<Category>>> {
     return loadCategoriesByKey(CategoriesKey.FilterByName(nameFilter))
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  private fun loadCategoriesByKey(key: CategoriesKey): Flow<StoreReadResponse<List<Category>>> {
+  private fun loadCategoriesByKey(key: CategoriesKey): Flow<Outcome<List<Category>>> {
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
       .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
       .logErrors(logger, "Error loading categories by $key")
+      .asOutcomes()
   }
 }

@@ -7,13 +7,16 @@ import com.scottolcott.recipe.repository.CategoryRepository
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.solcott.dataresult.DataError
+import io.github.solcott.dataresult.Origin
+import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import org.mobilenativefoundation.store.store5.StoreReadResponse
-import org.mobilenativefoundation.store.store5.StoreReadResponseOrigin
 
 private class CategoriesTestEnvironment(
   val navigator: FakeNavigator,
@@ -22,17 +25,15 @@ private class CategoriesTestEnvironment(
 )
 
 private class FakeCategoryRepository : CategoryRepository {
-  var getCategoriesHandler: () -> Flow<StoreReadResponse<List<Category>>> = {
-    flowOf(StoreReadResponse.Initial)
-  }
+  var getCategoriesHandler: () -> Flow<Outcome<List<Category>>> = { inFlight() }
 
-  var getCategoriesByNameHandler: (String) -> Flow<StoreReadResponse<List<Category>>> = {
+  var getCategoriesByNameHandler: (String) -> Flow<Outcome<List<Category>>> = {
     getCategoriesHandler()
   }
 
-  override fun getCategories(): Flow<StoreReadResponse<List<Category>>> = getCategoriesHandler()
+  override fun getCategories(): Flow<Outcome<List<Category>>> = getCategoriesHandler()
 
-  override fun getCategories(nameFilter: String): Flow<StoreReadResponse<List<Category>>> =
+  override fun getCategories(nameFilter: String): Flow<Outcome<List<Category>>> =
     getCategoriesByNameHandler(nameFilter)
 }
 
@@ -52,7 +53,7 @@ val categoriesPresenterTests by testSuite {
     {
       val simpleStates =
         listOf(
-          Triple("loadingState", flowOf(StoreReadResponse.Initial)) { state: CategoriesState ->
+          Triple("loadingState", inFlight()) { state: CategoriesState ->
             assertIs<CategoriesState.Loading>(state)
           },
           Triple("successState", null) { state: CategoriesState ->
@@ -60,12 +61,7 @@ val categoriesPresenterTests by testSuite {
           },
           Triple(
             "errorState",
-            flowOf(
-              StoreReadResponse.Error.Exception(
-                RuntimeException("Error"),
-                StoreReadResponseOrigin.Fetcher(),
-              )
-            ),
+            flowOf(Outcome.Error(DataError.Unknown(message = "Error"), Origin.Network)),
           ) { state: CategoriesState ->
             assertIs<CategoriesState.Error>(state)
           },
@@ -73,11 +69,7 @@ val categoriesPresenterTests by testSuite {
 
       for ((name, responseFlow, assertion) in simpleStates) {
         test(name) {
-          val flow =
-            responseFlow
-              ?: flowOf(
-                StoreReadResponse.Data(categoriesFixture(), StoreReadResponseOrigin.SourceOfTruth)
-              )
+          val flow = responseFlow ?: flowOf(Outcome.Data(categoriesFixture(), Origin.Cache))
           repository.getCategoriesHandler = { flow }
           presenter.test {
             var state = awaitItem()
@@ -97,14 +89,9 @@ val categoriesPresenterTests by testSuite {
         repository.getCategoriesHandler = {
           callCount++
           if (callCount == 1) {
-            flowOf(
-              StoreReadResponse.Error.Exception(
-                RuntimeException("Error"),
-                StoreReadResponseOrigin.Fetcher(),
-              )
-            )
+            flowOf(Outcome.Error(DataError.Unknown(message = "Error"), Origin.Network))
           } else {
-            flowOf(StoreReadResponse.Initial)
+            inFlight()
           }
         }
         presenter.test {
@@ -122,9 +109,7 @@ val categoriesPresenterTests by testSuite {
 
       test("categoryClick") {
         val categories = categoriesFixture()
-        repository.getCategoriesHandler = {
-          flowOf(StoreReadResponse.Data(categories, StoreReadResponseOrigin.SourceOfTruth))
-        }
+        repository.getCategoriesHandler = { flowOf(Outcome.Data(categories, Origin.Cache)) }
         presenter.test {
           var state = awaitItem()
           if (state is CategoriesState.Loading) state = awaitItem()
@@ -138,4 +123,17 @@ val categoriesPresenterTests by testSuite {
         }
       }
     }
+}
+
+/**
+ * A request that is still in flight: it reports loading and then stays open.
+ *
+ * Deliberately not `flowOf(Outcome.Loading)`. That completes, and a completed source that produced
+ * nothing is a *settled* empty result, not a pending one -- `produceRetainedContentState` settles
+ * the status on completion so a spinner can never hang. A Store stream never completes, so this is
+ * the faithful stand-in.
+ */
+private fun inFlight(): Flow<Outcome<Nothing>> = flow {
+  emit(Outcome.Loading)
+  awaitCancellation()
 }

@@ -30,7 +30,7 @@ internal constructor(
   @Composable
   override fun present(): CategoriesState {
     var retryTrigger by retain { mutableIntStateOf(0) }
-    val response = categoriesProducer.produce(retryTrigger)
+    val state = categoriesProducer.produce(retryTrigger)
 
     val successEventSink: (CategoriesEvent.Success) -> Unit = remember {
       { event ->
@@ -49,11 +49,11 @@ internal constructor(
       }
     }
 
-    return when (val ui = rememberListUi(response, retryTrigger)) {
-      ListUi.Loading -> Loading
-      is ListUi.Content -> Success(ui.items, ui.isRefreshing, successEventSink)
-      is ListUi.Failure -> Error(ui.message, errorEventSink)
-    }
+    return state.foldToState(
+      onLoading = { Loading },
+      onError = { message -> Error(message, errorEventSink) },
+      onContent = { items, isRefreshing -> Success(items, isRefreshing, successEventSink) },
+    )
   }
 }
 

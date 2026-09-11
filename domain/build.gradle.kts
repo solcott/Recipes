@@ -37,7 +37,12 @@ kotlin {
         api(libs.kotlinx.coroutines)
         // Used for url encode/decode in ScreenUrlMapper
         api(libs.ktor.http)
-        api(libs.store)
+        // ContentState is what the producers return, so it is part of their signatures. Store5 is
+        // gone from here entirely -- :repository speaks Outcome now and keeps Store to itself.
+        api(libs.uistate)
+        // produceContentState. `api` because the producers' return types come from `uistate`,
+        // which this brings with it.
+        api(libs.uistateCircuit)
 
         implementation(projects.core)
         implementation(projects.repository)
