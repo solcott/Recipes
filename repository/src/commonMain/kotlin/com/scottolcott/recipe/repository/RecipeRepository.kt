@@ -69,9 +69,14 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.Query(query.trim())
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error searching recipes by $query")
-      .asOutcomes()
+      .flatMapLatest { refresh ->
+        // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
+        // Every refreshing stream below does the same.
+        recipeStore
+          .stream(StoreReadRequest.cached(key, refresh))
+          .logErrors(logger, "Error searching recipes by $query")
+          .asOutcomes(fetching = refresh) { it.recipes.isEmpty() }
+      }
       .map { outcome -> outcome.mapData { it.recipes } }
   }
 
@@ -80,9 +85,12 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ByCategory(category)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading recipes by category $category")
-      .asOutcomes()
+      .flatMapLatest { refresh ->
+        recipeStore
+          .stream(StoreReadRequest.cached(key, refresh))
+          .logErrors(logger, "Error loading recipes by category $category")
+          .asOutcomes(fetching = refresh) { it.recipes.isEmpty() }
+      }
       .map { outcome -> outcome.mapData { it.recipes } }
   }
 
@@ -91,9 +99,12 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ByIngredient.of(ingredients)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading recipes by ingredients $ingredients")
-      .asOutcomes()
+      .flatMapLatest { refresh ->
+        recipeStore
+          .stream(StoreReadRequest.cached(key, refresh))
+          .logErrors(logger, "Error loading recipes by ingredients $ingredients")
+          .asOutcomes(fetching = refresh) { it.recipes.isEmpty() }
+      }
       .map { outcome -> outcome.mapData { it.recipes } }
   }
 
@@ -102,9 +113,12 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ByArea(area)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading recipes by area $area")
-      .asOutcomes()
+      .flatMapLatest { refresh ->
+        recipeStore
+          .stream(StoreReadRequest.cached(key, refresh))
+          .logErrors(logger, "Error loading recipes by area $area")
+          .asOutcomes(fetching = refresh) { it.recipes.isEmpty() }
+      }
       .map { outcome -> outcome.mapData { it.recipes } }
   }
 
@@ -113,9 +127,12 @@ internal class RecipeRepositoryImpl(
     val key = RecipesKey.ById(id)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> recipeStore.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading recipes by id : $id")
-      .asOutcomes()
+      .flatMapLatest { refresh ->
+        recipeStore
+          .stream(StoreReadRequest.cached(key, refresh))
+          .logErrors(logger, "Error loading recipes by id : $id")
+          .asOutcomes(fetching = refresh) { it.recipes.isEmpty() }
+      }
       .map { outcome -> outcome.mapData { it.recipes.firstOrNull() } }
   }
 

@@ -81,8 +81,10 @@ return state.foldToState(
 `Success(isRefreshing = true)` rather than dropping back to `Loading`. Do not add a `retain`ed var
 beside it to do that job — that pattern predates `ContentState` and is gone.
 
-Inside `foldToState`, **`hasLoaded` is the discriminator, not `data.isEmpty()`**: an empty list is a
-real answer, and reading it as "nothing yet" hangs a spinner over an empty screen. See the
+Inside `foldToState`, **`hasAnswer` is the discriminator, not `data.isEmpty()`**: an empty list is a
+real answer, and reading it as "nothing yet" hangs a spinner over an empty screen. The one empty list
+that isn't an answer is an empty read from cache while its request is still in flight. The
+repository holds it back (`asOutcomes(fetching = refresh) { … }`) and `hasAnswer` refuses it. See the
 Architecture section of `CLAUDE.md`.
 
 ### Screen persistence

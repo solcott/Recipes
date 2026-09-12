@@ -115,11 +115,13 @@ internal class IngredientRepositoryImpl(
   }
 
   private fun loadIngredientsByKey(key: IngredientsKey): Flow<Outcome<List<Ingredient>>> {
-    return fetchHistoryDataStore
-      .refreshNeeded(cacheExpiration)
-      .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading ingredients by $key")
-      .asOutcomes()
+    return fetchHistoryDataStore.refreshNeeded(cacheExpiration).flatMapLatest { refresh ->
+      // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
+      store
+        .stream(StoreReadRequest.cached(key, refresh))
+        .logErrors(logger, "Error loading ingredients by $key")
+        .asOutcomes(fetching = refresh) { it.isEmpty() }
+    }
   }
 
   private fun Flow<List<IngredientEntity>>.mapToIngredients(): Flow<List<Ingredient>> =
