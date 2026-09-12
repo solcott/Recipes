@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.ui.ingredient
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,37 +59,41 @@ fun IngredientsScreen(state: IngredientsState, modifier: Modifier = Modifier) {
       MaterialTheme.typography.titleSmallEmphasized
     }
   Box(modifier, contentAlignment = Alignment.TopCenter) {
-    when (state) {
-      is IngredientsState.Error ->
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          ErrorDisplay(onRetryClick = { state.eventSink(IngredientsEvent.Error.RetryClicked) })
-        }
-
-      IngredientsState.Loading ->
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          CircularProgressIndicator()
-        }
-
-      is IngredientsState.Success -> {
-        if (state.ingredients.isEmpty()) {
-          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.no_ingredients_found))
+    AnimatedContent(state) { targetState ->
+      when (targetState) {
+        is IngredientsState.Error ->
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            ErrorDisplay(
+              onRetryClick = { targetState.eventSink(IngredientsEvent.Error.RetryClicked) }
+            )
           }
-        } else {
-          LazyVerticalGrid(
-            cells,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = padding,
-          ) {
-            items(state.ingredients, key = { it.id }, contentType = { "ingredient_item" }) {
-              IngredientItem(
-                it,
-                labelTextStyle = labelTextStyle,
-                { state.eventSink(IngredientsEvent.Success.IngredientClicked(it.name)) },
-                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-              )
+
+        IngredientsState.Loading ->
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+          }
+
+        is IngredientsState.Success -> {
+          if (targetState.ingredients.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+              Text(stringResource(Res.string.no_ingredients_found))
+            }
+          } else {
+            LazyVerticalGrid(
+              cells,
+              modifier = Modifier.fillMaxSize(),
+              verticalArrangement = Arrangement.spacedBy(12.dp),
+              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              contentPadding = padding,
+            ) {
+              items(targetState.ingredients, key = { it.id }, contentType = { "ingredient_item" }) {
+                IngredientItem(
+                  it,
+                  labelTextStyle = labelTextStyle,
+                  { targetState.eventSink(IngredientsEvent.Success.IngredientClicked(it.name)) },
+                  Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+                )
+              }
             }
           }
         }

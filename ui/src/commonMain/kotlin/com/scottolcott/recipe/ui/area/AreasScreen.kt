@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.ui.area
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,38 +64,40 @@ fun AreasScreen(state: AreasState, modifier: Modifier = Modifier) {
   // the gloss it is rather than a second title.
   val countryTextStyle = MaterialTheme.typography.bodyMedium
   Box(modifier, contentAlignment = Alignment.TopCenter) {
-    when (state) {
-      is AreasState.Error ->
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          ErrorDisplay(onRetryClick = { state.eventSink(AreasEvent.Error.RetryClicked) })
-        }
-
-      AreasState.Loading ->
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          CircularProgressIndicator()
-        }
-
-      is AreasState.Success -> {
-        if (state.areas.isEmpty()) {
-          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.no_areas_found))
+    AnimatedContent(state) { targetState ->
+      when (targetState) {
+        is AreasState.Error ->
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            ErrorDisplay(onRetryClick = { targetState.eventSink(AreasEvent.Error.RetryClicked) })
           }
-        } else {
-          LazyVerticalGrid(
-            cells,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = padding,
-          ) {
-            items(state.areas, key = { it.area }, contentType = { "area_item" }) { area ->
-              AreaItem(
-                area,
-                areaTextStyle = areaTextStyle,
-                countryTextStyle = countryTextStyle,
-                { state.eventSink(AreasEvent.Success.AreaClicked(area.area)) },
-                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-              )
+
+        AreasState.Loading ->
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+          }
+
+        is AreasState.Success -> {
+          if (targetState.areas.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+              Text(stringResource(Res.string.no_areas_found))
+            }
+          } else {
+            LazyVerticalGrid(
+              cells,
+              modifier = Modifier.fillMaxSize(),
+              verticalArrangement = Arrangement.spacedBy(12.dp),
+              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              contentPadding = padding,
+            ) {
+              items(targetState.areas, key = { it.area }, contentType = { "area_item" }) { area ->
+                AreaItem(
+                  area,
+                  areaTextStyle = areaTextStyle,
+                  countryTextStyle = countryTextStyle,
+                  { targetState.eventSink(AreasEvent.Success.AreaClicked(area.area)) },
+                  Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+                )
+              }
             }
           }
         }

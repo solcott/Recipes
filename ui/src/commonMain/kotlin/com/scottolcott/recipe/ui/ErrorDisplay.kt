@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -9,7 +10,11 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ErrorDisplay(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
-  Column(modifier = modifier) {
+  Column(
+    modifier = modifier,
+    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.Center,
+  ) {
     Text(stringResource(Res.string.an_error_occurred))
     Button(onRetryClick) { Text(stringResource(Res.string.retry)) }
   }

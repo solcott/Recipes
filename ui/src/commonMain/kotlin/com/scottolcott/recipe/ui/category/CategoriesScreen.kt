@@ -2,6 +2,7 @@
 
 package com.scottolcott.recipe.ui.category
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,37 +62,41 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
       MaterialTheme.typography.titleSmallEmphasized
     }
   Box(modifier, contentAlignment = Alignment.TopCenter) {
-    when (state) {
-      is CategoriesState.Error ->
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          ErrorDisplay(onRetryClick = { state.eventSink(CategoriesEvent.Error.RetryClicked) })
-        }
-
-      CategoriesState.Loading ->
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          CircularProgressIndicator()
-        }
-
-      is CategoriesState.Success -> {
-        if (state.categories.isEmpty()) {
-          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.no_categories_found))
+    AnimatedContent(state) { targetState ->
+      when (targetState) {
+        is CategoriesState.Error ->
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            ErrorDisplay(
+              onRetryClick = { targetState.eventSink(CategoriesEvent.Error.RetryClicked) }
+            )
           }
-        } else {
-          LazyVerticalGrid(
-            cells,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = padding,
-          ) {
-            items(state.categories, key = { it.id }, contentType = { "category_item" }) {
-              CategoryItem(
-                it,
-                labelTextStyle = labelTextStyle,
-                { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
-                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-              )
+
+        CategoriesState.Loading ->
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+          }
+
+        is CategoriesState.Success -> {
+          if (targetState.categories.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+              Text(stringResource(Res.string.no_categories_found))
+            }
+          } else {
+            LazyVerticalGrid(
+              cells,
+              modifier = Modifier.fillMaxSize(),
+              verticalArrangement = Arrangement.spacedBy(12.dp),
+              horizontalArrangement = Arrangement.spacedBy(12.dp),
+              contentPadding = padding,
+            ) {
+              items(targetState.categories, key = { it.id }, contentType = { "category_item" }) {
+                CategoryItem(
+                  it,
+                  labelTextStyle = labelTextStyle,
+                  { targetState.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
+                  Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+                )
+              }
             }
           }
         }
