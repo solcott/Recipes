@@ -1,6 +1,5 @@
 package com.scottolcott.recipe.ui.ingredient
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +28,9 @@ import com.scottolcott.recipe.domain.presenter.IngredientsEvent
 import com.scottolcott.recipe.domain.presenter.IngredientsScreen
 import com.scottolcott.recipe.domain.presenter.IngredientsState
 import com.scottolcott.recipe.model.Ingredient
+import com.scottolcott.recipe.ui.AnimatedStateContent
 import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
@@ -58,42 +58,36 @@ fun IngredientsScreen(state: IngredientsState, modifier: Modifier = Modifier) {
     } else {
       MaterialTheme.typography.titleSmallEmphasized
     }
-  Box(modifier, contentAlignment = Alignment.TopCenter) {
-    AnimatedContent(state) { targetState ->
-      when (targetState) {
-        is IngredientsState.Error ->
-          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            ErrorDisplay(
-              onRetryClick = { targetState.eventSink(IngredientsEvent.Error.RetryClicked) }
-            )
-          }
+  AnimatedStateContent(state, modifier) { targetState ->
+    when (targetState) {
+      is IngredientsState.Error ->
+        ErrorDisplay(
+          onRetryClick = { targetState.eventSink(IngredientsEvent.Error.RetryClicked) },
+          modifier = Modifier.fillMaxSize(),
+        )
 
-        IngredientsState.Loading ->
+      IngredientsState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
+
+      is IngredientsState.Success -> {
+        if (targetState.ingredients.isEmpty()) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            Text(stringResource(Res.string.no_ingredients_found))
           }
-
-        is IngredientsState.Success -> {
-          if (targetState.ingredients.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Text(stringResource(Res.string.no_ingredients_found))
-            }
-          } else {
-            LazyVerticalGrid(
-              cells,
-              modifier = Modifier.fillMaxSize(),
-              verticalArrangement = Arrangement.spacedBy(12.dp),
-              horizontalArrangement = Arrangement.spacedBy(12.dp),
-              contentPadding = padding,
-            ) {
-              items(targetState.ingredients, key = { it.id }, contentType = { "ingredient_item" }) {
-                IngredientItem(
-                  it,
-                  labelTextStyle = labelTextStyle,
-                  { targetState.eventSink(IngredientsEvent.Success.IngredientClicked(it.name)) },
-                  Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-                )
-              }
+        } else {
+          LazyVerticalGrid(
+            cells,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = padding,
+          ) {
+            items(targetState.ingredients, key = { it.id }, contentType = { "ingredient_item" }) {
+              IngredientItem(
+                it,
+                labelTextStyle = labelTextStyle,
+                { targetState.eventSink(IngredientsEvent.Success.IngredientClicked(it.name)) },
+                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+              )
             }
           }
         }

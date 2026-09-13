@@ -2,34 +2,27 @@ package com.scottolcott.recipe.domain.presenter
 
 import io.github.solcott.uistate.ContentState
 import io.github.solcott.uistate.errorOrNull
-import io.github.solcott.uistate.hasAnswer
 import io.github.solcott.uistate.isLoading
 
 /**
- * The three states every screen renders, decoupled from any one screen's `CircuitUiState`.
+ * [foldToState] for a screen that shows one optional item, such as a recipe by id.
  *
- * Each tab keeps its own state type — Circuit pairs a state with exactly one UI — but the mapping
- * from a [ContentState] onto these three cases is the same everywhere, so it lives here rather than
- * three times over.
- *
- * The order of the branches is the point. Having data wins over being in flight: [ContentState]
- * keeps the last item it loaded, so a background refresh reports it as content that is refreshing
- * rather than dropping the grid for a spinner.
- *
- * `hasAnswer` is what separates the first two branches, not `data == null` — a null is a real
- * answer, and reading it as "nothing yet" would leave a spinner over a legitimately empty tab
- * forever. What it adds over `hasLoaded` is the one empty list that is *not* an answer: an empty
- * read from cache while its request is still in flight or has failed. That is a key the database
- * has never seen, so it gets the spinner, or the error, rather than "nothing found". The
- * repositories already hold that read back with `asOutcomes(fetching = …)`; this is the backstop.
+ * Simpler than the list version, because a non-null item is always an answer: the one read
+ * `hasAnswer` exists to refuse -- an empty read from cache while its request is still outstanding
+ * -- is a null here, and a null is never content. So having the item wins over being in flight (a
+ * refresh renders as content that is refreshing, not a spinner); no item while in flight is still
+ * loading; and no item once settled is an error -- the request failed, or the source answered that
+ * there is no such item.
  */
-internal inline fun <T, S> ContentState<T?>.foldToState(
+internal inline fun <T : Any, S> ContentState<T?>.foldToState(
   onLoading: () -> S,
   onError: (message: String) -> S,
   onContent: (item: T, isRefreshing: Boolean) -> S,
-): S =
-  when {
-    hasAnswer { it != null } -> onContent(checkNotNull(data) { "data was null." }, isLoading)
+): S {
+  val item = data
+  return when {
+    item != null -> onContent(item, isLoading)
     isLoading -> onLoading()
     else -> onError(errorOrNull.toMessage())
   }
+}

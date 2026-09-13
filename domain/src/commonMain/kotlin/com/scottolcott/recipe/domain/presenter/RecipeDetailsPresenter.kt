@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByArea
 import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByCategory
@@ -35,25 +37,24 @@ internal constructor(
   @Composable
   override fun present(): RecipeDetailsState {
     val coroutineScope = rememberCoroutineScope()
-    var retryTrigger by remember { mutableIntStateOf(0) }
+    var retryTrigger by retain { mutableIntStateOf(0) }
     val state =
       produceRetainedContentState<Recipe?>(null, retryTrigger) {
         recipeRepository.getById(screen.id)
       }
-    // Unlike the old response-shaped state, this keeps the recipe on screen through a refresh
-    // rather than blanking it whenever the store goes back to the network.
-    val recipe: Recipe? = state.data
+    // Read through updated state: the sink below is remembered once, so closing over a plain local
+    // would pin it to the recipe from the first composition -- which is always null.
+    val latestRecipe by rememberUpdatedState(state.data)
     val successEventSink: (RecipeDetailsEvent.Success) -> Unit = remember {
       { event ->
         when (event) {
           RecipeDetailsEvent.Success.ToggleFavorite ->
             coroutineScope.launch {
-              if (recipe != null) {
-                if (recipe.favorite) {
-                  recipeRepository.removeFavorite(screen.id)
-                } else {
-                  recipeRepository.addFavorite(screen.id)
-                }
+              val recipe = latestRecipe ?: return@launch
+              if (recipe.favorite) {
+                recipeRepository.removeFavorite(screen.id)
+              } else {
+                recipeRepository.addFavorite(screen.id)
               }
             }
           is RecipeDetailsEvent.Success.CategoryClicked ->

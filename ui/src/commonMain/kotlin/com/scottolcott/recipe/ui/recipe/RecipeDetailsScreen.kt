@@ -1,7 +1,5 @@
 package com.scottolcott.recipe.ui.recipe
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateBounds
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,11 +21,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,7 +61,10 @@ import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeDetails
 import com.scottolcott.recipe.model.RecipeId
 import com.scottolcott.recipe.model.RecipeIngredient
+import com.scottolcott.recipe.ui.AnimatedStateContent
 import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
+import com.scottolcott.recipe.ui.RefreshingContent
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
 import com.scottolcott.recipe.ui.image_24px
@@ -84,25 +83,18 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
 fun RecipeDetailsScreen(state: RecipeDetailsState, modifier: Modifier = Modifier) {
-  Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    AnimatedContent(state) { targetState ->
-      when (targetState) {
-        is RecipeDetailsState.Error ->
-          ErrorDisplay(
-            onRetryClick = { targetState.eventSink(RecipeDetailsEvent.Error.RetryClicked) }
-          )
-        RecipeDetailsState.Loading -> CircularProgressIndicator()
-        is RecipeDetailsState.Success -> {
-          RecipeDetails(
-            targetState.recipe,
-            targetState.eventSink,
-            modifier = Modifier.fillMaxSize(),
-          )
-          AnimatedVisibility(targetState.isRefreshing) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth().align(Alignment.TopStart))
-          }
+  AnimatedStateContent(state, modifier.fillMaxSize()) { targetState ->
+    when (targetState) {
+      is RecipeDetailsState.Error ->
+        ErrorDisplay(
+          onRetryClick = { targetState.eventSink(RecipeDetailsEvent.Error.RetryClicked) },
+          modifier = Modifier.fillMaxSize(),
+        )
+      RecipeDetailsState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
+      is RecipeDetailsState.Success ->
+        RefreshingContent(targetState.isRefreshing, Modifier.fillMaxSize()) {
+          RecipeDetails(targetState.recipe, targetState.eventSink, Modifier.fillMaxSize())
         }
-      }
     }
   }
 }

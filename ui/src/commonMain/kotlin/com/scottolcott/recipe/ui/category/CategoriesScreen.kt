@@ -2,7 +2,6 @@
 
 package com.scottolcott.recipe.ui.category
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +31,9 @@ import com.scottolcott.recipe.domain.presenter.CategoriesEvent
 import com.scottolcott.recipe.domain.presenter.CategoriesScreen
 import com.scottolcott.recipe.domain.presenter.CategoriesState
 import com.scottolcott.recipe.model.Category
+import com.scottolcott.recipe.ui.AnimatedStateContent
 import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
@@ -61,42 +61,36 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
     } else {
       MaterialTheme.typography.titleSmallEmphasized
     }
-  Box(modifier, contentAlignment = Alignment.TopCenter) {
-    AnimatedContent(state) { targetState ->
-      when (targetState) {
-        is CategoriesState.Error ->
-          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            ErrorDisplay(
-              onRetryClick = { targetState.eventSink(CategoriesEvent.Error.RetryClicked) }
-            )
-          }
+  AnimatedStateContent(state, modifier) { targetState ->
+    when (targetState) {
+      is CategoriesState.Error ->
+        ErrorDisplay(
+          onRetryClick = { targetState.eventSink(CategoriesEvent.Error.RetryClicked) },
+          modifier = Modifier.fillMaxSize(),
+        )
 
-        CategoriesState.Loading ->
+      CategoriesState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
+
+      is CategoriesState.Success -> {
+        if (targetState.categories.isEmpty()) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            Text(stringResource(Res.string.no_categories_found))
           }
-
-        is CategoriesState.Success -> {
-          if (targetState.categories.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Text(stringResource(Res.string.no_categories_found))
-            }
-          } else {
-            LazyVerticalGrid(
-              cells,
-              modifier = Modifier.fillMaxSize(),
-              verticalArrangement = Arrangement.spacedBy(12.dp),
-              horizontalArrangement = Arrangement.spacedBy(12.dp),
-              contentPadding = padding,
-            ) {
-              items(targetState.categories, key = { it.id }, contentType = { "category_item" }) {
-                CategoryItem(
-                  it,
-                  labelTextStyle = labelTextStyle,
-                  { targetState.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
-                  Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
-                )
-              }
+        } else {
+          LazyVerticalGrid(
+            cells,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = padding,
+          ) {
+            items(targetState.categories, key = { it.id }, contentType = { "category_item" }) {
+              CategoryItem(
+                it,
+                labelTextStyle = labelTextStyle,
+                { targetState.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
+                Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
+              )
             }
           }
         }

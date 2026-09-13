@@ -1,7 +1,5 @@
 package com.scottolcott.recipe.ui.recipe
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +30,10 @@ import com.scottolcott.recipe.domain.presenter.RecipesEvent
 import com.scottolcott.recipe.domain.presenter.RecipesScreen
 import com.scottolcott.recipe.domain.presenter.RecipesState
 import com.scottolcott.recipe.model.Recipe
+import com.scottolcott.recipe.ui.AnimatedStateContent
 import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
+import com.scottolcott.recipe.ui.RefreshingContent
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
@@ -57,27 +56,24 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
   val horizontalCards = isShortWindow()
   // Whoever the bar is not naming has to name itself; see [LocalAppBarShowsScreenTitle].
   val titledByAppBar = LocalAppBarShowsScreenTitle.current
-  AnimatedContent(state) { targetState ->
+  AnimatedStateContent(state, modifier) { targetState ->
     when (targetState) {
       is RecipesState.Error ->
         ErrorDisplay(
           onRetryClick = { targetState.eventSink(RecipesEvent.Error.RetryClicked) },
-          modifier = modifier.fillMaxSize(),
+          modifier = Modifier.fillMaxSize(),
         )
-      RecipesState.Loading -> LoadingScreen(modifier)
-      is RecipesState.Success -> {
-        if (targetState.recipes.isEmpty()) {
-          Column(modifier.fillMaxSize().padding(padding)) {
-            if (!titledByAppBar) RecipesHeading(targetState.screen)
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Text(stringResource(Res.string.no_recipes_found))
+      RecipesState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
+      is RecipesState.Success ->
+        RefreshingContent(targetState.isRefreshing, Modifier.fillMaxSize()) {
+          if (targetState.recipes.isEmpty()) {
+            Column(Modifier.fillMaxSize().padding(padding)) {
+              if (!titledByAppBar) RecipesHeading(targetState.screen)
+              Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(stringResource(Res.string.no_recipes_found))
+              }
             }
-          }
-        } else {
-          Column(modifier.fillMaxSize()) {
-            AnimatedVisibility(targetState.isRefreshing) {
-              LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
+          } else {
             LazyVerticalGrid(
               cells,
               modifier = Modifier.fillMaxSize(),
@@ -85,16 +81,13 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
               horizontalArrangement = Arrangement.spacedBy(12.dp),
               contentPadding = padding,
             ) {
-
               // Inside the grid rather than above it: it picks up the same contentPadding as the
-              // cards
-              // it heads, so the two line up with no second padding calculation, and it scrolls
-              // away
-              // with them -- which is what a short window wants from a headline.
+              // cards it heads, so the two line up with no second padding calculation, and it
+              // scrolls away with them -- which is what a short window wants from a headline.
               // Skipped only when the top app bar is already showing this name, which under
-              // Cupertino
-              // it usually is -- but not on a layout wide enough for the navigation rail, where the
-              // search field takes the whole bar and this heading is the only name the screen has.
+              // Cupertino it usually is -- but not on a layout wide enough for the navigation
+              // rail, where the search field takes the whole bar and this heading is the only name
+              // the screen has.
               if (!titledByAppBar) {
                 item(span = { GridItemSpan(maxLineSpan) }, contentType = "heading") {
                   RecipesHeading(targetState.screen)
@@ -112,14 +105,8 @@ fun RecipesScreen(state: RecipesState, modifier: Modifier = Modifier) {
             }
           }
         }
-      }
     }
   }
-}
-
-@Composable
-private fun LoadingScreen(modifier: Modifier = Modifier) {
-  Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
 }
 
 /**

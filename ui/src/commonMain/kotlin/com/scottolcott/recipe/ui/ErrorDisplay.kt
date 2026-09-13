@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 
@@ -12,7 +13,7 @@ import org.jetbrains.compose.resources.stringResource
 fun ErrorDisplay(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
   Column(
     modifier = modifier,
-    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+    horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
     Text(stringResource(Res.string.an_error_occurred))
