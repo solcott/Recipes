@@ -7,6 +7,7 @@ import com.scottolcott.recipe.repository.RecipeRepository
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.solcott.dataresult.DataError
 import io.github.solcott.dataresult.Origin
 import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
@@ -110,6 +111,53 @@ val recipesPresenterTests by testSuite {
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(emptyList(), state.recipes)
       assertEquals(screen, state.screen)
+    }
+  }
+
+  // Regression: an empty read from cache while the network is being asked is a key the database
+  // has never seen, not an empty result. It used to render as `Success(empty, isRefreshing = true)`
+  // -- "No recipes found" under a progress bar -- until the network answered.
+  test("an empty cache read while the network is asked is still loading") {
+    val screen = RecipesScreen.BySearch("chicken")
+    val repository = FakeRecipeRepository()
+    val presenter = RecipesPresenter(screen, FakeNavigator(screen), RecipesProducer(repository))
+
+    presenter.test {
+      assertIs<RecipesState.Loading>(awaitItem())
+
+      // Settled, so it is an answer: nothing else was coming.
+      repository.responses.value = Outcome.Data(emptyList(), Origin.Cache)
+      assertIs<RecipesState.Success>(awaitItem())
+
+      repository.responses.value = Outcome.Loading
+      assertIs<RecipesState.Loading>(awaitItem())
+
+      // One instance: `recipe()` stamps `lastFetched` with the current time.
+      val fresh = listOf(recipe("1"))
+      repository.responses.value = Outcome.Data(fresh, Origin.Network)
+      val state = assertIs<RecipesState.Success>(awaitItem())
+      assertEquals(fresh, state.recipes)
+    }
+  }
+
+  // Offline on a first visit: the screen owes the user the failure and a retry, not "No recipes
+  // found".
+  test("an empty cache read whose fetch fails is an error") {
+    val screen = RecipesScreen.BySearch("chicken")
+    val repository = FakeRecipeRepository()
+    val presenter = RecipesPresenter(screen, FakeNavigator(screen), RecipesProducer(repository))
+
+    presenter.test {
+      assertIs<RecipesState.Loading>(awaitItem())
+
+      repository.responses.value = Outcome.Data(emptyList(), Origin.Cache)
+      assertIs<RecipesState.Success>(awaitItem())
+
+      repository.responses.value = Outcome.Loading
+      assertIs<RecipesState.Loading>(awaitItem())
+
+      repository.responses.value = Outcome.Error(DataError.Network, Origin.Network)
+      assertIs<RecipesState.Error>(awaitItem())
     }
   }
 }

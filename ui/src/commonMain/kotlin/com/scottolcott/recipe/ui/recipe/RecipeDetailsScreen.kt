@@ -21,7 +21,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -62,9 +61,12 @@ import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeDetails
 import com.scottolcott.recipe.model.RecipeId
 import com.scottolcott.recipe.model.RecipeIngredient
+import com.scottolcott.recipe.ui.AnimatedStateContent
+import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
+import com.scottolcott.recipe.ui.RefreshingContent
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.ThemeWrapper
-import com.scottolcott.recipe.ui.an_error_occurred
 import com.scottolcott.recipe.ui.image_24px
 import com.scottolcott.recipe.ui.image_source
 import com.scottolcott.recipe.ui.link_24px
@@ -81,20 +83,28 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
 fun RecipeDetailsScreen(state: RecipeDetailsState, modifier: Modifier = Modifier) {
-  Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    val recipe = state.recipe
-    if (state.loading) {
-      CircularProgressIndicator()
-    } else if (state.error) {
-      Text(stringResource(Res.string.an_error_occurred))
-    } else {
-      recipe?.let { RecipeDetails(it, state.eventSink) }
+  AnimatedStateContent(state, modifier.fillMaxSize()) { targetState ->
+    when (targetState) {
+      is RecipeDetailsState.Error ->
+        ErrorDisplay(
+          onRetryClick = { targetState.eventSink(RecipeDetailsEvent.Error.RetryClicked) },
+          modifier = Modifier.fillMaxSize(),
+        )
+      RecipeDetailsState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
+      is RecipeDetailsState.Success ->
+        RefreshingContent(targetState.isRefreshing, Modifier.fillMaxSize()) {
+          RecipeDetails(targetState.recipe, targetState.eventSink, Modifier.fillMaxSize())
+        }
     }
   }
 }
 
 @Composable
-private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Unit) {
+private fun RecipeDetails(
+  recipe: Recipe,
+  eventSink: (RecipeDetailsEvent.Success) -> Unit,
+  modifier: Modifier = Modifier,
+) {
   val windowSizeClass = LocalWindowSizeClass.current
   val columns =
     when {
@@ -108,7 +118,7 @@ private fun RecipeDetails(recipe: Recipe, eventSink: (RecipeDetailsEvent) -> Uni
 
   LookaheadScope {
     SelectionContainer {
-      Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding)) {
+      Column(modifier.verticalScroll(rememberScrollState()).padding(padding)) {
         Text(
           recipe.name,
           style = MaterialTheme.typography.headlineMediumEmphasized,
@@ -126,7 +136,7 @@ private fun LookaheadScope.RecipeGrid(
   recipe: Recipe,
   columns: Int,
   padding: PaddingValues,
-  eventSink: (RecipeDetailsEvent) -> Unit,
+  eventSink: (RecipeDetailsEvent.Success) -> Unit,
 ) {
   // The movable contents are remembered without keys so they keep their identity as the layout
   // moves them between columns. That means their lambdas capture whatever was in scope when they
@@ -139,7 +149,7 @@ private fun LookaheadScope.RecipeGrid(
       RecipeImage(
         currentRecipe,
         currentRecipe.favorite,
-        onToggleFavorite = { currentEventSink(RecipeDetailsEvent.ToggleFavorite) },
+        onToggleFavorite = { currentEventSink(RecipeDetailsEvent.Success.ToggleFavorite) },
         modifier = modifier.animateBounds(this@RecipeGrid),
       )
     }
@@ -237,7 +247,7 @@ private fun GridScope.RecipeGridLayout(
 @Composable
 private fun RecipeMetaInfo(
   recipe: Recipe,
-  eventSink: (RecipeDetailsEvent) -> Unit,
+  eventSink: (RecipeDetailsEvent.Success) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val details = recipe.details
@@ -381,5 +391,5 @@ private fun RecipeDetailsPreview() {
       details = details,
       lastFetched = Clock.System.now(),
     )
-  RecipeDetails(recipe) {}
+  RecipeDetails(recipe, eventSink = {})
 }

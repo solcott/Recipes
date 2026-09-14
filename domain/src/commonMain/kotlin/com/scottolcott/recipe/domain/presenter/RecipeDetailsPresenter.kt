@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByArea
 import com.scottolcott.recipe.domain.presenter.RecipesScreen.ByCategory
@@ -22,8 +24,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
 import io.github.solcott.uistate.circuit.produceRetainedContentState
-import io.github.solcott.uistate.errorOrNull
-import io.github.solcott.uistate.isLoading
 import kotlinx.coroutines.launch
 
 @CircuitInject(RecipeDetailsScreen::class, AppScope::class)
@@ -37,54 +37,78 @@ internal constructor(
   @Composable
   override fun present(): RecipeDetailsState {
     val coroutineScope = rememberCoroutineScope()
-    var retryTrigger by remember { mutableIntStateOf(0) }
+    var retryTrigger by retain { mutableIntStateOf(0) }
     val state =
       produceRetainedContentState<Recipe?>(null, retryTrigger) {
         recipeRepository.getById(screen.id)
       }
-    // Unlike the old response-shaped state, this keeps the recipe on screen through a refresh
-    // rather than blanking it whenever the store goes back to the network.
-    val recipe: Recipe? = state.data
-    return RecipeDetailsState(
-      recipe,
-      loading = state.isLoading,
-      error = state.errorOrNull != null,
-    ) { event ->
-      when (event) {
-        RecipeDetailsEvent.ToggleFavorite ->
-          coroutineScope.launch {
-            if (recipe != null) {
+    // Read through updated state: the sink below is remembered once, so closing over a plain local
+    // would pin it to the recipe from the first composition -- which is always null.
+    val latestRecipe by rememberUpdatedState(state.data)
+    val successEventSink: (RecipeDetailsEvent.Success) -> Unit = remember {
+      { event ->
+        when (event) {
+          RecipeDetailsEvent.Success.ToggleFavorite ->
+            coroutineScope.launch {
+              val recipe = latestRecipe ?: return@launch
               if (recipe.favorite) {
                 recipeRepository.removeFavorite(screen.id)
               } else {
                 recipeRepository.addFavorite(screen.id)
               }
             }
-          }
-        RecipeDetailsEvent.RetryClicked -> retryTrigger++
-        is RecipeDetailsEvent.CategoryClicked -> navigator.goTo(ByCategory(event.category))
+          is RecipeDetailsEvent.Success.CategoryClicked ->
+            navigator.goTo(ByCategory(event.category))
 
-        is RecipeDetailsEvent.AreaClicked -> navigator.goTo(ByArea(event.area))
+          is RecipeDetailsEvent.Success.AreaClicked -> navigator.goTo(ByArea(event.area))
+        }
       }
     }
+
+    val errorEventSink: (RecipeDetailsEvent.Error) -> Unit = remember {
+      { event ->
+        when (event) {
+          RecipeDetailsEvent.Error.RetryClicked -> retryTrigger++
+        }
+      }
+    }
+    return state.foldToState(
+      onLoading = { RecipeDetailsState.Loading },
+      onError = { message -> RecipeDetailsState.Error(message, errorEventSink) },
+      onContent = { recipe, isRefreshing ->
+        RecipeDetailsState.Success(recipe, isRefreshing, successEventSink)
+      },
+    )
   }
 }
 
-data class RecipeDetailsState(
-  val recipe: Recipe?,
-  val loading: Boolean,
-  val error: Boolean,
-  @Redacted val eventSink: (RecipeDetailsEvent) -> Unit,
-) : CircuitUiState
+sealed interface RecipeDetailsState : CircuitUiState {
+  data object Loading : RecipeDetailsState
+
+  data class Error(
+    val message: String,
+    @Redacted val eventSink: (RecipeDetailsEvent.Error) -> Unit,
+  ) : RecipeDetailsState
+
+  data class Success(
+    val recipe: Recipe,
+    val isRefreshing: Boolean,
+    @Redacted val eventSink: (RecipeDetailsEvent.Success) -> Unit,
+  ) : RecipeDetailsState
+}
 
 sealed interface RecipeDetailsEvent : CircuitUiEvent {
-  data object ToggleFavorite : RecipeDetailsEvent
+  sealed interface Success : RecipeDetailsEvent {
+    data class CategoryClicked(val category: String) : Success
 
-  data object RetryClicked : RecipeDetailsEvent
+    data class AreaClicked(val area: String) : Success
 
-  data class CategoryClicked(val category: String) : RecipeDetailsEvent
+    data object ToggleFavorite : Success
+  }
 
-  data class AreaClicked(val area: String) : RecipeDetailsEvent
+  sealed interface Error : RecipeDetailsEvent {
+    data object RetryClicked : Error
+  }
 }
 
 @CircuitSerializable(AppScope::class) data class RecipeDetailsScreen(val id: RecipeId) : Screen

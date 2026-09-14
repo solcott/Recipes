@@ -3,7 +3,7 @@ package com.scottolcott.recipe.domain.presenter
 import io.github.solcott.dataresult.DataError
 import io.github.solcott.uistate.ContentState
 import io.github.solcott.uistate.errorOrNull
-import io.github.solcott.uistate.hasLoaded
+import io.github.solcott.uistate.hasAnswer
 import io.github.solcott.uistate.isLoading
 
 /**
@@ -17,9 +17,12 @@ import io.github.solcott.uistate.isLoading
  * keeps the last list it loaded, so a background refresh reports it as content that is refreshing
  * rather than dropping the grid for a spinner.
  *
- * [ContentState.hasLoaded] is what separates the first two branches, not `data.isEmpty()` — an
- * empty list is a real answer, and reading it as "nothing yet" would leave a spinner over a
- * legitimately empty tab forever.
+ * `hasAnswer` is what separates the first two branches, not `data.isEmpty()` — an empty list is a
+ * real answer, and reading it as "nothing yet" would leave a spinner over a legitimately empty tab
+ * forever. What it adds over `hasLoaded` is the one empty list that is *not* an answer: an empty
+ * read from cache while its request is still in flight or has failed. That is a key the database
+ * has never seen, so it gets the spinner, or the error, rather than "nothing found". The
+ * repositories already hold that read back with `asOutcomes(fetching = …)`; this is the backstop.
  */
 internal inline fun <T, S> ContentState<List<T>>.foldToState(
   onLoading: () -> S,
@@ -27,7 +30,7 @@ internal inline fun <T, S> ContentState<List<T>>.foldToState(
   onContent: (items: List<T>, isRefreshing: Boolean) -> S,
 ): S =
   when {
-    hasLoaded -> onContent(data, isLoading)
+    hasAnswer(List<T>::isEmpty) -> onContent(data, isLoading)
     isLoading -> onLoading()
     else -> onError(errorOrNull.toMessage())
   }

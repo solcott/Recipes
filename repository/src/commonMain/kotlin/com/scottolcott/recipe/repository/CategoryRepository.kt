@@ -123,10 +123,12 @@ internal class CategoryRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   private fun loadCategoriesByKey(key: CategoriesKey): Flow<Outcome<List<Category>>> {
-    return fetchHistoryDataStore
-      .refreshNeeded(key, cacheExpiration)
-      .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(key, refresh)) }
-      .logErrors(logger, "Error loading categories by $key")
-      .asOutcomes()
+    return fetchHistoryDataStore.refreshNeeded(key, cacheExpiration).flatMapLatest { refresh ->
+      // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
+      store
+        .stream(StoreReadRequest.cached(key, refresh))
+        .logErrors(logger, "Error loading categories by $key")
+        .asOutcomes(fetching = refresh) { it.isEmpty() }
+    }
   }
 }

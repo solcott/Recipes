@@ -92,11 +92,13 @@ internal class AreaRepositoryImpl(
     StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
   override fun getAreas(): Flow<Outcome<List<Area>>> {
-    return fetchHistoryDataStore
-      .refreshNeeded(cacheExpiration)
-      .flatMapLatest { refresh -> store.stream(StoreReadRequest.cached(Unit, refresh)) }
-      .logErrors(logger, "Error loading areas")
-      .asOutcomes()
+    return fetchHistoryDataStore.refreshNeeded(cacheExpiration).flatMapLatest { refresh ->
+      // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
+      store
+        .stream(StoreReadRequest.cached(Unit, refresh))
+        .logErrors(logger, "Error loading areas")
+        .asOutcomes(fetching = refresh) { it.isEmpty() }
+    }
   }
 
   override suspend fun countryFor(area: String): String? {

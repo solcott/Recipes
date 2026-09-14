@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +30,9 @@ import com.scottolcott.recipe.domain.presenter.AreasEvent
 import com.scottolcott.recipe.domain.presenter.AreasScreen
 import com.scottolcott.recipe.domain.presenter.AreasState
 import com.scottolcott.recipe.model.Area
+import com.scottolcott.recipe.ui.AnimatedStateContent
 import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
@@ -62,20 +63,18 @@ fun AreasScreen(state: AreasState, modifier: Modifier = Modifier) {
   // The country is the same word again for most of the list -- Algerian, Algeria -- so it reads as
   // the gloss it is rather than a second title.
   val countryTextStyle = MaterialTheme.typography.bodyMedium
-  Box(modifier, contentAlignment = Alignment.TopCenter) {
-    when (state) {
+  AnimatedStateContent(state, modifier) { targetState ->
+    when (targetState) {
       is AreasState.Error ->
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          ErrorDisplay(onRetryClick = { state.eventSink(AreasEvent.Error.RetryClicked) })
-        }
+        ErrorDisplay(
+          onRetryClick = { targetState.eventSink(AreasEvent.Error.RetryClicked) },
+          modifier = Modifier.fillMaxSize(),
+        )
 
-      AreasState.Loading ->
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          CircularProgressIndicator()
-        }
+      AreasState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
 
       is AreasState.Success -> {
-        if (state.areas.isEmpty()) {
+        if (targetState.areas.isEmpty()) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(Res.string.no_areas_found))
           }
@@ -87,12 +86,12 @@ fun AreasScreen(state: AreasState, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = padding,
           ) {
-            items(state.areas, key = { it.area }, contentType = { "area_item" }) { area ->
+            items(targetState.areas, key = { it.area }, contentType = { "area_item" }) { area ->
               AreaItem(
                 area,
                 areaTextStyle = areaTextStyle,
                 countryTextStyle = countryTextStyle,
-                { state.eventSink(AreasEvent.Success.AreaClicked(area.area)) },
+                { targetState.eventSink(AreasEvent.Success.AreaClicked(area.area)) },
                 Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
               )
             }

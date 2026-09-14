@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,7 +31,9 @@ import com.scottolcott.recipe.domain.presenter.CategoriesEvent
 import com.scottolcott.recipe.domain.presenter.CategoriesScreen
 import com.scottolcott.recipe.domain.presenter.CategoriesState
 import com.scottolcott.recipe.model.Category
+import com.scottolcott.recipe.ui.AnimatedStateContent
 import com.scottolcott.recipe.ui.ErrorDisplay
+import com.scottolcott.recipe.ui.LoadingDisplay
 import com.scottolcott.recipe.ui.Res
 import com.scottolcott.recipe.ui.design.AppCard
 import com.scottolcott.recipe.ui.isShortWindow
@@ -60,20 +61,18 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
     } else {
       MaterialTheme.typography.titleSmallEmphasized
     }
-  Box(modifier, contentAlignment = Alignment.TopCenter) {
-    when (state) {
+  AnimatedStateContent(state, modifier) { targetState ->
+    when (targetState) {
       is CategoriesState.Error ->
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          ErrorDisplay(onRetryClick = { state.eventSink(CategoriesEvent.Error.RetryClicked) })
-        }
+        ErrorDisplay(
+          onRetryClick = { targetState.eventSink(CategoriesEvent.Error.RetryClicked) },
+          modifier = Modifier.fillMaxSize(),
+        )
 
-      CategoriesState.Loading ->
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          CircularProgressIndicator()
-        }
+      CategoriesState.Loading -> LoadingDisplay(Modifier.fillMaxSize())
 
       is CategoriesState.Success -> {
-        if (state.categories.isEmpty()) {
+        if (targetState.categories.isEmpty()) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(Res.string.no_categories_found))
           }
@@ -85,11 +84,11 @@ fun CategoriesScreen(state: CategoriesState, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = padding,
           ) {
-            items(state.categories, key = { it.id }, contentType = { "category_item" }) {
+            items(targetState.categories, key = { it.id }, contentType = { "category_item" }) {
               CategoryItem(
                 it,
                 labelTextStyle = labelTextStyle,
-                { state.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
+                { targetState.eventSink(CategoriesEvent.Success.CategoryClicked(it.name)) },
                 Modifier.animateItem().pointerHoverIcon(PointerIcon.Hand, true),
               )
             }

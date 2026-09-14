@@ -24,7 +24,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun RecipeCategoryAndArea(
   recipe: Recipe,
-  eventSink: (RecipeDetailsEvent) -> Unit,
+  eventSink: (RecipeDetailsEvent.Success) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   // FlexBox rather than Row: a Row's min intrinsic width is the sum of both chips, which a narrow
@@ -33,7 +33,7 @@ fun RecipeCategoryAndArea(
     val category = recipe.category.orEmpty()
     if (category.isNotBlank()) {
       AssistChip(
-        onClick = { eventSink(RecipeDetailsEvent.CategoryClicked(category)) },
+        onClick = { eventSink(RecipeDetailsEvent.Success.CategoryClicked(category)) },
         label = { Text(category) },
         leadingIcon = { Icon(painterResource(Res.drawable.label_24px), null) },
         colors =
@@ -48,7 +48,7 @@ fun RecipeCategoryAndArea(
     val area = recipe.area.orEmpty()
     if (area.isNotBlank()) {
       AssistChip(
-        onClick = { eventSink(RecipeDetailsEvent.AreaClicked(area)) },
+        onClick = { eventSink(RecipeDetailsEvent.Success.AreaClicked(area)) },
         label = { Text(area) },
         leadingIcon = { Icon(painterResource(Res.drawable.location_on_24px), null) },
         colors =
