@@ -8,8 +8,8 @@ import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -68,9 +68,9 @@ class SearchPresenter(
       .debounce(300.milliseconds)
       .produceRetainedContentStates(
         contentStatesOf(
-          persistentListOf(),
-          persistentListOf(),
-          persistentListOf(),
+          persistentListOf<SearchSuggestion>(),
+          persistentListOf<Category>(),
+          persistentListOf<Ingredient>(),
         )
       ) { query ->
         searchSuggestionsRepository.getSearchSuggestionsAsFlow(query)
@@ -125,7 +125,7 @@ typealias SearchSuggestionStates =
     ImmutableList<Ingredient>,
   >
 
-@Immutable
+@Stable
 data class SearchState
 @OptIn(ExperimentalMaterial3Api::class)
 constructor(
