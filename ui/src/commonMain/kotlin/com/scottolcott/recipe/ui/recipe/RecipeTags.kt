@@ -7,10 +7,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(ExperimentalFlexBoxApi::class)
 @Composable
-fun RecipeTags(tags: List<String>, modifier: Modifier = Modifier) {
+fun RecipeTags(tags: ImmutableList<String>, modifier: Modifier = Modifier) {
   if (tags.isNotEmpty()) {
     FlexBox(config = { gap(8.dp) }, modifier = modifier) {
       for (tag in tags) {

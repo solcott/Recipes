@@ -17,6 +17,8 @@ import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -31,7 +33,7 @@ import org.mobilenativefoundation.store.store5.StoreReadRequest
 
 interface AreaRepository {
 
-  fun getAreas(): Flow<Outcome<List<Area>>>
+  fun getAreas(): Flow<Outcome<ImmutableList<Area>>>
 
   /**
    * The country [area] names, or `null` if the list does not know this area or could not be loaded.
@@ -63,9 +65,11 @@ internal class AreaRepositoryImpl(
   // every read is the whole list, and Unit says so rather than a sealed type with one member.
   private val fetcher: Fetcher<Unit, List<AreaDto>> = Fetcher.of { api.getAreas().meals.orEmpty() }
 
-  private val sourceOfTruth: SourceOfTruth<Unit, List<AreaEntity>, List<Area>> =
+  private val sourceOfTruth: SourceOfTruth<Unit, List<AreaEntity>, ImmutableList<Area>> =
     SourceOfTruth.of(
-      reader = { dao.getAllAreasAsFlow().map { entities -> entities.map { it.toArea() } } },
+      reader = {
+        dao.getAllAreasAsFlow().map { entities -> entities.map { it.toArea() }.toImmutableList() }
+      },
       writer = { _, local ->
         // Replace rather than upsert: an upsert would leave an area dropped upstream in the grid
         // forever. CategoryRepositoryImpl clears the table the same way.
@@ -77,21 +81,21 @@ internal class AreaRepositoryImpl(
       deleteAll = { dao.deleteAll() },
     )
 
-  private val converter: Converter<List<AreaDto>, List<AreaEntity>, List<Area>> =
-    Converter.Builder<List<AreaDto>, List<AreaEntity>, List<Area>>()
+  private val converter: Converter<List<AreaDto>, List<AreaEntity>, ImmutableList<Area>> =
+    Converter.Builder<List<AreaDto>, List<AreaEntity>, ImmutableList<Area>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
-        dtos.map { AreaEntity(it.area, it.country, lastFetched) }
+        dtos.map { AreaEntity(it.area, it.country, lastFetched) }.toImmutableList()
       }
       .fromOutputToLocal { models ->
-        models.map { AreaEntity(it.area, it.country, it.lastFetched) }
+        models.map { AreaEntity(it.area, it.country, it.lastFetched) }.toImmutableList()
       }
       .build()
 
-  private val store: Store<Unit, List<Area>> =
+  private val store: Store<Unit, ImmutableList<Area>> =
     StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
-  override fun getAreas(): Flow<Outcome<List<Area>>> {
+  override fun getAreas(): Flow<Outcome<ImmutableList<Area>>> {
     return fetchHistoryDataStore.refreshNeeded(cacheExpiration).flatMapLatest { refresh ->
       // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
       store

@@ -39,7 +39,6 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -76,6 +75,8 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.zacsweers.metro.AppScope
 import io.ktor.http.Url
 import kotlin.time.Clock
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -251,18 +252,18 @@ private fun RecipeMetaInfo(
   modifier: Modifier = Modifier,
 ) {
   val details = recipe.details
-  val uriHandler = LocalUriHandler.current
-
   Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    RecipeTags(details?.tags.orEmpty())
+    val tags = remember(details?.tags) { details?.tags.orEmpty().toImmutableList() }
+    RecipeTags(tags)
     RecipeCategoryAndArea(recipe, eventSink)
-    RecipeSources(details, uriHandler)
+    RecipeSources(details)
   }
 }
 
 @Suppress("UnusedReceiverParameter")
 @Composable
-private fun ColumnScope.RecipeSources(details: RecipeDetails?, uriHandler: UriHandler) {
+private fun ColumnScope.RecipeSources(details: RecipeDetails?) {
+  val uriHandler = LocalUriHandler.current
   val source = details?.source
   if (!source.isNullOrBlank()) {
     AssistChip(
@@ -360,14 +361,14 @@ private fun RecipeDetailsPreview() {
         |            Add the cooked vegetables and rice to the casserole dish with the chicken. Add most of the remaining sauce, reserving a bit to drizzle over the top when serving. Gently toss everything together in the casserole dish until combined. Return to oven and cook 15 minutes. Remove from oven and let stand 5 minutes before serving. Drizzle each serving with remaining sauce. Enjoy!
         """
           .trimMargin(),
-      tags = listOf("Meat", "Casserole"),
+      tags = persistentListOf("Meat", "Casserole"),
       youtube = "https://www.youtube.com/watch?v=4aZr5hZXP_s",
       source = null,
       imageSource = null,
       creativeCommonsConfirmed = null,
       dateModified = null,
       ingredients =
-        listOf(
+        persistentListOf(
           RecipeIngredient("soy sauce", "3/4 cup"),
           RecipeIngredient("water", "1/2 cup"),
           RecipeIngredient("brown sugar", "1/4 cup"),

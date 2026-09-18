@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.scottolcott.recipe.domain.isCupertino
 import com.slack.circuit.runtime.screen.Screen
+import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -67,7 +68,7 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 fun AppNavigationBar(
-  destinations: List<AppDestination>,
+  destinations: ImmutableList<AppDestination>,
   selected: Screen?,
   onSelect: (Screen) -> Unit,
   modifier: Modifier = Modifier,
@@ -81,7 +82,7 @@ fun AppNavigationBar(
 
 @Composable
 private fun MaterialNavigationBar(
-  destinations: List<AppDestination>,
+  destinations: ImmutableList<AppDestination>,
   selected: Screen?,
   onSelect: (Screen) -> Unit,
   modifier: Modifier = Modifier,
@@ -140,7 +141,7 @@ private fun MaterialNavigationBar(
  */
 @Composable
 private fun CupertinoTabBar(
-  destinations: List<AppDestination>,
+  destinations: ImmutableList<AppDestination>,
   selected: Screen?,
   onSelect: (Screen) -> Unit,
   modifier: Modifier = Modifier,

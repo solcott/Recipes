@@ -18,6 +18,8 @@ import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -31,9 +33,9 @@ import org.mobilenativefoundation.store.store5.StoreReadRequest
 
 interface CategoryRepository {
 
-  fun getCategories(): Flow<Outcome<List<Category>>>
+  fun getCategories(): Flow<Outcome<ImmutableList<Category>>>
 
-  fun getCategories(nameFilter: String): Flow<Outcome<List<Category>>>
+  fun getCategories(nameFilter: String): Flow<Outcome<ImmutableList<Category>>>
 }
 
 @SingleIn(AppScope::class)
@@ -47,18 +49,23 @@ internal class CategoryRepositoryImpl(
   private val cacheExpiration: Duration = 6.hours,
 ) : CategoryRepository {
 
-  private val converter: Converter<List<CategoryDto>, List<CategoryEntity>, List<Category>> =
-    Converter.Builder<List<CategoryDto>, List<CategoryEntity>, List<Category>>()
+  private val converter:
+    Converter<List<CategoryDto>, List<CategoryEntity>, ImmutableList<Category>> =
+    Converter.Builder<List<CategoryDto>, List<CategoryEntity>, ImmutableList<Category>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
-        dtos.map { CategoryEntity(it.id, it.name, it.thumbnail, it.description, lastFetched) }
+        dtos
+          .map { CategoryEntity(it.id, it.name, it.thumbnail, it.description, lastFetched) }
+          .toImmutableList()
       }
       .fromOutputToLocal { dtos ->
-        dtos.map { CategoryEntity(it.id, it.name, it.thumb, it.description, it.lastFetched) }
+        dtos
+          .map { CategoryEntity(it.id, it.name, it.thumb, it.description, it.lastFetched) }
+          .toImmutableList()
       }
       .build()
 
-  private val store: Store<CategoriesKey, List<Category>> =
+  private val store: Store<CategoriesKey, ImmutableList<Category>> =
     StoreBuilder.from(
         fetcher = createFetcher(),
         sourceOfTruth = createSourceOfTruth(),
@@ -76,14 +83,16 @@ internal class CategoryRepositoryImpl(
   }
 
   private fun createSourceOfTruth():
-    SourceOfTruth<CategoriesKey, List<CategoryEntity>, List<Category>> {
+    SourceOfTruth<CategoriesKey, List<CategoryEntity>, ImmutableList<Category>> {
     return SourceOfTruth.of(
       reader = { key: CategoriesKey ->
         when (key) {
           CategoriesKey.GetCategories -> categoryDao.getCategories()
           is CategoriesKey.FilterByName -> categoryDao.getCategories(key.nameFilter)
         }.map { categories ->
-          categories.map { Category(it.id, it.name, it.thumb, it.description, it.lastFetched) }
+          categories
+            .map { Category(it.id, it.name, it.thumb, it.description, it.lastFetched) }
+            .toImmutableList()
         }
       },
       writer = { key: CategoriesKey, categories: List<CategoryEntity> ->
@@ -113,16 +122,16 @@ internal class CategoryRepositoryImpl(
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun getCategories(): Flow<Outcome<List<Category>>> {
+  override fun getCategories(): Flow<Outcome<ImmutableList<Category>>> {
     return loadCategoriesByKey(CategoriesKey.GetCategories)
   }
 
-  override fun getCategories(nameFilter: String): Flow<Outcome<List<Category>>> {
+  override fun getCategories(nameFilter: String): Flow<Outcome<ImmutableList<Category>>> {
     return loadCategoriesByKey(CategoriesKey.FilterByName(nameFilter))
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  private fun loadCategoriesByKey(key: CategoriesKey): Flow<Outcome<List<Category>>> {
+  private fun loadCategoriesByKey(key: CategoriesKey): Flow<Outcome<ImmutableList<Category>>> {
     return fetchHistoryDataStore.refreshNeeded(key, cacheExpiration).flatMapLatest { refresh ->
       // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
       store

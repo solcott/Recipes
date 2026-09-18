@@ -4,17 +4,23 @@ import com.scottolcott.recipe.model.Recipe
 import com.scottolcott.recipe.model.RecipeDetails
 import com.scottolcott.recipe.model.RecipeIngredient
 import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
-internal fun List<RecipeEntityWithDetail>.toModel(): List<Recipe> = map { recipe ->
+internal fun List<RecipeEntityWithDetail>.toModel(): ImmutableList<Recipe> = map { recipe ->
   recipe.toModel()
 }
+  .toImmutableList()
 
 internal fun RecipeEntityWithDetail.toModel(): Recipe {
 
   val detail = detail
   // @Relation does not guarantee row order, so restore the original slot order here.
   val ingredientsList =
-    ingredients.sortedBy { it.position }.map { RecipeIngredient(it.name, it.measure) }
+    ingredients
+      .sortedBy { it.position }
+      .map { RecipeIngredient(it.name, it.measure) }
+      .toImmutableList()
 
   return Recipe(
     id = recipe.id,
@@ -35,6 +41,7 @@ internal fun RecipeEntityWithDetail.toModel(): Recipe {
               ?.filter { it.isNotEmpty() }
               ?.toList()
               .orEmpty()
+              .toImmutableList()
           RecipeDetails(
             alternateName = alternateName,
             instructions = instructions,

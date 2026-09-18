@@ -21,6 +21,9 @@ import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -32,17 +35,17 @@ import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.StoreReadRequest
 
 interface RecipeRepository {
-  fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>>
+  fun searchRecipes(query: String): Flow<Outcome<ImmutableList<Recipe>>>
 
-  fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>>
+  fun recipesByCategory(category: String): Flow<Outcome<ImmutableList<Recipe>>>
 
-  fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>>
+  fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<ImmutableList<Recipe>>>
 
-  fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>>
+  fun recipesByArea(area: String): Flow<Outcome<ImmutableList<Recipe>>>
 
   fun getById(id: RecipeId): Flow<Outcome<Recipe?>>
 
-  fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>>
+  fun getFavoritesAsFlow(): Flow<Outcome<ImmutableList<Recipe>>>
 
   suspend fun addFavorite(id: RecipeId)
 
@@ -65,7 +68,7 @@ internal class RecipeRepositoryImpl(
     StoreBuilder.from(createFetcher(), createSourceOfTruth()).build()
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>> {
+  override fun searchRecipes(query: String): Flow<Outcome<ImmutableList<Recipe>>> {
     val key = RecipesKey.Query(query.trim())
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
@@ -81,7 +84,7 @@ internal class RecipeRepositoryImpl(
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>> {
+  override fun recipesByCategory(category: String): Flow<Outcome<ImmutableList<Recipe>>> {
     val key = RecipesKey.ByCategory(category)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
@@ -95,7 +98,9 @@ internal class RecipeRepositoryImpl(
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>> {
+  override fun recipesByIngredients(
+    ingredients: Set<String>
+  ): Flow<Outcome<ImmutableList<Recipe>>> {
     val key = RecipesKey.ByIngredient.of(ingredients)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
@@ -109,7 +114,7 @@ internal class RecipeRepositoryImpl(
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>> {
+  override fun recipesByArea(area: String): Flow<Outcome<ImmutableList<Recipe>>> {
     val key = RecipesKey.ByArea(area)
     return fetchHistoryDataStore
       .refreshNeeded(key, cacheExpiration)
@@ -137,7 +142,7 @@ internal class RecipeRepositoryImpl(
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  override fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>> {
+  override fun getFavoritesAsFlow(): Flow<Outcome<ImmutableList<Recipe>>> {
     return recipeStore
       .stream(StoreReadRequest.cached(RecipesKey.Favorites, false))
       .logErrors(logger, "Error getting recipe favorites")
@@ -167,24 +172,28 @@ internal class RecipeRepositoryImpl(
    * still throws: an empty return is written back as a successful fetch and would suppress the
    * retry for a full [cacheExpiration].
    */
-  private suspend fun fetchByIngredients(key: RecipesKey.ByIngredient): List<RecipeFullDto> {
+  private suspend fun fetchByIngredients(
+    key: RecipesKey.ByIngredient
+  ): ImmutableList<RecipeFullDto> {
     val queried = key.ingredients.take(MAX_FILTER_INGREDIENTS)
     val summaries = recipeApi.getByIngredient(queried)?.meals.orEmpty()
     val ids = summaries.take(MAX_HYDRATED_RESULTS).map { it.id }
-    if (ids.isEmpty()) return emptyList()
+    if (ids.isEmpty()) return persistentListOf()
 
     val alreadyFresh =
       recipeDao.idsWithFreshDetail(ids, Clock.System.now().minus(cacheExpiration)).toSet()
     val stale = ids.filterNot { it in alreadyFresh }
 
-    return stale.mapConcurrentlyCatching(
-      concurrency = HYDRATION_CONCURRENCY,
-      onFailure = { id, error ->
-        logger.w(error) { "Skipping recipe $id: hydration lookup failed" }
-      },
-    ) { id ->
-      recipeApi.getRecipe(id)?.meals?.firstOrNull()
-    }
+    return stale
+      .mapConcurrentlyCatching(
+        concurrency = HYDRATION_CONCURRENCY,
+        onFailure = { id, error ->
+          logger.w(error) { "Skipping recipe $id: hydration lookup failed" }
+        },
+      ) { id ->
+        recipeApi.getRecipe(id)?.meals?.firstOrNull()
+      }
+      .toImmutableList()
   }
 
   private fun createFetcher(): Fetcher<RecipesKey, List<RecipeDto>> {
@@ -257,4 +266,4 @@ private const val HYDRATION_CONCURRENCY = 4
  * A wrapper around the list rather than the list itself because Store needs a single output type
  * for every key, including the ones that read a single recipe.
  */
-data class RecipeResponse(val recipes: List<Recipe>)
+data class RecipeResponse(val recipes: ImmutableList<Recipe>)

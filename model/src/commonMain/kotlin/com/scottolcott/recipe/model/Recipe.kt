@@ -2,6 +2,8 @@ package com.scottolcott.recipe.model
 
 import androidx.compose.runtime.Immutable
 import kotlin.time.Instant
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class Recipe(
@@ -19,13 +21,13 @@ data class Recipe(
 data class RecipeDetails(
   val alternateName: String? = null,
   val instructions: String,
-  val tags: List<String> = emptyList(),
+  val tags: ImmutableList<String> = persistentListOf(),
   val youtube: String? = null,
   val source: String? = null,
   val imageSource: String? = null,
   val creativeCommonsConfirmed: String? = null,
   val dateModified: String? = null,
-  val ingredients: List<RecipeIngredient> = emptyList(),
+  val ingredients: ImmutableList<RecipeIngredient> = persistentListOf(),
   val lastFetched: Instant,
 )
 

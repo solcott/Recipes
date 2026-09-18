@@ -17,6 +17,7 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import kotlinx.collections.immutable.ImmutableList
 
 @CircuitInject(IngredientsScreen::class, AppScope::class)
 @Inject
@@ -59,14 +60,13 @@ internal constructor(
 
 @Immutable
 sealed interface IngredientsState : CircuitUiState {
-
   data object Loading : IngredientsState
 
   data class Error(val message: String, @Redacted val eventSink: (IngredientsEvent.Error) -> Unit) :
     IngredientsState
 
   data class Success(
-    val ingredients: List<Ingredient>,
+    val ingredients: ImmutableList<Ingredient>,
     val isRefreshing: Boolean,
     @Redacted val eventSink: (IngredientsEvent.Success) -> Unit,
   ) : IngredientsState

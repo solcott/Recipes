@@ -6,19 +6,24 @@ import com.scottolcott.recipe.repository.RecipeRepository
 import dev.zacsweers.metro.Inject
 import io.github.solcott.uistate.ContentState
 import io.github.solcott.uistate.circuit.produceRetainedContentState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Inject
 class RecipesProducer(private val recipeRepository: RecipeRepository) {
 
   @Composable
-  fun produceBySearchTerm(searchTerm: String, retryTrigger: Int): ContentState<List<Recipe>> =
-    produceRetainedContentState(emptyList(), searchTerm, retryTrigger) {
+  fun produceBySearchTerm(
+    searchTerm: String,
+    retryTrigger: Int,
+  ): ContentState<ImmutableList<Recipe>> =
+    produceRetainedContentState(persistentListOf(), searchTerm, retryTrigger) {
       recipeRepository.searchRecipes(searchTerm)
     }
 
   @Composable
-  fun produceByCategory(category: String, retryTrigger: Int): ContentState<List<Recipe>> =
-    produceRetainedContentState(emptyList(), category, retryTrigger) {
+  fun produceByCategory(category: String, retryTrigger: Int): ContentState<ImmutableList<Recipe>> =
+    produceRetainedContentState(persistentListOf(), category, retryTrigger) {
       recipeRepository.recipesByCategory(category)
     }
 
@@ -29,18 +34,20 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
   fun produceByIngredients(
     ingredients: Set<String>,
     retryTrigger: Int,
-  ): ContentState<List<Recipe>> =
-    produceRetainedContentState(emptyList(), ingredients, retryTrigger) {
+  ): ContentState<ImmutableList<Recipe>> =
+    produceRetainedContentState(persistentListOf(), ingredients, retryTrigger) {
       recipeRepository.recipesByIngredients(ingredients)
     }
 
   @Composable
-  fun produceByArea(area: String, retryTrigger: Int): ContentState<List<Recipe>> =
-    produceRetainedContentState(emptyList(), area, retryTrigger) {
+  fun produceByArea(area: String, retryTrigger: Int): ContentState<ImmutableList<Recipe>> =
+    produceRetainedContentState(persistentListOf(), area, retryTrigger) {
       recipeRepository.recipesByArea(area)
     }
 
   @Composable
-  fun produceByFavorites(retryTrigger: Int): ContentState<List<Recipe>> =
-    produceRetainedContentState(emptyList(), retryTrigger) { recipeRepository.getFavoritesAsFlow() }
+  fun produceByFavorites(retryTrigger: Int): ContentState<ImmutableList<Recipe>> =
+    produceRetainedContentState(persistentListOf(), retryTrigger) {
+      recipeRepository.getFavoritesAsFlow()
+    }
 }

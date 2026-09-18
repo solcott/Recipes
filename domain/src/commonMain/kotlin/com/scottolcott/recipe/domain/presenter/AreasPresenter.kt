@@ -17,6 +17,7 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import kotlinx.collections.immutable.ImmutableList
 
 @CircuitInject(AreasScreen::class, AppScope::class)
 @Inject
@@ -63,7 +64,7 @@ sealed interface AreasState : CircuitUiState {
     AreasState
 
   data class Success(
-    val areas: List<Area>,
+    val areas: ImmutableList<Area>,
     val isRefreshing: Boolean,
     @Redacted val eventSink: (AreasEvent.Success) -> Unit,
   ) : AreasState

@@ -12,6 +12,8 @@ import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,16 +27,19 @@ private class AreasTestEnvironment(
 )
 
 private class FakeAreaRepository : AreaRepository {
-  var getAreasHandler: () -> Flow<Outcome<List<Area>>> = { inFlight() }
+  var getAreasHandler: () -> Flow<Outcome<ImmutableList<Area>>> = { inFlight() }
 
-  override fun getAreas(): Flow<Outcome<List<Area>>> = getAreasHandler()
+  override fun getAreas(): Flow<Outcome<ImmutableList<Area>>> = getAreasHandler()
 
   override suspend fun countryFor(area: String): String? = null
 }
 
 val areasPresenterTests by testSuite {
   val areasFixture = testFixture {
-    listOf(Area("Italian", "Italy", Clock.System.now()), Area("Unknown", null, Clock.System.now()))
+    persistentListOf(
+      Area("Italian", "Italy", Clock.System.now()),
+      Area("Unknown", null, Clock.System.now()),
+    )
   }
 
   val environmentFixture = testFixture {
@@ -83,7 +88,7 @@ val areasPresenterTests by testSuite {
         val areas = areasFixture()
         // Driven emission by emission: a flow that emits both up front collapses into a single
         // recomposition, which would hide the transition this test is about.
-        val responses = MutableSharedFlow<Outcome<List<Area>>>(replay = 1)
+        val responses = MutableSharedFlow<Outcome<ImmutableList<Area>>>(replay = 1)
         responses.emit(Outcome.Data(areas, Origin.Cache))
         repository.getAreasHandler = { responses }
 

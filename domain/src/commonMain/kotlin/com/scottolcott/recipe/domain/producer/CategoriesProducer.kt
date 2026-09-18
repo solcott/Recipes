@@ -6,11 +6,15 @@ import com.scottolcott.recipe.repository.CategoryRepository
 import dev.zacsweers.metro.Inject
 import io.github.solcott.uistate.ContentState
 import io.github.solcott.uistate.circuit.produceRetainedContentState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Inject
 internal class CategoriesProducer(private val categoryRepository: CategoryRepository) {
 
   @Composable
-  fun produce(retryTrigger: Int): ContentState<List<Category>> =
-    produceRetainedContentState(emptyList(), retryTrigger) { categoryRepository.getCategories() }
+  fun produce(retryTrigger: Int): ContentState<ImmutableList<Category>> =
+    produceRetainedContentState(persistentListOf(), retryTrigger) {
+      categoryRepository.getCategories()
+    }
 }

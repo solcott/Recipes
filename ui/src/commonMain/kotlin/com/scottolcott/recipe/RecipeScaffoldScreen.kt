@@ -62,6 +62,8 @@ import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
 import dev.zacsweers.metro.AppScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -169,7 +171,10 @@ private fun rememberCollapsingTitleBehavior(currentScreen: Screen?): TopAppBarSc
 
 /** The tab bar, growing and shrinking the slot rather than popping in and out of it. */
 @Composable
-private fun ScaffoldBottomBar(state: RecipeScaffoldState, destinations: List<AppDestination>) {
+private fun ScaffoldBottomBar(
+  state: RecipeScaffoldState,
+  destinations: ImmutableList<AppDestination>,
+) {
   AnimatedVisibility(
     state.navigationLayout == NavigationLayout.BottomBar,
     enter = expandVertically(),
@@ -192,7 +197,7 @@ private fun ScaffoldBottomBar(state: RecipeScaffoldState, destinations: List<App
  * that field, so Search becomes somewhere you go instead.
  */
 @Composable
-private fun rememberAppDestinations(includeSearch: Boolean): List<AppDestination> =
+private fun rememberAppDestinations(includeSearch: Boolean): ImmutableList<AppDestination> =
   remember(includeSearch) {
     buildList {
       add(
@@ -222,12 +227,13 @@ private fun rememberAppDestinations(includeSearch: Boolean): List<AppDestination
         )
       }
     }
+      .toImmutableList()
   }
 
 @Composable
 private fun RecipeNavigationRail(
   state: RecipeScaffoldState,
-  destinations: List<AppDestination>,
+  destinations: ImmutableList<AppDestination>,
   modifier: Modifier = Modifier,
 ) {
   // Selection follows the section the current screen sits under, not the current record itself, so

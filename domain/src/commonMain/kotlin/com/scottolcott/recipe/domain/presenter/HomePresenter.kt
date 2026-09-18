@@ -17,6 +17,8 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.Serializable
 
 /**
@@ -26,8 +28,8 @@ import kotlinx.serialization.Serializable
  * page order. `ScreenUrlMapper` reads this same list to map both directions of `/home/{tab}`, so a
  * tab cannot end up in the pager but missing from the URL mapping.
  */
-internal val HOME_TABS: List<HomeTabScreen> =
-  listOf(CategoriesScreen, IngredientsScreen, AreasScreen)
+internal val HOME_TABS: ImmutableList<HomeTabScreen> =
+  persistentListOf(CategoriesScreen, IngredientsScreen, AreasScreen)
 
 @CircuitInject(HomeScreen::class, AppScope::class)
 @Inject
@@ -61,7 +63,7 @@ internal constructor(private val screen: HomeScreen, private val navigator: Navi
 data class HomeState(
   val selectedTabScreen: HomeTabScreen,
   val selectedIndex: Int,
-  val tabScreens: List<HomeTabScreen>,
+  val tabScreens: ImmutableList<HomeTabScreen>,
   val navigator: Navigator,
   @Redacted val eventSink: (HomeEvent) -> Unit,
 ) : CircuitUiState

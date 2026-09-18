@@ -13,6 +13,8 @@ import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -25,21 +27,21 @@ private class CategoriesTestEnvironment(
 )
 
 private class FakeCategoryRepository : CategoryRepository {
-  var getCategoriesHandler: () -> Flow<Outcome<List<Category>>> = { inFlight() }
+  var getCategoriesHandler: () -> Flow<Outcome<ImmutableList<Category>>> = { inFlight() }
 
-  var getCategoriesByNameHandler: (String) -> Flow<Outcome<List<Category>>> = {
+  var getCategoriesByNameHandler: (String) -> Flow<Outcome<ImmutableList<Category>>> = {
     getCategoriesHandler()
   }
 
-  override fun getCategories(): Flow<Outcome<List<Category>>> = getCategoriesHandler()
+  override fun getCategories(): Flow<Outcome<ImmutableList<Category>>> = getCategoriesHandler()
 
-  override fun getCategories(nameFilter: String): Flow<Outcome<List<Category>>> =
+  override fun getCategories(nameFilter: String): Flow<Outcome<ImmutableList<Category>>> =
     getCategoriesByNameHandler(nameFilter)
 }
 
 val categoriesPresenterTests by testSuite {
   val categoriesFixture = testFixture {
-    listOf(Category(CategoryId("1"), "Category 1", "thumb1", "desc1", Clock.System.now()))
+    persistentListOf(Category(CategoryId("1"), "Category 1", "thumb1", "desc1", Clock.System.now()))
   }
 
   val environmentFixture = testFixture {

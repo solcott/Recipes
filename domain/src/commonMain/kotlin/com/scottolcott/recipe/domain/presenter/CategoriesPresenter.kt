@@ -20,6 +20,7 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import kotlinx.collections.immutable.ImmutableList
 
 @CircuitInject(CategoriesScreen::class, AppScope::class)
 @Inject
@@ -66,7 +67,7 @@ sealed interface CategoriesState : CircuitUiState {
     CategoriesState
 
   data class Success(
-    val categories: List<Category>,
+    val categories: ImmutableList<Category>,
     val isRefreshing: Boolean,
     @Redacted val eventSink: (CategoriesEvent.Success) -> Unit,
   ) : CategoriesState

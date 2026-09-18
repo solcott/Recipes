@@ -34,6 +34,8 @@ import io.github.solcott.uistate.ContentStates3
 import io.github.solcott.uistate.circuit.produceRetainedContentStates
 import io.github.solcott.uistate.contentStatesOf
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -66,9 +68,9 @@ class SearchPresenter(
       .debounce(300.milliseconds)
       .produceRetainedContentStates(
         contentStatesOf(
-          emptyList<SearchSuggestion>(),
-          emptyList<Category>(),
-          emptyList<Ingredient>(),
+          persistentListOf(),
+          persistentListOf(),
+          persistentListOf(),
         )
       ) { query ->
         searchSuggestionsRepository.getSearchSuggestionsAsFlow(query)
@@ -117,7 +119,11 @@ class SearchPresenter(
  * group answer for all three.
  */
 typealias SearchSuggestionStates =
-  ContentStates3<List<SearchSuggestion>, List<Category>, List<Ingredient>>
+  ContentStates3<
+    ImmutableList<SearchSuggestion>,
+    ImmutableList<Category>,
+    ImmutableList<Ingredient>,
+  >
 
 @Immutable
 data class SearchState

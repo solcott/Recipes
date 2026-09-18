@@ -12,6 +12,7 @@ import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -55,16 +56,18 @@ private class FakeRecipeDetailsRepository : RecipeRepository {
     stored?.let { emit(Outcome.Data(it.copy(favorite = favorite), Origin.Cache)) }
   }
 
-  override fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>> =
+  override fun recipesByIngredients(
+    ingredients: Set<String>
+  ): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
+
+  override fun searchRecipes(query: String): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
+
+  override fun recipesByCategory(category: String): Flow<Outcome<ImmutableList<Recipe>>> =
     emptyFlow()
 
-  override fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
+  override fun recipesByArea(area: String): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
 
-  override fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
-
-  override fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
-
-  override fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>> = emptyFlow()
+  override fun getFavoritesAsFlow(): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
 }
 
 private val screen = RecipeDetailsScreen(RecipeId("1"))
