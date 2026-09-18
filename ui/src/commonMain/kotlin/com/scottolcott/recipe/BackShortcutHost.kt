@@ -28,7 +28,7 @@ import androidx.compose.ui.input.key.type
  */
 @Stable
 class BackShortcutHost {
-  internal var onBack: MutableState<(() -> Boolean)?> = mutableStateOf(null)
+  internal val onBack: MutableState<(() -> Boolean)?> = mutableStateOf(null)
 
   /**
    * Pops one screen. Returns whether anything moved, so the caller can leave the key unconsumed.
