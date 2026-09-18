@@ -2,12 +2,12 @@ package com.scottolcott.recipe
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.window.core.layout.WindowSizeClass
 import com.scottolcott.recipe.domain.AppDesign
 import com.scottolcott.recipe.domain.AppInput
 import com.scottolcott.recipe.domain.LocalWindowSizeClass
@@ -35,7 +35,7 @@ fun RecipeApp(
   subCircuit: SubCircuit,
   modifier: Modifier = Modifier,
   onRootPop: (result: PopResult?) -> Unit = {},
-  windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass,
+  adaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfoV2(),
   initialScreen: Screen? = null,
   backShortcutHost: BackShortcutHost? = null,
   design: AppDesign = if (isIos()) AppDesign.Cupertino else AppDesign.Material,
@@ -45,7 +45,7 @@ fun RecipeApp(
   // tokens and the branches below them can never disagree about which design is in force.
   RecipeAppTheme(design = design, input = input) {
     CompositionLocalProvider(
-      LocalWindowSizeClass provides windowSizeClass,
+      LocalWindowSizeClass provides adaptiveInfo.windowSizeClass,
       LocalDeepLinkScreen provides initialScreen,
       LocalBackShortcutHost provides backShortcutHost,
     ) {
