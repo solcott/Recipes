@@ -4,6 +4,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
@@ -304,6 +305,7 @@ sealed interface RecipeScaffoldEvent : CircuitUiEvent {
   constructor(val searchBarValue: SearchBarValue) : RecipeScaffoldEvent
 }
 
+@Stable
 data class RecipeScaffoldState(
   val navStack: NavStack<out NavStack.Record>,
   val navigator: Navigator,

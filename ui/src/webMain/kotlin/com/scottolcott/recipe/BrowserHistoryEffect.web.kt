@@ -3,7 +3,12 @@ package com.scottolcott.recipe
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import com.scottolcott.recipe.domain.navigation.toUrlPath
 import com.scottolcott.recipe.domain.presenter.HomeScreen
@@ -242,18 +247,19 @@ internal expect fun replaceDepth(depth: Int, url: String)
 /** Reads the depth previously stored in `history.state`, or `0` if absent/unparseable. */
 internal expect fun historyDepth(): Int
 
+@Stable
 private class BrowserNavState(initialDepth: Int) {
-  var depth: Int = initialDepth
+  var depth by mutableIntStateOf(initialDepth)
 
   /**
    * Upcoming `popstate` events to silently ignore (we called [org.w3c.dom.History.go] / back /
    * forward).
    */
-  var pendingPopStateIgnore: Int = 0
+  var pendingPopStateIgnore by mutableIntStateOf(0)
 
   /** Upcoming [snapshotFlow] emissions to silently ignore (browser initiated navigation). */
-  var pendingSnapshotIgnore: Int = 0
+  var pendingSnapshotIgnore by mutableIntStateOf(0)
 
   /** URL a root swap owes the depth-0 entry once its rewind settles; see [swapRoot]. */
-  var pendingRootUrl: String? = null
+  var pendingRootUrl by mutableStateOf<String?>(null)
 }

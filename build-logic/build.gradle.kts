@@ -16,6 +16,7 @@ dependencies {
   compileOnly(libs.plugins.dependency.sorter.toDep())
   compileOnly(libs.plugins.detekt.toDep())
   compileOnly(libs.plugins.kmp.parcelize.toDep())
+  compileOnly(libs.plugins.kotlin.compose.toDep())
   compileOnly(libs.plugins.ktfmt.toDep())
 
   detektPlugins(

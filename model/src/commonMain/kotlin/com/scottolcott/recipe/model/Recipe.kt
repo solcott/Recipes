@@ -1,7 +1,11 @@
 package com.scottolcott.recipe.model
 
+import androidx.compose.runtime.Immutable
 import kotlin.time.Instant
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
+@Immutable
 data class Recipe(
   val id: RecipeId,
   val name: String,
@@ -13,20 +17,21 @@ data class Recipe(
   val lastFetched: Instant,
 )
 
+@Immutable
 data class RecipeDetails(
   val alternateName: String? = null,
   val instructions: String,
-  val tags: List<String> = emptyList(),
+  val tags: ImmutableList<String> = persistentListOf(),
   val youtube: String? = null,
   val source: String? = null,
   val imageSource: String? = null,
   val creativeCommonsConfirmed: String? = null,
   val dateModified: String? = null,
-  val ingredients: List<RecipeIngredient> = emptyList(),
+  val ingredients: ImmutableList<RecipeIngredient> = persistentListOf(),
   val lastFetched: Instant,
 )
 
-data class RecipeIngredient(val ingredient: String, val measure: String)
+@Immutable data class RecipeIngredient(val ingredient: String, val measure: String)
 
 /**
  * Canonical form of an ingredient name, used both for the indexed lookup column in storage and for

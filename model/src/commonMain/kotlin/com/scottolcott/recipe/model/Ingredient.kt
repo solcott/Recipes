@@ -1,9 +1,11 @@
 package com.scottolcott.recipe.model
 
+import androidx.compose.runtime.Immutable
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Immutable
 data class Ingredient(
   val id: IngredientId,
   val name: String,

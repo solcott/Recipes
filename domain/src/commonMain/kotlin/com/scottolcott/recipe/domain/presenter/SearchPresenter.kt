@@ -9,6 +9,7 @@ import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -33,6 +34,8 @@ import io.github.solcott.uistate.ContentStates3
 import io.github.solcott.uistate.circuit.produceRetainedContentStates
 import io.github.solcott.uistate.contentStatesOf
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -65,9 +68,9 @@ class SearchPresenter(
       .debounce(300.milliseconds)
       .produceRetainedContentStates(
         contentStatesOf(
-          emptyList<SearchSuggestion>(),
-          emptyList<Category>(),
-          emptyList<Ingredient>(),
+          persistentListOf<SearchSuggestion>(),
+          persistentListOf<Category>(),
+          persistentListOf<Ingredient>(),
         )
       ) { query ->
         searchSuggestionsRepository.getSearchSuggestionsAsFlow(query)
@@ -116,8 +119,13 @@ class SearchPresenter(
  * group answer for all three.
  */
 typealias SearchSuggestionStates =
-  ContentStates3<List<SearchSuggestion>, List<Category>, List<Ingredient>>
+  ContentStates3<
+    ImmutableList<SearchSuggestion>,
+    ImmutableList<Category>,
+    ImmutableList<Ingredient>,
+  >
 
+@Stable
 data class SearchState
 @OptIn(ExperimentalMaterial3Api::class)
 constructor(

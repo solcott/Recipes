@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import kotlinx.collections.immutable.ImmutableList
 
 @CircuitInject(CategoriesScreen::class, AppScope::class)
 @Inject
@@ -57,6 +59,7 @@ internal constructor(
   }
 }
 
+@Immutable
 sealed interface CategoriesState : CircuitUiState {
   data object Loading : CategoriesState
 
@@ -64,7 +67,7 @@ sealed interface CategoriesState : CircuitUiState {
     CategoriesState
 
   data class Success(
-    val categories: List<Category>,
+    val categories: ImmutableList<Category>,
     val isRefreshing: Boolean,
     @Redacted val eventSink: (CategoriesEvent.Success) -> Unit,
   ) : CategoriesState

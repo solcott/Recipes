@@ -13,6 +13,8 @@ import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -25,17 +27,18 @@ private class IngredientsTestEnvironment(
 )
 
 private class FakeIngredientRepository : IngredientRepository {
-  var getIngredientsHandler: () -> Flow<Outcome<List<Ingredient>>> = { inFlight() }
+  var getIngredientsHandler: () -> Flow<Outcome<ImmutableList<Ingredient>>> = { inFlight() }
 
-  override fun getIngredients(): Flow<Outcome<List<Ingredient>>> = getIngredientsHandler()
+  override fun getIngredients(): Flow<Outcome<ImmutableList<Ingredient>>> = getIngredientsHandler()
 
-  override fun filterIngredientsByName(nameFilter: String): Flow<Outcome<List<Ingredient>>> =
-    getIngredientsHandler()
+  override fun filterIngredientsByName(
+    nameFilter: String
+  ): Flow<Outcome<ImmutableList<Ingredient>>> = getIngredientsHandler()
 }
 
 val ingredientsPresenterTests by testSuite {
   val ingredientsFixture = testFixture {
-    listOf(Ingredient(IngredientId("1"), "Chicken", lastFetched = Clock.System.now()))
+    persistentListOf(Ingredient(IngredientId("1"), "Chicken", lastFetched = Clock.System.now()))
   }
 
   val environmentFixture = testFixture {

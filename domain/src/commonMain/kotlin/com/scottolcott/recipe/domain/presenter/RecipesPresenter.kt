@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.retain.retain
@@ -19,6 +20,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
 import io.github.solcott.uistate.ContentState
+import kotlinx.collections.immutable.ImmutableList
 
 @CircuitInject(RecipesScreen::class, AppScope::class)
 @Inject
@@ -65,7 +67,7 @@ internal constructor(
   private fun produceRecipesState(
     screen: RecipesScreen,
     retryTrigger: Int,
-  ): ContentState<List<Recipe>> {
+  ): ContentState<ImmutableList<Recipe>> {
     return when (screen) {
       is RecipesScreen.ByCategory ->
         recipesProducer.produceByCategory(screen.category, retryTrigger)
@@ -89,6 +91,7 @@ sealed interface RecipesEvent : CircuitUiEvent {
   }
 }
 
+@Immutable
 sealed interface RecipesState : CircuitUiState {
   data object Loading : RecipesState
 
@@ -102,13 +105,14 @@ sealed interface RecipesState : CircuitUiState {
      * travel to reach it -- the name cannot be resolved here.
      */
     val screen: RecipesScreen,
-    val recipes: List<Recipe>,
+    val recipes: ImmutableList<Recipe>,
     val isRefreshing: Boolean,
     val showAreaLabel: Boolean,
     @Redacted val eventSink: (RecipesEvent.Success) -> Unit,
   ) : RecipesState
 }
 
+@Immutable
 sealed interface RecipesScreen : Screen {
   @CircuitSerializable(AppScope::class) data class ByCategory(val category: String) : RecipesScreen
 

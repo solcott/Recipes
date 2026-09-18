@@ -13,6 +13,8 @@ import io.github.solcott.dataresult.Outcome
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Clock
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -20,7 +22,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 
 private class FakeRecipeRepository : RecipeRepository {
-  val responses = MutableStateFlow<Outcome<List<Recipe>>>(Outcome.Loading)
+  val responses = MutableStateFlow<Outcome<ImmutableList<Recipe>>>(Outcome.Loading)
 
   /** Counts how many times the ingredient flow was *collected*, not how many times it was built. */
   var ingredientSubscriptions = 0
@@ -29,21 +31,24 @@ private class FakeRecipeRepository : RecipeRepository {
   var lastIngredients: Set<String>? = null
     private set
 
-  override fun recipesByIngredients(ingredients: Set<String>): Flow<Outcome<List<Recipe>>> = flow {
+  override fun recipesByIngredients(
+    ingredients: Set<String>
+  ): Flow<Outcome<ImmutableList<Recipe>>> = flow {
     ingredientSubscriptions++
     lastIngredients = ingredients
     emitAll(responses)
   }
 
-  override fun searchRecipes(query: String): Flow<Outcome<List<Recipe>>> = responses
+  override fun searchRecipes(query: String): Flow<Outcome<ImmutableList<Recipe>>> = responses
 
-  override fun recipesByCategory(category: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
+  override fun recipesByCategory(category: String): Flow<Outcome<ImmutableList<Recipe>>> =
+    emptyFlow()
 
-  override fun recipesByArea(area: String): Flow<Outcome<List<Recipe>>> = emptyFlow()
+  override fun recipesByArea(area: String): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
 
   override fun getById(id: RecipeId): Flow<Outcome<Recipe?>> = emptyFlow()
 
-  override fun getFavoritesAsFlow(): Flow<Outcome<List<Recipe>>> = emptyFlow()
+  override fun getFavoritesAsFlow(): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
 
   override suspend fun addFavorite(id: RecipeId) = Unit
 
@@ -75,12 +80,12 @@ val recipesPresenterTests by testSuite {
     presenter.test {
       assertIs<RecipesState.Loading>(awaitItem())
 
-      repository.responses.value = Outcome.Data(listOf(recipe("1")), Origin.Network)
+      repository.responses.value = Outcome.Data(persistentListOf(recipe("1")), Origin.Network)
       assertIs<RecipesState.Success>(awaitItem())
 
       repository.responses.value =
         Outcome.Data(
-          listOf(recipe("1"), recipe("2")),
+          persistentListOf(recipe("1"), recipe("2")),
           Origin.Cache,
         )
       val state = assertIs<RecipesState.Success>(awaitItem())
@@ -106,7 +111,7 @@ val recipesPresenterTests by testSuite {
     presenter.test {
       assertIs<RecipesState.Loading>(awaitItem())
 
-      repository.responses.value = Outcome.Data(emptyList(), Origin.Cache)
+      repository.responses.value = Outcome.Data(persistentListOf(), Origin.Cache)
 
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(emptyList(), state.recipes)
@@ -126,14 +131,14 @@ val recipesPresenterTests by testSuite {
       assertIs<RecipesState.Loading>(awaitItem())
 
       // Settled, so it is an answer: nothing else was coming.
-      repository.responses.value = Outcome.Data(emptyList(), Origin.Cache)
+      repository.responses.value = Outcome.Data(persistentListOf(), Origin.Cache)
       assertIs<RecipesState.Success>(awaitItem())
 
       repository.responses.value = Outcome.Loading
       assertIs<RecipesState.Loading>(awaitItem())
 
       // One instance: `recipe()` stamps `lastFetched` with the current time.
-      val fresh = listOf(recipe("1"))
+      val fresh = persistentListOf(recipe("1"))
       repository.responses.value = Outcome.Data(fresh, Origin.Network)
       val state = assertIs<RecipesState.Success>(awaitItem())
       assertEquals(fresh, state.recipes)
@@ -150,7 +155,7 @@ val recipesPresenterTests by testSuite {
     presenter.test {
       assertIs<RecipesState.Loading>(awaitItem())
 
-      repository.responses.value = Outcome.Data(emptyList(), Origin.Cache)
+      repository.responses.value = Outcome.Data(persistentListOf(), Origin.Cache)
       assertIs<RecipesState.Success>(awaitItem())
 
       repository.responses.value = Outcome.Loading

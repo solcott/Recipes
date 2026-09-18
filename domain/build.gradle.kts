@@ -4,6 +4,7 @@ import dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi
 
 plugins {
   id("kmp.library")
+  id("compose.stability")
   alias(libs.plugins.metro)
   alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.kotlin.compose)
@@ -46,6 +47,7 @@ kotlin {
 
         implementation(projects.core)
         implementation(projects.repository)
+        implementation(libs.compose.runtime.annotations)
         implementation(libs.kermit.core)
       }
     }

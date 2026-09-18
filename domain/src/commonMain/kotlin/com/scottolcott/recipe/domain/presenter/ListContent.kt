@@ -5,6 +5,7 @@ import io.github.solcott.uistate.ContentState
 import io.github.solcott.uistate.errorOrNull
 import io.github.solcott.uistate.hasAnswer
 import io.github.solcott.uistate.isLoading
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * The three states every list tab renders, decoupled from any one screen's `CircuitUiState`.
@@ -24,13 +25,13 @@ import io.github.solcott.uistate.isLoading
  * has never seen, so it gets the spinner, or the error, rather than "nothing found". The
  * repositories already hold that read back with `asOutcomes(fetching = …)`; this is the backstop.
  */
-internal inline fun <T, S> ContentState<List<T>>.foldToState(
+internal inline fun <T, S> ContentState<ImmutableList<T>>.foldToState(
   onLoading: () -> S,
   onError: (message: String) -> S,
-  onContent: (items: List<T>, isRefreshing: Boolean) -> S,
+  onContent: (items: ImmutableList<T>, isRefreshing: Boolean) -> S,
 ): S =
   when {
-    hasAnswer(List<T>::isEmpty) -> onContent(data, isLoading)
+    hasAnswer(ImmutableList<T>::isEmpty) -> onContent(data, isLoading)
     isLoading -> onLoading()
     else -> onError(errorOrNull.toMessage())
   }

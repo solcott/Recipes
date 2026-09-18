@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.runtime.CircuitUiEvent
@@ -46,6 +47,7 @@ sealed interface SearchTabEvent : CircuitUiEvent {
   data class GoTo(val screen: Screen) : SearchTabEvent
 }
 
+@Immutable
 data class SearchTabState(@Redacted val eventSink: (SearchTabEvent) -> Unit) : CircuitUiState
 
 @CircuitSerializable(AppScope::class) data object SearchTabScreen : Screen

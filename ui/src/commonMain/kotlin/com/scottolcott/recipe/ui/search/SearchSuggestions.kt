@@ -58,6 +58,7 @@ import com.scottolcott.recipe.ui.delete_24px
 import com.scottolcott.recipe.ui.history_24px
 import com.scottolcott.recipe.ui.ingredients
 import com.scottolcott.recipe.ui.recent
+import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -110,7 +111,7 @@ private fun LazyListScope.sectionHeader(
 }
 
 private fun LazyListScope.historySection(
-  history: List<SearchSuggestion>,
+  history: ImmutableList<SearchSuggestion>,
   searchText: TextFieldState,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
@@ -179,7 +180,7 @@ private fun LazyListScope.historySection(
 }
 
 private fun LazyListScope.categorySection(
-  categories: List<Category>,
+  categories: ImmutableList<Category>,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
 ) {
@@ -199,7 +200,7 @@ private fun LazyListScope.categorySection(
 }
 
 private fun LazyListScope.ingredientSection(
-  ingredients: List<Ingredient>,
+  ingredients: ImmutableList<Ingredient>,
   listState: LazyListState,
   onSearch: (SearchSuggestion) -> Unit,
 ) {

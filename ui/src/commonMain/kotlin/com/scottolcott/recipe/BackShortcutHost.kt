@@ -1,5 +1,8 @@
 package com.scottolcott.recipe
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
@@ -23,13 +26,14 @@ import androidx.compose.ui.input.key.type
  * Web deliberately does not use this — the browser already maps these chords to history back, which
  * `BrowserHistoryEffect` turns into navigation. Handling them again would pop twice.
  */
+@Stable
 class BackShortcutHost {
-  internal var onBack: (() -> Boolean)? = null
+  internal val onBack: MutableState<(() -> Boolean)?> = mutableStateOf(null)
 
   /**
    * Pops one screen. Returns whether anything moved, so the caller can leave the key unconsumed.
    */
-  fun requestBack(): Boolean = onBack?.invoke() == true
+  fun requestBack(): Boolean = onBack.value?.invoke() == true
 }
 
 /**

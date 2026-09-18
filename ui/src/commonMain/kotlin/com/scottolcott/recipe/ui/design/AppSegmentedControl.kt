@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * An iOS segmented control: a grey track with a single light pill that slides to the selection.
@@ -44,7 +45,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun AppSegmentedControl(
-  options: List<String>,
+  options: ImmutableList<String>,
   selectedIndex: Int,
   onSelect: (Int) -> Unit,
   modifier: Modifier = Modifier,

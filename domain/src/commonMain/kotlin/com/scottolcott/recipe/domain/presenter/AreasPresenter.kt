@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,7 @@ import com.slack.circuit.serialization.CircuitSerializable
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.redacted.annotations.Redacted
+import kotlinx.collections.immutable.ImmutableList
 
 @CircuitInject(AreasScreen::class, AppScope::class)
 @Inject
@@ -53,6 +55,7 @@ internal constructor(private val navigator: Navigator, private val areasProducer
   }
 }
 
+@Immutable
 sealed interface AreasState : CircuitUiState {
 
   data object Loading : AreasState
@@ -61,7 +64,7 @@ sealed interface AreasState : CircuitUiState {
     AreasState
 
   data class Success(
-    val areas: List<Area>,
+    val areas: ImmutableList<Area>,
     val isRefreshing: Boolean,
     @Redacted val eventSink: (AreasEvent.Success) -> Unit,
   ) : AreasState

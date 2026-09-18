@@ -13,6 +13,8 @@ import io.github.solcott.dataresult.Origin
 import io.github.solcott.dataresult.Outcome
 import io.github.solcott.dataresult.Outcomes3
 import io.github.solcott.dataresult.combineOutcomes
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -22,7 +24,7 @@ import kotlinx.coroutines.flow.map
  * ingredients. Destructure it to name them -- `val (history, categories, ingredients) = outcomes`.
  */
 typealias SearchSuggestionsOutcomes =
-  Outcomes3<List<SearchSuggestion>, List<Category>, List<Ingredient>>
+  Outcomes3<ImmutableList<SearchSuggestion>, ImmutableList<Category>, ImmutableList<Ingredient>>
 
 interface SearchSuggestionsRepository {
 
@@ -58,15 +60,15 @@ internal class SearchSuggestionsRepositoryImpl(
       ingredientRepository.filterIngredientsByName(query),
     )
 
-  private fun storedSuggestions(query: String): Flow<Outcome<List<SearchSuggestion>>> =
+  private fun storedSuggestions(query: String): Flow<Outcome<ImmutableList<SearchSuggestion>>> =
     suggestionsDataStore.suggestions
       .map { stored ->
         stored.suggestions
           .filter { suggestion -> suggestion.text.startsWith(query.trim()) }
           .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.text })
       }
-      .map<List<SearchSuggestion>, Outcome<List<SearchSuggestion>>> {
-        Outcome.Data(it, Origin.Cache)
+      .map<List<SearchSuggestion>, Outcome<ImmutableList<SearchSuggestion>>> {
+        Outcome.Data(it.toImmutableList(), Origin.Cache)
       }
       // Caught here rather than left to cancel the group: a store that cannot be read should cost
       // the recents section, not the categories and ingredients beside it.

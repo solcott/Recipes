@@ -18,6 +18,8 @@ import io.github.solcott.dataresult.store5.asOutcomes
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -31,9 +33,9 @@ import org.mobilenativefoundation.store.store5.StoreReadRequest
 
 interface IngredientRepository {
 
-  fun getIngredients(): Flow<Outcome<List<Ingredient>>>
+  fun getIngredients(): Flow<Outcome<ImmutableList<Ingredient>>>
 
-  fun filterIngredientsByName(nameFilter: String): Flow<Outcome<List<Ingredient>>>
+  fun filterIngredientsByName(nameFilter: String): Flow<Outcome<ImmutableList<Ingredient>>>
 }
 
 // detekt 2.0.0-alpha.6 false positive: UnusedPrivateProperty misses references made from lambdas
@@ -60,7 +62,7 @@ internal class IngredientRepositoryImpl(
   }
 
   private val sourceOfTruth:
-    SourceOfTruth<IngredientsKey, List<IngredientEntity>, List<Ingredient>> =
+    SourceOfTruth<IngredientsKey, List<IngredientEntity>, ImmutableList<Ingredient>> =
     SourceOfTruth.of(
       reader = { key: IngredientsKey ->
         when (key) {
@@ -88,8 +90,9 @@ internal class IngredientRepositoryImpl(
       deleteAll = { dao.deleteAll() },
     )
 
-  private val converter: Converter<List<IngredientDto>, List<IngredientEntity>, List<Ingredient>> =
-    Converter.Builder<List<IngredientDto>, List<IngredientEntity>, List<Ingredient>>()
+  private val converter:
+    Converter<List<IngredientDto>, List<IngredientEntity>, ImmutableList<Ingredient>> =
+    Converter.Builder<List<IngredientDto>, List<IngredientEntity>, ImmutableList<Ingredient>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
         dtos.map { dto ->
@@ -103,18 +106,20 @@ internal class IngredientRepositoryImpl(
       }
       .build()
 
-  private val store: Store<IngredientsKey, List<Ingredient>> =
+  private val store: Store<IngredientsKey, ImmutableList<Ingredient>> =
     StoreBuilder.from(fetcher, sourceOfTruth, converter).build()
 
-  override fun getIngredients(): Flow<Outcome<List<Ingredient>>> {
+  override fun getIngredients(): Flow<Outcome<ImmutableList<Ingredient>>> {
     return loadIngredientsByKey(IngredientsKey.GetAll)
   }
 
-  override fun filterIngredientsByName(nameFilter: String): Flow<Outcome<List<Ingredient>>> {
+  override fun filterIngredientsByName(
+    nameFilter: String
+  ): Flow<Outcome<ImmutableList<Ingredient>>> {
     return loadIngredientsByKey(IngredientsKey.FilterByName(nameFilter))
   }
 
-  private fun loadIngredientsByKey(key: IngredientsKey): Flow<Outcome<List<Ingredient>>> {
+  private fun loadIngredientsByKey(key: IngredientsKey): Flow<Outcome<ImmutableList<Ingredient>>> {
     return fetchHistoryDataStore.refreshNeeded(cacheExpiration).flatMapLatest { refresh ->
       // `fetching` holds back a first read of `[]`: a key never fetched, not an empty result.
       store
@@ -124,9 +129,9 @@ internal class IngredientRepositoryImpl(
     }
   }
 
-  private fun Flow<List<IngredientEntity>>.mapToIngredients(): Flow<List<Ingredient>> =
+  private fun Flow<List<IngredientEntity>>.mapToIngredients(): Flow<ImmutableList<Ingredient>> =
     map { entities ->
-      entities.map { it.toIngredient() }
+      entities.map { it.toIngredient() }.toImmutableList()
     }
 
   private fun IngredientEntity.toIngredient() =

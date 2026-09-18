@@ -4,6 +4,7 @@ import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import de.infix.testBalloon.framework.core.testSuite
 import kotlin.test.assertEquals
+import kotlinx.collections.immutable.persistentListOf
 
 private fun presenterFor(screen: HomeScreen) = HomePresenter(screen, FakeNavigator(screen))
 
@@ -27,7 +28,7 @@ val homePresenterTests by testSuite {
   test("every tab is offered in pager order") {
     presenterFor(HomeScreen()).test {
       assertEquals(
-        listOf(CategoriesScreen, IngredientsScreen, AreasScreen),
+        persistentListOf(CategoriesScreen, IngredientsScreen, AreasScreen),
         awaitItem().tabScreens,
       )
     }

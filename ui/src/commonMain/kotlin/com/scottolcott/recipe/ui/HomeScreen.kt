@@ -32,6 +32,7 @@ import com.scottolcott.recipe.ui.design.AppSegmentedControl
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.foundation.CircuitContent
 import dev.zacsweers.metro.AppScope
+import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -59,7 +60,7 @@ fun HomeScreen(state: HomeState, modifier: Modifier = Modifier) {
   Column(modifier = modifier.fillMaxSize()) {
     if (isCupertino) {
       AppSegmentedControl(
-        options = state.tabScreens.map { it.label() },
+        options = state.tabScreens.map { it.label() }.toImmutableList(),
         selectedIndex = state.selectedIndex,
         onSelect = { state.eventSink(HomeEvent.TabSelected(state.tabScreens[it])) },
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
