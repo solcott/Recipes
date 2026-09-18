@@ -10,8 +10,6 @@ import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
 import com.scottolcott.recipe.storage.entity.RecipeIngredientEntity
 import kotlin.time.Clock
 import kotlin.time.Instant
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 
 private fun RecipeFullDto.toDetailEntity(lastFetched: Instant): RecipeDetailEntity {
   return RecipeDetailEntity(
@@ -33,7 +31,7 @@ private fun RecipeFullDto.toDetailEntity(lastFetched: Instant): RecipeDetailEnti
  * with a name but no measure is kept, since the API leaves measures blank for things like "salt to
  * taste". Slot order is preserved in `position`.
  */
-private fun RecipeFullDto.toIngredientEntities(): ImmutableList<RecipeIngredientEntity> {
+private fun RecipeFullDto.toIngredientEntities(): List<RecipeIngredientEntity> {
   return listOf(
       ingredient1 to measure1,
       ingredient2 to measure2,
@@ -70,7 +68,6 @@ private fun RecipeFullDto.toIngredientEntities(): ImmutableList<RecipeIngredient
         )
       }
     }
-    .toImmutableList()
 }
 
 private fun RecipeFullDto.toEntityWithDetail(lastFetched: Instant): RecipeEntityWithDetail {

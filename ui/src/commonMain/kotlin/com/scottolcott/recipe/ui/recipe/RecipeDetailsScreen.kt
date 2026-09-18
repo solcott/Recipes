@@ -76,7 +76,6 @@ import dev.zacsweers.metro.AppScope
 import io.ktor.http.Url
 import kotlin.time.Clock
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -253,8 +252,7 @@ private fun RecipeMetaInfo(
 ) {
   val details = recipe.details
   Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    val tags = remember(details?.tags) { details?.tags.orEmpty().toImmutableList() }
-    RecipeTags(tags)
+    RecipeTags(details?.tags ?: persistentListOf())
     RecipeCategoryAndArea(recipe, eventSink)
     RecipeSources(details)
   }

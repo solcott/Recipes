@@ -54,14 +54,10 @@ internal class CategoryRepositoryImpl(
     Converter.Builder<List<CategoryDto>, List<CategoryEntity>, ImmutableList<Category>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
-        dtos
-          .map { CategoryEntity(it.id, it.name, it.thumbnail, it.description, lastFetched) }
-          .toImmutableList()
+        dtos.map { CategoryEntity(it.id, it.name, it.thumbnail, it.description, lastFetched) }
       }
       .fromOutputToLocal { dtos ->
-        dtos
-          .map { CategoryEntity(it.id, it.name, it.thumb, it.description, it.lastFetched) }
-          .toImmutableList()
+        dtos.map { CategoryEntity(it.id, it.name, it.thumb, it.description, it.lastFetched) }
       }
       .build()
 

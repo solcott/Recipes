@@ -95,25 +95,14 @@ internal class IngredientRepositoryImpl(
     Converter.Builder<List<IngredientDto>, List<IngredientEntity>, ImmutableList<Ingredient>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
-        dtos
-          .map { dto ->
-            IngredientEntity(
-              dto.id,
-              dto.name,
-              dto.description,
-              dto.type,
-              dto.thumbnail,
-              lastFetched,
-            )
-          }
-          .toImmutableList()
+        dtos.map { dto ->
+          IngredientEntity(dto.id, dto.name, dto.description, dto.type, dto.thumbnail, lastFetched)
+        }
       }
       .fromOutputToLocal { models ->
-        models
-          .map {
-            IngredientEntity(it.id, it.name, it.description, it.type, it.thumbnail, it.lastFetched)
-          }
-          .toImmutableList()
+        models.map {
+          IngredientEntity(it.id, it.name, it.description, it.type, it.thumbnail, it.lastFetched)
+        }
       }
       .build()
 

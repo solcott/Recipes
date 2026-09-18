@@ -22,8 +22,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -172,28 +170,24 @@ internal class RecipeRepositoryImpl(
    * still throws: an empty return is written back as a successful fetch and would suppress the
    * retry for a full [cacheExpiration].
    */
-  private suspend fun fetchByIngredients(
-    key: RecipesKey.ByIngredient
-  ): ImmutableList<RecipeFullDto> {
+  private suspend fun fetchByIngredients(key: RecipesKey.ByIngredient): List<RecipeFullDto> {
     val queried = key.ingredients.take(MAX_FILTER_INGREDIENTS)
     val summaries = recipeApi.getByIngredient(queried)?.meals.orEmpty()
     val ids = summaries.take(MAX_HYDRATED_RESULTS).map { it.id }
-    if (ids.isEmpty()) return persistentListOf()
+    if (ids.isEmpty()) return emptyList()
 
     val alreadyFresh =
       recipeDao.idsWithFreshDetail(ids, Clock.System.now().minus(cacheExpiration)).toSet()
     val stale = ids.filterNot { it in alreadyFresh }
 
-    return stale
-      .mapConcurrentlyCatching(
-        concurrency = HYDRATION_CONCURRENCY,
-        onFailure = { id, error ->
-          logger.w(error) { "Skipping recipe $id: hydration lookup failed" }
-        },
-      ) { id ->
-        recipeApi.getRecipe(id)?.meals?.firstOrNull()
-      }
-      .toImmutableList()
+    return stale.mapConcurrentlyCatching(
+      concurrency = HYDRATION_CONCURRENCY,
+      onFailure = { id, error ->
+        logger.w(error) { "Skipping recipe $id: hydration lookup failed" }
+      },
+    ) { id ->
+      recipeApi.getRecipe(id)?.meals?.firstOrNull()
+    }
   }
 
   private fun createFetcher(): Fetcher<RecipesKey, List<RecipeDto>> {

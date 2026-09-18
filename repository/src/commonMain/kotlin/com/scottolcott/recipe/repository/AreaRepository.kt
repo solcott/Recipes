@@ -85,10 +85,10 @@ internal class AreaRepositoryImpl(
     Converter.Builder<List<AreaDto>, List<AreaEntity>, ImmutableList<Area>>()
       .fromNetworkToLocal { dtos ->
         val lastFetched = Clock.System.now()
-        dtos.map { AreaEntity(it.area, it.country, lastFetched) }.toImmutableList()
+        dtos.map { AreaEntity(it.area, it.country, lastFetched) }
       }
       .fromOutputToLocal { models ->
-        models.map { AreaEntity(it.area, it.country, it.lastFetched) }.toImmutableList()
+        models.map { AreaEntity(it.area, it.country, it.lastFetched) }
       }
       .build()
 

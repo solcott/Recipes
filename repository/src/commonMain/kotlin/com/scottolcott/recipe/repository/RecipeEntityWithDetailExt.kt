@@ -5,12 +5,12 @@ import com.scottolcott.recipe.model.RecipeDetails
 import com.scottolcott.recipe.model.RecipeIngredient
 import com.scottolcott.recipe.storage.entity.RecipeEntityWithDetail
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-internal fun List<RecipeEntityWithDetail>.toModel(): ImmutableList<Recipe> = map { recipe ->
-  recipe.toModel()
+internal fun List<RecipeEntityWithDetail>.toModel(): ImmutableList<Recipe> {
+  return map { it.toModel() }.toImmutableList()
 }
-  .toImmutableList()
 
 internal fun RecipeEntityWithDetail.toModel(): Recipe {
 
@@ -39,9 +39,7 @@ internal fun RecipeEntityWithDetail.toModel(): Recipe {
               ?.splitToSequence(',')
               ?.map { it.trim() }
               ?.filter { it.isNotEmpty() }
-              ?.toList()
-              .orEmpty()
-              .toImmutableList()
+              ?.toImmutableList() ?: persistentListOf()
           RecipeDetails(
             alternateName = alternateName,
             instructions = instructions,
