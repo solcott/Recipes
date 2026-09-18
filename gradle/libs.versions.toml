@@ -107,7 +107,7 @@ compose-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptiv
 compose-material3-adaptive-desktop = { module = "org.jetbrains.compose.material3.adaptive:adaptive-desktop", version.ref = "composeAdaptive" }
 compose-material3-desktop = { module = "org.jetbrains.compose.material3:material3-desktop", version.ref = "composeMultiplatformMaterial3" }
 compose-material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "composeMultiplatformMaterial3" }
-compose-runtime-annotations = {  module = "androidx.compose.runtime:runtime-annotation", version.ref = "androidx-compose"}
+compose-runtime-annotations = { module = "androidx.compose.runtime:runtime-annotation", version.ref = "androidx-compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-ui-desktop = { module = "org.jetbrains.compose.ui:ui-desktop", version.ref = "composeMultiplatform" }
 compose-ui-graphics = { module = "org.jetbrains.compose.ui:ui-graphics", version.ref = "composeMultiplatform" }
