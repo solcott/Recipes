@@ -51,12 +51,33 @@ jobs:
       - name: Compose stability
         run: ./gradlew composeStabilityCheck
 
+      # The Compose compiler names its reports after the Kotlin module, which here is the Gradle
+      # project path -- `Recipes:domain-classes.txt`. upload-artifact rejects a colon in a path, so
+      # stage a renamed copy. Done immediately after the check rather than at the end of the job, so
+      # the artifact is exactly what the check read: `build` below recompiles the other targets over
+      # the same directory.
+      - name: Stage Compose reports
+        if: always()
+        run: |
+          mkdir -p compose-reports
+          for src in */build/reports/compose; do
+            [ -d "$src" ] || continue
+            mkdir -p "compose-reports/${src%%/*}"
+            cp -R "$src/." "compose-reports/${src%%/*}/"
+          done
+          find compose-reports -depth -name '*:*' | while read -r path; do
+            mv "$path" "$(dirname "$path")/$(basename "$path" | tr ':' '_')"
+          done
+
+      # continue-on-error: this is diagnostics. A bad upload must not fail the job and skip `Build`,
+      # which is exactly what happened the first time this workflow ran.
       - name: Upload Compose reports
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: compose-reports
-          path: '**/build/reports/compose/**'
+          path: compose-reports
           if-no-files-found: warn
 
       - name: Build

@@ -29,3 +29,6 @@ local.properties
 xcuserdata/
 
 .DS_Store
+
+# CI stages a renamed copy of the Compose stability reports here before uploading them.
+compose-reports/

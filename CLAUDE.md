@@ -248,7 +248,9 @@ listed, none of which is ever a composable parameter.
 
 Reports land in `<module>/build/reports/compose/reports/` (`-classes.txt`, `-composables.txt`) with
 `-module.json` counts under `.../metrics/<target>/main/`. Read them for *why* something failed —
-the entry lists each property or parameter and its verdict.
+the entry lists each property or parameter and its verdict. The compiler names them after the
+Kotlin module, which is the Gradle project path — so they carry a colon, `Recipes:domain-classes.txt`,
+and CI stages a renamed copy before uploading them because `upload-artifact` rejects one.
 
 Two traps in those reports:
 
