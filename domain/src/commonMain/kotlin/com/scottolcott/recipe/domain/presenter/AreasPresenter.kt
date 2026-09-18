@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +54,7 @@ internal constructor(private val navigator: Navigator, private val areasProducer
   }
 }
 
+@Immutable
 sealed interface AreasState : CircuitUiState {
 
   data object Loading : AreasState

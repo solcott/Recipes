@@ -264,11 +264,11 @@ private fun RecipeNavigationRail(
 private fun BackShortcutEffect(state: RecipeScaffoldState) {
   val host = LocalBackShortcutHost.current ?: return
   DisposableEffect(host, state) {
-    host.onBack = {
+    host.onBack.value = {
       // Reports whether it moved, so at the root the key falls through unconsumed rather than
       // being swallowed.
       state.canGoBack.also { if (it) state.eventSink(RecipeScaffoldEvent.Back) }
     }
-    onDispose { host.onBack = null }
+    onDispose { host.onBack.value = null }
   }
 }

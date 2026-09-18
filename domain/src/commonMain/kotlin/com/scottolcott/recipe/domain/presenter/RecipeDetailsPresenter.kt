@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -82,6 +83,7 @@ internal constructor(
   }
 }
 
+@Immutable
 sealed interface RecipeDetailsState : CircuitUiState {
   data object Loading : RecipeDetailsState
 

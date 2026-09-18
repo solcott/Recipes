@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.retain.retain
@@ -89,6 +90,7 @@ sealed interface RecipesEvent : CircuitUiEvent {
   }
 }
 
+@Immutable
 sealed interface RecipesState : CircuitUiState {
   data object Loading : RecipesState
 
@@ -109,6 +111,7 @@ sealed interface RecipesState : CircuitUiState {
   ) : RecipesState
 }
 
+@Immutable
 sealed interface RecipesScreen : Screen {
   @CircuitSerializable(AppScope::class) data class ByCategory(val category: String) : RecipesScreen
 

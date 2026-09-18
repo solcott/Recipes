@@ -1,7 +1,9 @@
 package com.scottolcott.recipe.model
 
+import androidx.compose.runtime.Immutable
 import kotlin.time.Instant
 
+@Immutable
 data class Recipe(
   val id: RecipeId,
   val name: String,
@@ -13,6 +15,7 @@ data class Recipe(
   val lastFetched: Instant,
 )
 
+@Immutable
 data class RecipeDetails(
   val alternateName: String? = null,
   val instructions: String,
@@ -26,7 +29,7 @@ data class RecipeDetails(
   val lastFetched: Instant,
 )
 
-data class RecipeIngredient(val ingredient: String, val measure: String)
+@Immutable data class RecipeIngredient(val ingredient: String, val measure: String)
 
 /**
  * Canonical form of an ingredient name, used both for the indexed lookup column in storage and for

@@ -46,6 +46,7 @@ kotlin {
 
         implementation(projects.core)
         implementation(projects.repository)
+        implementation(libs.compose.runtime.annotations)
         implementation(libs.kermit.core)
       }
     }

@@ -1,5 +1,6 @@
 package com.scottolcott.recipe.model
 
+import androidx.compose.runtime.Immutable
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
@@ -10,4 +11,6 @@ import kotlinx.serialization.Serializable
  * [country] is nullable because `list.php?a=list` declares `strCountry` nullable and does not
  * return it for every row.
  */
-@Serializable data class Area(val area: String, val country: String?, val lastFetched: Instant)
+@Serializable
+@Immutable
+data class Area(val area: String, val country: String?, val lastFetched: Instant)

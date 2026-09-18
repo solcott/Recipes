@@ -8,6 +8,7 @@ import androidx.compose.material3.SearchBarState
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -118,6 +119,7 @@ class SearchPresenter(
 typealias SearchSuggestionStates =
   ContentStates3<List<SearchSuggestion>, List<Category>, List<Ingredient>>
 
+@Immutable
 data class SearchState
 @OptIn(ExperimentalMaterial3Api::class)
 constructor(

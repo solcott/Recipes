@@ -1,6 +1,7 @@
 package com.scottolcott.recipe.domain.presenter
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +57,7 @@ internal constructor(private val screen: HomeScreen, private val navigator: Navi
   }
 }
 
+@Immutable
 data class HomeState(
   val selectedTabScreen: HomeTabScreen,
   val selectedIndex: Int,

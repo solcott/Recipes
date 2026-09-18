@@ -1,5 +1,6 @@
 package com.scottolcott.recipe
 
+import androidx.compose.runtime.Immutable
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.NoTagFormatter
 import co.touchlab.kermit.Severity
@@ -26,6 +27,7 @@ import dev.zacsweers.metro.Provides
       NetworkProviders::class,
     ],
 )
+@Immutable
 interface DesktopAppGraph : AppGraph {
 
   @Provides
