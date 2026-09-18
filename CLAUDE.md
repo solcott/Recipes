@@ -207,6 +207,32 @@ Two things are easy to get wrong:
 `ListContent.kt` bridges the two, and belongs in `:ui` with the rest of the user-facing copy once
 these get localized.
 
+### Compose stability
+
+Everything a presenter hands to a composable has to be *stable*, or Compose re-runs the UI on every
+recomposition. Two rules keep it that way:
+
+- **Collections headed for the UI are `ImmutableList`**, from the repository's public signature
+  onward — `SourceOfTruth.reader`, `toModel()`, the `Flow<Outcome<…>>` return type, the producer's
+  `ContentState<ImmutableList<T>>`, and the screen state's field. Entities and DTOs stay `List`:
+  Store's local type is `List<Entity>` and nothing below `toModel()` ever reaches composition, so
+  converting there is a copy that buys nothing. `:model` carries
+  `api(libs.kotlinx.collections.immutable)` for this.
+- **`@Immutable` when it is true, `@Stable` when it is not.** `@Immutable` promises no public
+  property ever changes: right for the `:model` classes and for a screen state whose fields are all
+  values (`AreasState`, `RecipesState`, `RecipeDetailsState`, `SearchTabState`, `RecipesScreen`).
+  A state that carries an observable holder — `SearchBarState` and `TextFieldState` in `SearchState`,
+  `NavStack`/`Navigator` in `RecipeScaffoldState` and `HomeState`, the Metro graph in
+  `DesktopAppGraph` — gets `@Stable`. Both make the type skippable; only one of them is honest, and
+  a class marked `@Stable` must back its mutable properties with snapshot state (this is why
+  `BackShortcutHost.onBack` is a `MutableState`).
+
+Annotate the *declared parameter type*: `@Stable` on a supertype does not propagate, so
+`DesktopAppGraph` carries its own annotation rather than inheriting one from `AppGraph`.
+
+A sealed `CircuitUiState` interface is unstable until annotated — the compiler cannot see the
+implementations — so every one of them carries a marker.
+
 **A test fake for an in-flight request must not complete.** `produceRetainedContentState` settles a still
 loading status when its source completes, so a spinner can never hang — which means
 `flowOf(Outcome.Loading)` is a *settled empty result*, not a pending one. Store streams never
