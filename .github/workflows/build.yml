@@ -45,5 +45,19 @@ jobs:
       - name: Detekt
         run: ./gradlew detektAll
 
+      # Before Build on purpose. `reportsDestination` is a project-level Compose compiler setting
+      # that every target of a module writes to, so only this invocation -- which compiles the one
+      # designated target -- leaves a single writer and a deterministic report.
+      - name: Compose stability
+        run: ./gradlew composeStabilityCheck
+
+      - name: Upload Compose reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compose-reports
+          path: '**/build/reports/compose/**'
+          if-no-files-found: warn
+
       - name: Build
         run: ./gradlew build

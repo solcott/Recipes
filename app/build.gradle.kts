@@ -9,6 +9,7 @@ plugins {
   alias(libs.plugins.compose.multiplatform)
   alias(libs.plugins.metro)
   alias(libs.plugins.dependency.sorter)
+  id("compose.stability")
   id("dependency.analysis")
   id("detekt")
   id("formatting")

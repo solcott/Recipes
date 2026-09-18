@@ -6,6 +6,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.metro)
   alias(libs.plugins.dependency.sorter)
+  id("compose.stability")
   id("dependency.analysis")
   id("detekt")
 }

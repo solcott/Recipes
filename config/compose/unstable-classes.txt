@@ -1,0 +1,26 @@
+# Classes the Compose compiler infers as `unstable` that we accept anyway.
+#
+# One `<module>:<name>` per line; `#` starts a comment. The compiler reports fully qualified names,
+# so copy them verbatim from the failure message. The module prefix scopes the entry to that
+# project's `composeStabilityCheck`, so entries for other modules are ignored rather than mistaken
+# for stale ones.
+#
+# Every entry needs a comment saying why the class cannot be made stable. An unstable class makes
+# every composable that takes one re-run on each recomposition, so the bar is "the alternative is
+# worse", not "this was quicker". The usual fixes come first: make the properties `val`s of stable
+# types, swap `List` for `ImmutableList`, or annotate `@Immutable` (nothing ever changes) or
+# `@Stable` (mutable properties are backed by snapshot state). See CLAUDE.md, *Compose stability*.
+
+# The Metro-generated graph implementations. Nothing hands a graph to a composable on these two
+# platforms -- `main()` reads `graph.circuit` and `graph.subCircuit` off it and passes those, and
+# `RecipeApplication` keeps the Android one to itself. Desktop is the exception and is absent from
+# this list for that reason: `RecipeWindow(graph: DesktopAppGraph, ...)` does take one, which is why
+# `DesktopAppGraph` carries `@Stable` and why :desktopApp reports nothing here.
+webApp:com.scottolcott.recipe.ui.web.WebAppGraph.Impl
+app:com.scottolcott.recipe.AndroidAppGraph.Impl
+
+# Android framework entry points, both full of mutable state the framework owns. Neither is ever a
+# composable parameter -- MainActivity calls `setContent { RecipeApp(circuit, subCircuit, ...) }`
+# and passes the two Circuit instances, not itself. Annotating either @Stable would be a lie.
+app:com.scottolcott.recipe.MainActivity
+app:com.scottolcott.recipe.RecipeApplication

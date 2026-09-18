@@ -50,7 +50,24 @@ the suppression is clearly justified.
 If it comes back with more than a handful of findings, hand off to the **`detekt-triage`** agent
 instead of reading the raw output — it returns them grouped by rule with counts.
 
-### 4. Build each touched module
+### 4. Compose stability
+
+```
+./gradlew composeStabilityCheck
+```
+
+Only if a touched module is one of the six that apply the Compose compiler plugin — `:ui`,
+`:domain`, `:shared`, `:app`, `:webApp`, `:desktopApp`. It reads the Compose compiler's own
+reports and fails on a class inferred `unstable` or a `restartable` composable that is not
+`skippable`.
+
+Run it as its own invocation, never folded into `./gradlew build ...`: every target of a module
+writes over the same reports directory, and this task's single designated compile task is what
+makes the result deterministic. The failure names each offender and the allowlist line to add.
+Prefer fixing the type over allowlisting — CLAUDE.md, *Compose stability*, says which annotation
+belongs where.
+
+### 5. Build each touched module
 
 ```
 ./gradlew :<module>:build
@@ -60,7 +77,7 @@ One invocation per touched module. This covers all targets (android, jvm, iosArm
 iosSimulatorArm64, js, wasmJs), which is the point — a change that compiles on JVM can still break
 `expect`/`actual` or a web target.
 
-### 5. Tests
+### 6. Tests
 
 ```
 ./gradlew :domain:jvmTest

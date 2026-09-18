@@ -30,6 +30,14 @@ class RecipesProducer(private val recipeRepository: RecipeRepository) {
   // A Set, not vararg: the parameter is a produceRetainedContentState key, and an Array compares by
   // identity, so a vararg call site would allocate a fresh key on every recomposition and restart
   // the collection each pass.
+  //
+  // UnstableCollections wants an ImmutableSet, and for a composable that emits UI it would be
+  // right. This one returns a value, so the compiler marks it neither restartable nor skippable --
+  // the stability report has it as a bare `fun`, against `restartable skippable` for the :ui
+  // composables. The parameter's stability is inert here, while an ImmutableSet would cost either a
+  // persistent-set copy per recomposition at the call site or a kotlinx-serialization serializer
+  // for RecipesScreen.ByIngredient, which has none for the immutable collections.
+  @Suppress("UnstableCollections")
   @Composable
   fun produceByIngredients(
     ingredients: Set<String>,
