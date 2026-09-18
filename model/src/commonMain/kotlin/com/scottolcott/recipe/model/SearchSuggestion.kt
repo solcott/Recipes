@@ -10,6 +10,5 @@ sealed interface SearchSuggestion {
 
   @Serializable data class CategorySuggestion(val category: Category) : SearchSuggestion
 
-  @Serializable
-  data class IngredientSuggestion(val ingredient: Ingredient) : SearchSuggestion
+  @Serializable data class IngredientSuggestion(val ingredient: Ingredient) : SearchSuggestion
 }
