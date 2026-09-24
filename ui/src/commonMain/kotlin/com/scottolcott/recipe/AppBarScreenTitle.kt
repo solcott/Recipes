@@ -1,6 +1,7 @@
 package com.scottolcott.recipe
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import com.scottolcott.recipe.domain.isCupertino
 import com.scottolcott.recipe.domain.presenter.RecipeScaffoldState
@@ -29,6 +30,7 @@ val LocalAppBarShowsScreenTitle = compositionLocalOf { false }
  * [LocalAppBarShowsScreenTitle] to decide whether to head themselves.
  */
 @Composable
+@ReadOnlyComposable
 internal fun RecipeScaffoldState.appBarShowsScreenTitle(): Boolean = isCupertino && !searchVisible
 
 /**
