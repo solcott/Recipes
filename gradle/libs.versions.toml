@@ -125,7 +125,7 @@ dataresultStore5 = { module = "io.github.solcott:dataresult-store5", version.ref
 uistate = { module = "io.github.solcott:uistate", version.ref = "dataresult" }
 uistateCircuit = { module = "io.github.solcott:uistate-circuit", version.ref = "dataresult" }
 #noinspection UnusedVersionCatalogEntry
-detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version = "0.6.6" }
+detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version = "0.6.7" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kermit-core = { module = "co.touchlab:kermit-core", version.ref = "kermit" }
