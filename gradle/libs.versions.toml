@@ -9,7 +9,7 @@ androidMinSdk = "28"
 #noinspection UnusedVersionCatalogEntry
 androidTargetSdk = "36"
 androidx-compose = "1.12.1"
-androidx-compose-material3 = "1.5.0-alpha28"
+androidx-compose-material3 = "1.5.0-alpha29"
 appdirs = "1.5.0"
 circuit = "0.39.0"
 coil = "3.6.3"
@@ -38,7 +38,7 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.12"
 ktor = "3.6.0"
-metro = "1.4.4"
+metro = "1.4.5"
 room = "3.0.3"
 sqlite = "2.7.1"
 store = "5.1.0-beta01"
@@ -125,7 +125,7 @@ dataresultStore5 = { module = "io.github.solcott:dataresult-store5", version.ref
 uistate = { module = "io.github.solcott:uistate", version.ref = "dataresult" }
 uistateCircuit = { module = "io.github.solcott:uistate-circuit", version.ref = "dataresult" }
 #noinspection UnusedVersionCatalogEntry
-detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version = "0.6.6" }
+detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version = "0.6.7" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kermit-core = { module = "co.touchlab:kermit-core", version.ref = "kermit" }
