@@ -12,15 +12,17 @@ not a finished feature.
 
 ## Before writing anything
 
-Read these two files, in this order. They are the contract:
+Read these files, in this order. They are the contract:
 
-1. `.claude/skills/circuit-screen/SKILL.md` — the pattern, the required declaration order, and the
-   traps.
-2. `domain/src/commonMain/kotlin/com/scottolcott/recipe/domain/presenter/CategoriesPresenter.kt` —
+1. `.claude/skills/circuit-screen/SKILL.md` — the pattern and the required declaration order.
+2. `.claude/rules/circuit.md` — the traps: `@Redacted` sinks, per-state events,
+   `@CircuitSerializable`, and URL mapping.
+3. `domain/src/commonMain/kotlin/com/scottolcott/recipe/domain/presenter/CategoriesPresenter.kt` —
    the canonical example. Match its structure, import style, and naming exactly.
 
-If the screen reads a repository, also grep the repository interface in `repository/` and confirm
-the method you intend to call actually exists. **Do not invent repository methods.** If nothing
+If the screen reads a repository, also read `.claude/rules/data-flow.md` (`ContentState`,
+`foldToState`, and why `hasAnswer` beats `data.isEmpty()`), and grep the repository interface in
+`repository/` to confirm the method you intend to call actually exists. **Do not invent repository methods.** If nothing
 suitable exists, leave a TODO naming what's needed and carry on.
 
 ## What you produce
@@ -34,6 +36,9 @@ Given a screen name `Xxx` and a description of what it shows:
    last (`com.slack.circuit.serialization.CircuitSerializable` — it implies `@Serializable`, so
    don't add that too; `Screen`s are not `Parcelable`).
    - `@CircuitInject(XxxScreen::class, AppScope::class)` and `@Inject` on the presenter
+   - `@Immutable` on the sealed `XxxState` (`@Stable` instead if a case holds an observable holder
+     such as a `TextFieldState`) — `composeStabilityCheck` fails an unannotated one; see
+     `.claude/rules/compose-stability.md`
    - `@Redacted` on every `eventSink` property
    - `retain { }` for retained state, never `rememberSaveable`
    - `ContentState.foldToState(onLoading, onError, onContent)` to map producer output onto the

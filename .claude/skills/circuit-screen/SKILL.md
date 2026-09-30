@@ -43,25 +43,10 @@ sealed interface XxxEvent {
 @CircuitSerializable(AppScope::class) data object XxxScreen : Screen
 ```
 
-Rules that are easy to get wrong:
-
-- **`@Redacted` on every `eventSink`.** Comes from `dev.zacsweers.redacted.annotations.Redacted`;
-  keeps lambdas out of `toString`.
-- **Events are nested per state**, not one flat sealed interface. A `Success` state's sink only
-  accepts `XxxEvent.Success`.
-- **`retain { }`**, from `androidx.compose.runtime.retain`, for state that must survive
-  config change — never `rememberSaveable`.
-- **`@CircuitSerializable(AppScope::class)` on the `Screen`**, from
-  `com.slack.circuit.serialization`. It is `@MetaSerializable`, so it already implies
-  `@Serializable` — don't add that too. Screens stopped being `Parcelable` in Circuit 0.38;
-  `@Parcelize` now belongs only to the `:model` id value classes.
-- A retry is conventionally an `Int` counter (`retryTrigger`) passed into the producer as a key,
-  incremented by `XxxEvent.Error.RetryClicked`.
-- Screens with parameters are a sealed interface whose **concrete cases** carry the annotation —
-  see `RecipesScreen.ByCategory` / `.ByArea` / `.BySearch` / `.Favorites`. The sealed parent is
-  never annotated.
-- Every parameter of a screen must be serializable. `RecipeId`, `CategoryId` and `IngredientId`
-  already are; a new parameter type in `:model` needs `@Serializable` added there.
+The rules this shape must obey — `@Redacted` sinks, per-state events, `retain { }`,
+`@CircuitSerializable` and what it implies, parameterised screens, serializable parameters — live
+in `.claude/rules/circuit.md`, which loads whenever you touch `:domain` or `:ui`. Read it before
+reviewing a new presenter.
 
 ### Turning repository data into screen state
 
@@ -81,26 +66,14 @@ return state.foldToState(
 `Success(isRefreshing = true)` rather than dropping back to `Loading`. Do not add a `retain`ed var
 beside it to do that job — that pattern predates `ContentState` and is gone.
 
-Inside `foldToState`, **`hasAnswer` is the discriminator, not `data.isEmpty()`**: an empty list is a
-real answer, and reading it as "nothing yet" hangs a spinner over an empty screen. The one empty list
-that isn't an answer is an empty read from cache while its request is still in flight. The
-repository holds it back (`asOutcomes(fetching = refresh) { … }`) and `hasAnswer` refuses it. See the
-Architecture section of `CLAUDE.md`.
+Inside `foldToState`, **`hasAnswer` is the discriminator, not `data.isEmpty()`** — see
+`.claude/rules/data-flow.md`.
 
 ### Screen persistence
 
-The back stack is saved with kotlinx-serialization. Circuit codegen turns each
-`@CircuitSerializable` screen into a `CircuitSerializerRegistration` multibinding, and
-`domain/.../circuit/CircuitProviders.kt` folds the whole set into a `SerializableCircuitSaver` on
-`Circuit.Builder`. Nothing to register by hand — but the failure modes are runtime, not compile
-time:
-
-- **Saving** an unregistered or unserializable screen throws. That is the loud, useful case.
-- **Restoring** one can only return null, and the nav stack drops that record; `CircuitProviders`
-  passes `onRestoreError` to the logger so it isn't silent.
-
-`SubScreen`s from `circuitx-subcircuit` never enter the back stack and get **no** annotation — they
-may hold unserializable state such as a `TextFieldState`.
+Nothing to register by hand: codegen turns each `@CircuitSerializable` screen into a saver
+registration. The runtime failure modes, and why `SubScreen`s get no annotation, are in
+`.claude/rules/circuit.md` → *Navigation persistence*.
 
 ## 2. Producer — `domain/.../producer/XxxProducer.kt`
 
