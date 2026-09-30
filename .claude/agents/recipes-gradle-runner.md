@@ -33,9 +33,12 @@ check, don't guess.
 | Check formatting without writing | `ktfmtCheck` |
 | Static analysis | `detektAll` |
 | Sort build-file dependency blocks | `sortDependencies` / `checkSortDependencies` |
+| Compose stability (`:ui :domain :shared :app :webApp :desktopApp`) | `composeStabilityCheck` |
 | Everything | `build` |
 
-`detektAll` is a custom aggregate task, not stock detekt. `:<module>:build` is the project's
+`detektAll` is a custom aggregate task, not stock detekt. Run `composeStabilityCheck` as its own
+invocation, never combined with `build` in one command: every target writes the same reports
+directory, so its result is only trustworthy on its own. On failure, relay the offenders it names. `:<module>:build` is the project's
 standard compile check — prefer it over `assemble` unless the caller asked for something narrower.
 
 Run from the repo root with `./gradlew`. Add `--console=plain`; it strips the progress-bar control

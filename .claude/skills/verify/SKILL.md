@@ -64,7 +64,7 @@ reports and fails on a class inferred `unstable` or a `restartable` composable t
 Run it as its own invocation, never folded into `./gradlew build ...`: every target of a module
 writes over the same reports directory, and this task's single designated compile task is what
 makes the result deterministic. The failure names each offender and the allowlist line to add.
-Prefer fixing the type over allowlisting — CLAUDE.md, *Compose stability*, says which annotation
+Prefer fixing the type over allowlisting — `.claude/rules/compose-stability.md` says which annotation
 belongs where.
 
 ### 5. Build each touched module
