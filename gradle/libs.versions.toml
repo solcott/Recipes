@@ -50,7 +50,7 @@ ws = "8.18.3"
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
-androidx-collection = { module = "androidx.collection:collection", version = "1.6.0" }
+androidx-collection = { module = "androidx.collection:collection", version = "1.7.0" }
 androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "androidx-compose" }
 androidx-compose-animation-core = { module = "androidx.compose.animation:animation-core", version.ref = "androidx-compose" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-compose" }
