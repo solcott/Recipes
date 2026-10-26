@@ -12,9 +12,9 @@ import androidx.compose.runtime.compositionLocalOf
  * the search action would point at the field itself.
  *
  * A composition local rather than a parameter because the search bar is a sub-circuit:
- * `RecipeAppBar` reaches it through `SubCircuitContent(SearchScreen(...))`, whose only entry point
- * is `SubUi.Content(state, modifier)`. There is no slot to pass a composable through, and a
- * composable cannot ride inside the `Screen` -- that is a serializable data class.
+ * `RecipeAppBar` reaches it through `SubCircuitContent(SearchScreen(...))`, and Circuit calls the
+ * injected composable with only `(state, modifier)`. There is no slot to pass a composable through,
+ * and a composable cannot ride inside the `Screen` -- that is a serializable data class.
  *
  * `null` leaves the slot out entirely, which is what web wants: the browser's own back button makes
  * an in-app one redundant, and an empty-but-present slot would still cost Material3's leading
