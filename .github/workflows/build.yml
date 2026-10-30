@@ -12,9 +12,6 @@ concurrency:
 
 permissions:
   contents: read
-  # io.github.solcott:dataresult* and uistate* resolve from GitHub Packages, which authenticates
-  # even public reads. settings.gradle.kts falls back to GITHUB_ACTOR/GITHUB_TOKEN.
-  packages: read
 
 jobs:
   build:
@@ -23,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MEALDB_API_KEY: ${{ secrets.MEALDB_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
