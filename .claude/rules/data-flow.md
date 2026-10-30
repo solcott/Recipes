@@ -13,8 +13,7 @@ in `asOutcomes(fetching = refresh) { … }`, at the end of each repository's cha
 the `flatMapLatest { refresh -> … }` so it can see whether a fetch is coming.
 
 The types come from [kmp-dataresult](https://github.com/solcott/kmp-dataresult), shared with the
-`Countries` project. Resolving them needs `gpr.user`/`gpr.key` in `~/.gradle/gradle.properties` (a
-classic PAT with `read:packages`) — GitHub Packages authenticates even public reads.
+`Countries` project, and resolve from Maven Central.
 
 The path from a repository to a screen state is three steps:
 
