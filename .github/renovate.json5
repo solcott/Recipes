@@ -6,9 +6,9 @@
 
   packageRules: [
     {
-      description: "kmp-dataresult is a -SNAPSHOT on GitHub Packages, which Renovate can't read without a token. Bump it by hand.",
-      matchPackageNames: ["io.github.solcott:dataresult*", "io.github.solcott:uistate*"],
-      enabled: false,
+      description: "settings.gradle.kts lists Maven Central's snapshot repository for trying unreleased builds by hand. Never propose one.",
+      matchManagers: ["gradle"],
+      allowedVersions: "!/-SNAPSHOT$/",
     },
   ],
 }
