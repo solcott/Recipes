@@ -18,7 +18,7 @@ interface IngredientDao {
     SELECT * FROM INGREDIENT WHERE NAME LIKE :query || '%'
     UNION ALL
     SELECT * FROM INGREDIENT WHERE NAME LIKE '%' || :query || '%' AND NAME NOT LIKE :query || '%'
-  """
+  """,
   )
   fun filterByName(query: String): Flow<List<IngredientEntity>>
 

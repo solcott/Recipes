@@ -39,7 +39,7 @@ class SearchTabPresenter internal constructor(private val navigator: Navigator) 
               is SearchTabEvent.GoTo -> navigator.goTo(event.screen)
             }
           }
-        }
+        },
     )
 }
 

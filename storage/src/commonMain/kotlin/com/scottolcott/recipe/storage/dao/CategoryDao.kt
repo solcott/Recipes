@@ -18,7 +18,7 @@ interface CategoryDao {
     SELECT * FROM CATEGORY WHERE NAME LIKE :query || '%'
     UNION ALL
     SELECT * FROM CATEGORY WHERE NAME LIKE '%' || :query || '%' AND NAME NOT LIKE :query || '%'
-  """
+  """,
   )
   fun getCategories(query: String): Flow<List<CategoryEntity>>
 

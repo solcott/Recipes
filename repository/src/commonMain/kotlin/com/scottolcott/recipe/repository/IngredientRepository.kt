@@ -114,7 +114,7 @@ internal class IngredientRepositoryImpl(
   }
 
   override fun filterIngredientsByName(
-    nameFilter: String
+    nameFilter: String,
   ): Flow<Outcome<ImmutableList<Ingredient>>> {
     return loadIngredientsByKey(IngredientsKey.FilterByName(nameFilter))
   }

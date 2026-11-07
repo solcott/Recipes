@@ -146,7 +146,7 @@ fun AreaItem(
   ) {
     Column(
       Modifier.fillMaxSize()
-        .padding(horizontal = CARD_HORIZONTAL_PADDING, vertical = CARD_VERTICAL_PADDING)
+        .padding(horizontal = CARD_HORIZONTAL_PADDING, vertical = CARD_VERTICAL_PADDING),
     ) {
       // Bottom- then top-aligned so a one-line pair meets in the middle of the card rather than
       // floating apart at its two ends, while a two-line pair still fills it.

@@ -32,7 +32,7 @@ private class FakeIngredientRepository : IngredientRepository {
   override fun getIngredients(): Flow<Outcome<ImmutableList<Ingredient>>> = getIngredientsHandler()
 
   override fun filterIngredientsByName(
-    nameFilter: String
+    nameFilter: String,
   ): Flow<Outcome<ImmutableList<Ingredient>>> = getIngredientsHandler()
 }
 

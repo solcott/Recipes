@@ -41,7 +41,7 @@ sealed interface RecipesKey {
             .map { it.normalizeIngredient() }
             .filter { it.isNotEmpty() }
             .distinct()
-            .sorted()
+            .sorted(),
         )
 
       fun of(vararg ingredients: String): ByIngredient = of(ingredients.asList())

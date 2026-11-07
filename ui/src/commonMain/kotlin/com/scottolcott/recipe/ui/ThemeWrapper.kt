@@ -50,7 +50,7 @@ class ThemeWrapper : PreviewWrapperProvider {
                   enabled = false,
                   colors =
                     IconButtonDefaults.iconButtonColors(
-                      disabledContentColor = LocalContentColor.current
+                      disabledContentColor = LocalContentColor.current,
                     ),
                 ) {
                   Icon(

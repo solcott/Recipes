@@ -31,7 +31,7 @@ val recipeScaffoldPresenterTests by testSuite {
     assertFalse(HomeScreen().isSameDestinationAs(RecipesScreen.Favorites))
     assertFalse(RecipesScreen.ByCategory("Seafood").isSameDestinationAs(RecipesScreen.Favorites))
     assertFalse(
-      RecipesScreen.ByCategory("Seafood").isSameDestinationAs(RecipesScreen.ByCategory("Beef"))
+      RecipesScreen.ByCategory("Seafood").isSameDestinationAs(RecipesScreen.ByCategory("Beef")),
     )
   }
 

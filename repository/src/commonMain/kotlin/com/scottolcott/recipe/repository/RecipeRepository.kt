@@ -97,7 +97,7 @@ internal class RecipeRepositoryImpl(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   override fun recipesByIngredients(
-    ingredients: Set<String>
+    ingredients: Set<String>,
   ): Flow<Outcome<ImmutableList<Recipe>>> {
     val key = RecipesKey.ByIngredient.of(ingredients)
     return fetchHistoryDataStore

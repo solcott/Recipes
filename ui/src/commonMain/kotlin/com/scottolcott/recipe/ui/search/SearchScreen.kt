@@ -273,7 +273,7 @@ private fun Modifier.boundedToWindow(): Modifier {
           maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth else containerSize.width,
           maxHeight =
             if (constraints.hasBoundedHeight) constraints.maxHeight else containerSize.height,
-        )
+        ),
       )
     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
   }

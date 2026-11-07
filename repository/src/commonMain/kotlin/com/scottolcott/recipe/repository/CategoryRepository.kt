@@ -102,7 +102,7 @@ internal class CategoryRepositoryImpl(
             categoryDao.insertCategories(
               categories.map {
                 CategoryEntity(it.id, it.name, it.thumb, it.description, lastFetched)
-              }
+              },
             )
             fetchHistoryDataStore.updateLastFetchTime(
               key,

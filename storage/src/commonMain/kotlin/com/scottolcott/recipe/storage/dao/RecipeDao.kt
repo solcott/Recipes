@@ -35,7 +35,7 @@ abstract class RecipeDao {
     """SELECT r.* 
         FROM recipe r 
         INNER JOIN favorite_recipe f ON r.recipe_id = f.favorite_recipe_id 
-        ORDER BY f.favorite_recipe_added_date_time DESC"""
+        ORDER BY f.favorite_recipe_added_date_time DESC""",
   )
   abstract fun getFavorites(): Flow<List<RecipeEntityWithDetail>>
 
@@ -61,7 +61,7 @@ abstract class RecipeDao {
         WHERE ri.recipe_ingredient_name_normalized IN (:ingredients)
         GROUP BY r.recipe_id
         HAVING COUNT(DISTINCT ri.recipe_ingredient_name_normalized) = :requiredCount
-        ORDER BY r.recipe_id DESC"""
+        ORDER BY r.recipe_id DESC""",
   )
   abstract fun getByIngredients(
     ingredients: List<String>,
@@ -75,7 +75,7 @@ abstract class RecipeDao {
   @Query(
     """SELECT recipe_detail_recipe_id 
         FROM recipe_detail 
-        WHERE recipe_detail_recipe_id IN (:ids) AND recipe_detail_last_fetched > :freshAfter"""
+        WHERE recipe_detail_recipe_id IN (:ids) AND recipe_detail_last_fetched > :freshAfter""",
   )
   abstract suspend fun idsWithFreshDetail(
     ids: List<RecipeId>,

@@ -168,7 +168,7 @@ private fun CupertinoTabBar(
       .clip(shape)
       .background(MaterialTheme.colorScheme.surface)
       .border(Dp.Hairline, MaterialTheme.colorScheme.outlineVariant, shape)
-      .padding(horizontal = TAB_BAR_PADDING)
+      .padding(horizontal = TAB_BAR_PADDING),
   ) {
     // Drawn before the row, so it sits under the icons and labels. Its vertical inset comes from
     // its own height rather than from padding the box, which keeps each item the full height of
@@ -179,7 +179,7 @@ private fun CupertinoTabBar(
           .offset(x = pillOffset)
           .size(TAB_PILL_WIDTH, TAB_PILL_HEIGHT)
           .clip(RoundedCornerShape(TAB_PILL_CORNER))
-          .background(MaterialTheme.colorScheme.surfaceVariant)
+          .background(MaterialTheme.colorScheme.surfaceVariant),
       )
     }
     Row(Modifier.fillMaxHeight()) {
