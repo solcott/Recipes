@@ -57,7 +57,7 @@ fun AppSegmentedControl(
       .height(CONTROL_HEIGHT)
       .clip(RoundedCornerShape(TRACK_CORNER))
       .background(MaterialTheme.colorScheme.surfaceVariant)
-      .padding(TRACK_PADDING)
+      .padding(TRACK_PADDING),
   ) {
     val segmentWidth = maxWidth / options.size
     val pillOffset by animateDpAsState(segmentWidth * selectedIndex, label = "segmentedPill")
@@ -66,7 +66,7 @@ fun AppSegmentedControl(
         .width(segmentWidth)
         .fillMaxHeight()
         .clip(RoundedCornerShape(PILL_CORNER))
-        .background(MaterialTheme.colorScheme.surface)
+        .background(MaterialTheme.colorScheme.surface),
     )
     Row(Modifier.fillMaxSize()) {
       options.forEachIndexed { index, label ->

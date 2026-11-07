@@ -32,7 +32,7 @@ private class FakeRecipeRepository : RecipeRepository {
     private set
 
   override fun recipesByIngredients(
-    ingredients: Set<String>
+    ingredients: Set<String>,
   ): Flow<Outcome<ImmutableList<Recipe>>> = flow {
     ingredientSubscriptions++
     lastIngredients = ingredients

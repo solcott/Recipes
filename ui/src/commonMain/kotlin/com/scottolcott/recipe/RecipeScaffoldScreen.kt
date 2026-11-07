@@ -120,7 +120,7 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
         // list run under the capsule and past either side of it; see [LocalFloatingBarInset]. Every
         // other edge is applied here as usual.
         CompositionLocalProvider(
-          LocalFloatingBarInset provides paddingValues.calculateBottomPadding()
+          LocalFloatingBarInset provides paddingValues.calculateBottomPadding(),
         ) {
           Box(
             Modifier.fillMaxSize()
@@ -128,7 +128,7 @@ fun RecipeScaffoldScreen(state: RecipeScaffoldState, modifier: Modifier = Modifi
                 start = paddingValues.calculateStartPadding(layoutDirection),
                 top = paddingValues.calculateTopPadding(),
                 end = paddingValues.calculateEndPadding(layoutDirection),
-              )
+              ),
           ) {
             SharedElementTransitionLayout {
               NavigableCircuitContent(
@@ -206,7 +206,7 @@ private fun rememberAppDestinations(includeSearch: Boolean): ImmutableList<AppDe
           icon = Res.drawable.chef_hat_24px,
           selectedIcon = Res.drawable.chef_hat_24px,
           label = Res.string.recipes,
-        )
+        ),
       )
       add(
         AppDestination(
@@ -214,7 +214,7 @@ private fun rememberAppDestinations(includeSearch: Boolean): ImmutableList<AppDe
           icon = Res.drawable.favorite_24px,
           selectedIcon = Res.drawable.favorite_24px_filled,
           label = Res.string.favorites,
-        )
+        ),
       )
       if (includeSearch) {
         add(
@@ -223,7 +223,7 @@ private fun rememberAppDestinations(includeSearch: Boolean): ImmutableList<AppDe
             icon = Res.drawable.search_24px,
             selectedIcon = Res.drawable.search_24px,
             label = Res.string.search,
-          )
+          ),
         )
       }
     }

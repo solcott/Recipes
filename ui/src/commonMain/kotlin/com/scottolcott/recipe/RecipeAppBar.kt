@@ -72,13 +72,13 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
       // Favorites, and repeating them a few pixels apart just reads as clutter. See
       // [LocalAppBarNavigationIcon] for why this arrives as a composition local.
       CompositionLocalProvider(
-        LocalAppBarNavigationIcon provides if (isWeb()) null else ({ AnimatedBackButton(state) })
+        LocalAppBarNavigationIcon provides if (isWeb()) null else ({ AnimatedBackButton(state) }),
       ) {
         SubCircuitContent(
           SearchScreen(initialSearchBarValue = initialSearchBarValue),
           modifier =
             modifier.padding(
-              vertical = if (state.navigationLayout == NavigationLayout.Rail) 8.dp else 4.dp
+              vertical = if (state.navigationLayout == NavigationLayout.Rail) 8.dp else 4.dp,
             ),
           outerEventSink = {
             when (it) {
@@ -87,12 +87,12 @@ fun RecipeAppBar(state: RecipeScaffoldState, modifier: Modifier = Modifier) {
               }
               is SearchOuterEvent.NavigateToCategoryResults -> {
                 state.eventSink(
-                  RecipeScaffoldEvent.GoTo(RecipesScreen.ByCategory(it.category.name))
+                  RecipeScaffoldEvent.GoTo(RecipesScreen.ByCategory(it.category.name)),
                 )
               }
               is SearchOuterEvent.NavigateToIngredientResults -> {
                 state.eventSink(
-                  RecipeScaffoldEvent.GoTo(RecipesScreen.ByIngredient(setOf(it.ingredient.name)))
+                  RecipeScaffoldEvent.GoTo(RecipesScreen.ByIngredient(setOf(it.ingredient.name))),
                 )
               }
               is SearchOuterEvent.SearchBarStateChanged ->

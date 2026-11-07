@@ -48,7 +48,7 @@ data class RecipeEntity(
         parentColumns = ["recipe_id"],
         childColumns = ["recipe_detail_recipe_id"],
         onDelete = CASCADE,
-      )
+      ),
     ],
 )
 data class RecipeDetailEntity(
@@ -83,7 +83,7 @@ data class RecipeDetailEntity(
         parentColumns = ["recipe_id"],
         childColumns = ["recipe_ingredient_recipe_id"],
         onDelete = CASCADE,
-      )
+      ),
     ],
   indices =
     [

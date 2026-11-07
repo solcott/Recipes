@@ -20,5 +20,5 @@ val Project.mealDbApiKey: String
         Add it to ~/.gradle/gradle.properties or export MEALDB_API_KEY.
         Get a key: https://www.themealdb.com/api.php
         """
-          .trimIndent()
+          .trimIndent(),
       )

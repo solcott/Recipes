@@ -145,7 +145,7 @@ private fun RecipeCard(
         RecipeCardContent(
           // A definite size, not fillMaxHeight: a grid item is measured with an unbounded height,
           // so filling it is a no-op that leaves the image sitting at its minimum.
-          recipeImage = { RecipeImage(recipe, modifier = Modifier.size(110.dp)) }
+          recipeImage = { RecipeImage(recipe, modifier = Modifier.size(110.dp)) },
         ) {
           RecipeDetails(recipe, showAreaLabel, Modifier.padding(vertical = 8.dp))
         }
@@ -156,7 +156,7 @@ private fun RecipeCard(
         modifier = Modifier.padding(bottom = 8.dp),
       ) {
         RecipeCardContent(
-          recipeImage = { RecipeImage(recipe, modifier = Modifier.fillMaxWidth().aspectRatio(1f)) }
+          recipeImage = { RecipeImage(recipe, modifier = Modifier.fillMaxWidth().aspectRatio(1f)) },
         ) {
           RecipeDetails(recipe, showAreaLabel, Modifier)
         }

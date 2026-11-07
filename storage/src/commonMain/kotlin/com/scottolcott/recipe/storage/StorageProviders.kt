@@ -48,35 +48,35 @@ object StorageProviders {
   @Provides
   @SingleIn(AppScope::class)
   fun provideSuggestionsDataStore(
-    storageFactory: StorageFactory
+    storageFactory: StorageFactory,
   ): SearchSearchSuggestionsDataStore =
     SearchSearchSuggestionsDataStore(storageFactory.createSearchSuggestionsDataStoreStorage())
 
   @Provides
   @SingleIn(AppScope::class)
   fun provideRecipeFetchHistoryDataStore(
-    storageFactory: StorageFactory
+    storageFactory: StorageFactory,
   ): RecipeFetchHistoryDataStore =
     RecipeFetchHistoryDataStore(storageFactory.createRecipeFetchHistoryDataStoreStorage())
 
   @Provides
   @SingleIn(AppScope::class)
   fun provideCategoriesFetchHistoryDataStore(
-    storageFactory: StorageFactory
+    storageFactory: StorageFactory,
   ): CategoriesFetchHistoryDataStore =
     CategoriesFetchHistoryDataStore(storageFactory.createCategoriesFetchHistoryDataStoreStorage())
 
   @Provides
   @SingleIn(AppScope::class)
   fun provideIngredientsFetchHistoryDataStore(
-    storageFactory: StorageFactory
+    storageFactory: StorageFactory,
   ): IngredientsFetchHistoryDataStore =
     IngredientsFetchHistoryDataStore(storageFactory.createIngredientsFetchHistoryDataStoreStorage())
 
   @Provides
   @SingleIn(AppScope::class)
   fun provideAreasFetchHistoryDataStore(
-    storageFactory: StorageFactory
+    storageFactory: StorageFactory,
   ): AreasFetchHistoryDataStore =
     AreasFetchHistoryDataStore(storageFactory.createAreasFetchHistoryDataStoreStorage())
 }

@@ -20,7 +20,7 @@ dependencies {
   compileOnly(libs.plugins.ktfmt.toDep())
 
   detektPlugins(
-    libs.detekt.compose.rules
+    libs.detekt.compose.rules,
   ) // required in order to use same detekt.yml as main project
 }
 

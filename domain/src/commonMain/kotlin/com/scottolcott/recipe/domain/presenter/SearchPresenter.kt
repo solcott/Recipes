@@ -71,7 +71,7 @@ class SearchPresenter(
           persistentListOf<SearchSuggestion>(),
           persistentListOf<Category>(),
           persistentListOf<Ingredient>(),
-        )
+        ),
       ) { query ->
         searchSuggestionsRepository.getSearchSuggestionsAsFlow(query)
       }
@@ -81,7 +81,7 @@ class SearchPresenter(
           scope.launch {
             outerEventSink(NavigateToSearchResults(event.query))
             searchSuggestionsRepository.addSearchSuggestion(
-              SearchSuggestion.QuerySuggestion(event.query)
+              SearchSuggestion.QuerySuggestion(event.query),
             )
             searchText.clearText()
           }
@@ -91,7 +91,7 @@ class SearchPresenter(
           outerEventSink(NavigateToCategoryResults(event.category))
           scope.launch {
             searchSuggestionsRepository.addSearchSuggestion(
-              SearchSuggestion.CategorySuggestion(event.category)
+              SearchSuggestion.CategorySuggestion(event.category),
             )
           }
         }
@@ -99,7 +99,7 @@ class SearchPresenter(
           outerEventSink(NavigateToIngredientResults(event.ingredient))
           scope.launch {
             searchSuggestionsRepository.addSearchSuggestion(
-              SearchSuggestion.IngredientSuggestion(event.ingredient)
+              SearchSuggestion.IngredientSuggestion(event.ingredient),
             )
           }
         }

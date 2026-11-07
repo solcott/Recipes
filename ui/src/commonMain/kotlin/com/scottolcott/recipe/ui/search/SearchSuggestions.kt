@@ -152,7 +152,7 @@ private fun LazyListScope.historySection(
                 MaterialTheme.colorScheme.onSurfaceVariant
               } else {
                 MaterialTheme.colorScheme.onPrimaryContainer
-              }
+              },
             ),
           contentScale = ContentScale.Inside,
         )

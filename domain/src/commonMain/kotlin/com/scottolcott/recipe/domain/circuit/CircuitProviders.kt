@@ -24,7 +24,7 @@ import kotlin.jvm.JvmSuppressWildcards
 import kotlin.reflect.KClass
 
 @OptIn(
-  ExperimentalCircuitApi::class // For AnimatedScreenTransform
+  ExperimentalCircuitApi::class, // For AnimatedScreenTransform
 )
 @BindingContainer
 interface CircuitProviders {

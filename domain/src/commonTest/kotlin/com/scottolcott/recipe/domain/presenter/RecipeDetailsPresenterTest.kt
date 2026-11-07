@@ -57,7 +57,7 @@ private class FakeRecipeDetailsRepository : RecipeRepository {
   }
 
   override fun recipesByIngredients(
-    ingredients: Set<String>
+    ingredients: Set<String>,
   ): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
 
   override fun searchRecipes(query: String): Flow<Outcome<ImmutableList<Recipe>>> = emptyFlow()
