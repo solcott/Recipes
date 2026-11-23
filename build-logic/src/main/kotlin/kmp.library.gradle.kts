@@ -30,7 +30,12 @@ kotlin {
     val libs = project.versionCatalog
     namespace = "com.scottolcott.recipe.${project.name.replace("-", ".")}"
     minSdk = libs.findVersion("androidMinSdk").get().requiredVersion.toInt()
-    compileSdk = libs.findVersion("androidCompileSdk").get().requiredVersion.toInt()
+    compileSdk {
+      version =
+        release(libs.findVersion("androidCompileSdk").get().requiredVersion.toInt()) {
+          minorApiLevel = libs.findVersion("androidCompileSdkMinor").get().requiredVersion.toInt()
+        }
+    }
     compilerOptions {
       jvmTarget = JvmTarget.fromTarget(jvmBytecodeTarget)
       freeCompilerArgs.add("-Xjdk-release=$jvmBytecodeTarget")

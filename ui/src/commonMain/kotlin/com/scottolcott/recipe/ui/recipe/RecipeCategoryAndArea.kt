@@ -1,6 +1,5 @@
 package com.scottolcott.recipe.ui.recipe
 
-import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.AssistChip
@@ -20,7 +19,6 @@ import com.scottolcott.recipe.ui.label_24px
 import com.scottolcott.recipe.ui.location_on_24px
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalFlexBoxApi::class)
 @Composable
 fun RecipeCategoryAndArea(
   recipe: Recipe,

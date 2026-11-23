@@ -16,10 +16,12 @@ plugins {
 }
 
 android {
-  compileSdk = libs.versions.androidCompileSdk.get().toInt()
   namespace = "com.scottolcott.recipe"
   compileSdk {
-    version = release(libs.versions.androidCompileSdk.get().toInt()) { minorApiLevel = 0 }
+    version =
+      release(libs.versions.androidCompileSdk.get().toInt()) {
+        minorApiLevel = libs.versions.androidCompileSdkMinor.get().toInt()
+      }
   }
 
   defaultConfig {
