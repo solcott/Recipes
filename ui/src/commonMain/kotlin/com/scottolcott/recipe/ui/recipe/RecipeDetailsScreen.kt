@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.GridConfigurationScope
 import androidx.compose.foundation.layout.GridScope
@@ -130,7 +129,6 @@ private fun RecipeDetails(
   }
 }
 
-@OptIn(ExperimentalGridApi::class)
 @Composable
 private fun LookaheadScope.RecipeGrid(
   recipe: Recipe,
@@ -177,7 +175,6 @@ private fun LookaheadScope.RecipeGrid(
   }
 }
 
-@OptIn(ExperimentalGridApi::class)
 private fun GridConfigurationScope.recipeGridConfig(columns: Int, padding: PaddingValues) {
   // Every track is MinMax so its base size is the fixed minimum. A bare `fr` track resolves to
   // `minmax(min-content, <n>fr)`, which lets one unbreakable string (a source URL, a long
@@ -198,7 +195,6 @@ private fun GridConfigurationScope.recipeGridConfig(columns: Int, padding: Paddi
 }
 
 @Suppress("ContentSlotReused")
-@OptIn(ExperimentalGridApi::class)
 @Composable
 private fun GridScope.RecipeGridLayout(
   columns: Int,

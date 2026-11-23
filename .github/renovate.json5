@@ -10,5 +10,15 @@
       matchManagers: ["gradle"],
       allowedVersions: "!/-SNAPSHOT$/",
     },
+    {
+      description: "Compose Multiplatform is built against a specific androidx Compose release, and each new androidx Compose can raise the required compileSdk. Update the two trains in one PR so they can't land half-aligned. Material3 Adaptive and androidx Material3 version on their own cadence and stay separate.",
+      matchManagers: ["gradle"],
+      matchPackageNames: [
+        "/^androidx\\.compose\\.(animation|foundation|runtime|ui):/",
+        "/^org\\.jetbrains\\.compose[.:]/",
+        "!/^org\\.jetbrains\\.compose\\.material3\\.adaptive:/",
+      ],
+      groupName: "Compose",
+    },
   ],
 }
