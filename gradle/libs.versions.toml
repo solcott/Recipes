@@ -1,6 +1,6 @@
 [versions]
 activity = "1.13.0"
-agp = "9.5.2"
+agp = "9.5.3"
 #noinspection UnusedVersionCatalogEntry
 androidCompileSdk = "37"
 # Compose 1.13 AARs require compileSdk 37.1+; checkAarMetadata fails the app build on 37.0.
